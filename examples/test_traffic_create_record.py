@@ -7,8 +7,8 @@ dyn = DynTraffic('customername', 'username', 'password').with_zone('example.com'
 # establish an API connection
 dyn.session.create()
 
-# create a CNAME record
-dyn.record.create('CNAME', 'www.example.com.', {'address':'1.2.3.4'})
+# create an A record
+dyn.record.create('A', 'www.example.com.', {'address':'1.2.3.4'})
 
 # publish changes
 dyn.zone.publish()

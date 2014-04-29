@@ -15,8 +15,11 @@ Making DNS Updates as easy as:
     # establish an API connection
     dyn.session.create()
 
+    # create an A record
+    dyn.record.create('A', 'www.example.com.', {'address':'1.2.3.4'})
+
     # create a CNAME record
-    dyn.record.create('CNAME', 'www.example.com.', {'address':'1.2.3.4'})
+    dyn.record.create('CNAME', 'www2.example.com.', {'cname':'www.example.com'})
 
     # publish changes
     dyn.zone.publish()

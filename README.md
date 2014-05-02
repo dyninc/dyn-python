@@ -15,14 +15,33 @@ Making DNS Updates as easy as:
     # establish an API connection
     dyn.session.create()
 
+
     # create an A record
     dyn.record.create('A', 'www.example.com.', {'address':'1.2.3.4'})
 
     # create a CNAME record
     dyn.record.create('CNAME', 'www2.example.com.', {'cname':'www.example.com'})
 
+
+    # delete one A record
+    dyn.record.delete('A', 'www.example.com', <record_id>)
+
+    # delete all A record
+    dyn.record.delete('A', 'www.example.com')
+
+    # delete a CNAME record
+    dyn.record.delete('CNAME', 'www2.example.com')
+
+
     # publish changes
     dyn.zone.publish()
+
+    #Get all records from the zone
+    dyn.zone.list()
+
+    #Get all records from the node
+    dyn.zone.list('www.example.com')
+
 
     # log out to finish session
     dyn.session.destroy()

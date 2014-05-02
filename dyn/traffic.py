@@ -55,9 +55,8 @@ class Record(object):
     def create(self, type, fqdn, rdata):
         return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn, 'POST', dict({'rdata':rdata}) )
 
-    def list(self):
-        return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn + '/' + id, 'GET')
+    def list(self,fqdn=''):
+        return self._dyn._client.execute('/AllRecord/' + self._dyn._zone + '/' + fqdn, 'GET')
 
-    def delete(self, type, fqdn, id):
+    def delete(self, type, fqdn, id=''):
         return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn + '/' + id, 'DELETE')
-

@@ -149,6 +149,14 @@ class DynTrafficClient(object):
         # Deal with the results
         response = self._conn.getresponse()
         body = response.read()
+        try:
+            body_json=json.loads(body)
+            if body_json['status'] == "success":
+                self._debug("Response: Success\n")
+            else:
+                self._debug("Response: %s, Info: %s\n" % (body_json['status'],body_json['msgs']))
+        except Exception, response_err:
+            self._debug("Response: %s\n" % (response_err))
         self._last_response = response
 
         if self.poll_incomplete:

@@ -8,11 +8,11 @@ setup(
     name="dyn",
     version=version,
     keywords=["dynect", "api", "dns"],
-    long_description=open(os.path.join(os.path.dirname(__file__),"README"), "r").read(),
+    long_description=open(os.path.join(os.path.dirname(__file__),"README.md"), "r").read(),
     description="Dyn Python SDK",
     author="Cole Tuininga",
     author_email="ctuininga@dyn.com",
-    url="https://github.com/dyninc/dyn-py"
+    url="https://github.com/dyninc/dyn-py",
     packages=['dyn'],
     classifiers=[
         'Programming Language :: Python :: 2',

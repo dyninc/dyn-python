@@ -40,7 +40,7 @@ class Zone(object):
         self._dyn = dyn
 
     def publish(self):
-        return self._dyn._client.execute('/Zone/' + self._dyn._zone, 'POST', {'publish':True})
+        return self._dyn._client.execute('/Zone/' + self._dyn._zone, 'PUT', {'publish':True})
 
     def freeze(self):
         return self._dyn._client.execute('/Zone/' + self._dyn._zone, 'POST', {'freeze':True})
@@ -53,11 +53,10 @@ class Record(object):
         self._dyn = dyn
 
     def create(self, type, fqdn, rdata):
-        return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn, 'POST', rdata)
+        return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn, 'POST', dict({'rdata':rdata}) )
 
-    def list(self):
-        return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn + '/' + id, 'GET')
+    def list(self,fqdn=''):
+        return self._dyn._client.execute('/AllRecord/' + self._dyn._zone + '/' + fqdn, 'GET')
 
-    def delete(self, type, fqdn, id):
+    def delete(self, type, fqdn, id=''):
         return self._dyn._client.execute('/' + type + 'Record/' + self._dyn._zone + '/' + fqdn + '/' + id, 'DELETE')
-

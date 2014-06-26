@@ -20,7 +20,7 @@ Get the Code
 ------------
 
 dyn is actively developed on GitHub, the code is
-`always available <https://github.corp.dyndns.com/jnappi/py-dynect>`_.
+`always available <https://github.com/moogar0880/dyn-python>`_.
 
 You can either clone the public repository::
 

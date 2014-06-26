@@ -9,7 +9,7 @@ Requires Python 2.6 or higher, or the "simplejson" package.
 For full documentation and examples see the dyn module on `Read The Docs <http://dyn.readthedocs.org>`_.
 
 Dyn Inc, Integration Team Deliverable
-"Copyright © 2013, Dyn Inc.
+"Copyright © 2014, Dyn Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

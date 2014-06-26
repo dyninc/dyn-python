@@ -1,19 +1,21 @@
-import os
 from distutils.core import setup
+from dyn import __version__
 
-# sync with __init__.py
-version = '0.1'
+with open('README.rst') as f:
+    readme = f.read()
+with open('HISTORY.rst') as f:
+    history = f.read()
 
 setup(
-    name="dyn",
-    version=version,
-    keywords=["dynect", "api", "dns"],
-    long_description=open(os.path.join(os.path.dirname(__file__),"README.md"), "r").read(),
-    description="Dyn Python SDK",
-    author="Cole Tuininga",
-    author_email="ctuininga@dyn.com",
-    url="https://github.com/dyninc/dyn-py",
-    packages=['dyn'],
+    name='dyn',
+    version=__version__,
+    keywords=['dyn', 'api', 'dns', 'email', 'dyndns', 'dynemail'],
+    long_description='\n\n'.join([readme, history]),
+    description='Dyn REST API wrapper',
+    author='Jonathan Nappi, Cole Tuininga',
+    author_email='jnappi@dyn.com',
+    url='https://github.com/dyninc/Dynect-API-Python-Library',
+    packages=['dyn', 'dyn/tm', 'dyn/mm', 'dyn/tm/services'],
     classifiers=[
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',

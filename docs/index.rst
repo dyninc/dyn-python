@@ -4,8 +4,8 @@
    contain the root `toctree` directive.
 
 
-dyn: The official Dyn API Python Wrapper
-========================================
+dyn: The Dyn API Python Wrapper
+===============================
 
 Release v\ |version|. (:ref:`Installation <install>`)
 

@@ -24,15 +24,15 @@ dyn is actively developed on GitHub, the code is
 
 You can either clone the public repository::
 
-    git clone https://github.corp.dyndns.com/jnappi/py-dynect.git
+    git clone https://github.com/moogar0880/dyn-python.git
 
-Download the `tarball <https://github.corp.dyndns.com/jnappi/py-dynect/tarball/master>`_::
+Download the `tarball <https://github.com/moogar0880/dyn-python/tarball/master>`_::
 
-    $ curl -OL https://github.corp.dyndns.com/jnappi/py-dynect/tarball/master
+    $ curl -OL https://github.com/moogar0880/dyn-python/tarball/master
 
-Or, download the `zipball <https://github.corp.dyndns.com/jnappi/py-dynect/zipball/master>`_::
+Or, download the `zipball <https://github.com/moogar0880/dyn-python/zipball/master>`_::
 
-    $ curl -OL https://github.corp.dyndns.com/jnappi/py-dynect/zipball/master
+    $ curl -OL https://github.com/moogar0880/dyn-python/zipball/master
 
 Once you have a copy of the source, you can embed it in your Python package,
 or install it into your site-packages by running::

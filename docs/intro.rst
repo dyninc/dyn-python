@@ -17,4 +17,4 @@ the Dyn API `Rest Resources <https://help.dynect.net/rest-resources/>`_ page.
 DynECT API License
 ------------------
 
-    .. include:: ../../LICENSE
+    .. include:: ../LICENSE

@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Dyn'
-copyright = u'2014, Jonathan Nappi, Cole Tuininga'
+copyright = u'2014, Dyn Inc, Jonathan Nappi, Cole Tuininga'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

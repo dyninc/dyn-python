@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Dyn'
-copyright = u'2014, Jonathan Nappi, Cole Tuininga'
+copyright = u'2014, Dyn Inc, Jonathan Nappi, Cole Tuininga'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -132,7 +132,7 @@ html_theme = 'default'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/dyn.png'
+html_logo = ''
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

@@ -1,5 +1,9 @@
 Release History
 ---------------
+0.9.10 (2014-07-07)
++++++++++++++++++++
+
+* Added fix for potentially improperly formatted search parameters in dyn.tm.accounts.get_users
 
 0.9.9 (2014-06-26)
 ++++++++++++++++++

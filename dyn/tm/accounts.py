@@ -58,9 +58,9 @@ def get_users(search=None):
         search_string = ''
         for key, val in search.items():
             if search_string != '':
-                ' AND '.join([search_string, '{}: "{}"'.format(key, val)])
+                ' AND '.join([search_string, '{}:"{}"'.format(key, val)])
             else:
-                search_string = '{}: "{}"'.format(key, val)
+                search_string = '{}:"{}"'.format(key, val)
         api_args['search'] = search_string
     response = session().execute(uri, 'GET', api_args)
     users = []

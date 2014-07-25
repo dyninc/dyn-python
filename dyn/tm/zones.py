@@ -34,7 +34,7 @@ def get_all_zones():
     response = session().execute(uri, 'GET', api_args)
     zones = []
     for zone in response['data']:
-        zones.append(Zone(None, api=False, **zone))
+        zones.append(Zone(zone['zone'], api=False, **zone))
     return zones
 
 
@@ -211,6 +211,8 @@ class Zone(object):
         """The email address of the primary :class:`Contact` associated with
         this :class:`Zone`
         """
+        if self._contact is None:
+            self._contact = self.__root_soa.rname
         return self._contact
     @contact.setter
     def contact(self, value):
@@ -219,6 +221,8 @@ class Zone(object):
     @property
     def ttl(self):
         """This :class:`Zone`'s default TTL"""
+        if self._ttl is None:
+            self._ttl = self.__root_soa.ttl
         return self._ttl
     @ttl.setter
     def ttl(self, value):

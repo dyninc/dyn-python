@@ -1,5 +1,11 @@
 Release History
 ---------------
+0.9.11 (2014-07-25)
++++++++++++++++++++
+
+* Fixed a bug with how calls to ``get_all_zones`` created ``Zone`` objects
+* Tackled a possible bug also stemming from ``get_all_zones`` calls where a ``Zone``'s ``contact`` and ``ttl`` attributes could always be ``None``
+
 0.9.10 (2014-07-07)
 +++++++++++++++++++
 

@@ -1,12 +1,12 @@
+# -*- coding: utf-8 -*-
 import logging
-import dyn.tm.session
-from dyn.tm import Active
-from dyn.tm.errors import DynectInvalidArgumentError
+
+from ..utils import Active
+from ..errors import DynectInvalidArgumentError
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['HealthMonitor', 'ActiveFailover']
-
-session = dyn.tm.session.session
 
 
 class HealthMonitor(object):

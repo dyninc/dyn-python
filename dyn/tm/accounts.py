@@ -1,16 +1,15 @@
+# -*- coding: utf-8 -*-
 """This module contains interfaces for all Account management features of the
 REST API
 """
 import logging
-import dyn.tm.session
-from dyn.tm.errors import DynectInvalidArgumentError
+from .errors import DynectInvalidArgumentError
+from .session import session
 
 __author__ = 'jnappi'
 __all__ = ['get_updateusers', 'get_users', 'get_permissions_groups',
            'get_contacts', 'get_notifiers', 'UpdateUser', 'User',
            'PermissionsGroup', 'UserZone', 'Notifier', 'Contact']
-
-session = dyn.tm.session.session
 
 
 def get_updateusers(search=None):

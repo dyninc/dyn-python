@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 """This module contains class objects for all supported DynDNS Record types
 
 These DNS_Records should really only need to be created via a zone instance but
 could also be created independently if passed valid zone, fqdn data
 """
 import logging
-import dyn.tm.session
-from dyn.tm.errors import DynectInvalidArgumentError
+from .errors import DynectInvalidArgumentError
+from .session import session
 
 __author__ = 'jnappi'
 __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
@@ -13,8 +14,6 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
            'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TXTRecord']
-
-session = dyn.tm.session.session
 
 
 class DNSRecord(object):

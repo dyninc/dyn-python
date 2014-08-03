@@ -1,14 +1,14 @@
+# -*- coding: utf-8 -*-
 """This module contains API Wrapper implementations of the Dynamic DNS service
 """
 import logging
-from dyn.tm import Active
-import dyn.tm.session
-from dyn.tm.accounts import User
+
+from ..utils import Active
+from ..session import session
+from ..accounts import User
 
 __author__ = 'jnappi'
 __all__ = ['DynamicDNS']
-
-session = dyn.tm.session.session
 
 
 class DynamicDNS(object):

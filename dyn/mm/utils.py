@@ -24,10 +24,10 @@ def date_to_str(date_obj):
     return date_string
 
 
-class _APIDict(dict):
+class APIDict(dict):
     """Custom API Dict type"""
     def __init__(self, session_func, uri=None, *args, **kwargs):
-        super(_APIDict, self).__init__(*args, **kwargs)
+        super(APIDict, self).__init__(*args, **kwargs)
         self.session_func = session_func
         self.uri = uri
 
@@ -35,7 +35,7 @@ class _APIDict(dict):
         """Handle adding a new key, value pair in this dict via an appropriate
         API PUT call
         """
-        response = super(_APIDict, self).__setitem__(key, value)
+        response = super(APIDict, self).__setitem__(key, value)
         api_args = {x: self[x] for x in self if x is not None and
                     not hasattr(self[x], '__call__') and key != 'uri'}
         if self.session_func is not None and self.uri is not None:
@@ -46,7 +46,7 @@ class _APIDict(dict):
         """Handle the removal of an entry in this dict via an appropriate API
         call
         """
-        response = super(_APIDict, self).__delitem__(key)
+        response = super(APIDict, self).__delitem__(key)
         api_args = {x: self[x] for x in self if x is not None and
                     not hasattr(self[x], '__call__') and key != 'uri'}
         if self.session_func is not None and self.uri is not None:

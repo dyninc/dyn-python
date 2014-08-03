@@ -1,12 +1,11 @@
+# -*- coding: utf-8 -*-
 import logging
-from dyn.tm import _APIList
-import dyn.tm.session
-from dyn.tm.errors import DynectInvalidArgumentError
+from ..utils import APIList
+from ..errors import DynectInvalidArgumentError
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
-
-session = dyn.tm.session.session
 
 
 class Monitor(object):
@@ -624,7 +623,7 @@ class GSLB(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._contact_nickname = None
         self._active = self._status = self.active = None
-        self._region = _APIList(session, 'region')
+        self._region = APIList(session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -688,7 +687,7 @@ class GSLB(object):
         for key, val in data.items():
             if key == 'region':
                 if region:
-                    self._region = _APIList(session, 'region')
+                    self._region = APIList(session, 'region')
                     for region in val:
                         region_code = region.pop('region_code', None)
                         self._region.append(GSLBRegion(self._zone, self._fqdn,
@@ -872,9 +871,9 @@ class GSLB(object):
         return self._region
     @region.setter
     def region(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._region = _APIList(session, 'region', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._region = APIList(session, 'region', None, value)
+        elif isinstance(value, APIList):
             self._region = value
         self._region.uri = self.uri
 

@@ -1,12 +1,12 @@
+# -*- coding: utf-8 -*-
 import logging
-from dyn.tm.errors import DynectInvalidArgumentError
-import dyn.tm.session
-from dyn.tm import _APIList, Active
+
+from ..utils import APIList, Active
+from ..errors import DynectInvalidArgumentError
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dnssec', 'DNSSECKey', 'DNSSEC']
-
-session = dyn.tm.session.session
 
 
 def get_all_dnssec():
@@ -97,7 +97,7 @@ class DNSSEC(object):
         self.valid_notify_events = ('create', 'expire', 'warning')
         self._zone = zone
         self._contact_nickname = self._notify_events = None
-        self._keys = _APIList(session, 'keys')
+        self._keys = APIList(session, 'keys')
         self._active = None
         self.uri = '/DNSSEC/{}/'.format(self._zone)
         if 'api' in kwargs:
@@ -143,7 +143,7 @@ class DNSSEC(object):
         """
         for key, val in data.items():
             if key == 'keys':
-                self._keys = _APIList(session, 'keys')
+                self._keys = APIList(session, 'keys')
                 for key_data in val:
                     key_data['key_type'] = key_data['type']
                     del key_data['type']
@@ -228,9 +228,9 @@ class DNSSEC(object):
         return self._keys
     @keys.setter
     def keys(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._keys = _APIList(session, 'keys', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._keys = APIList(session, 'keys', None, value)
+        elif isinstance(value, APIList):
             self._keys = value
         self._keys.uri = self.uri
 

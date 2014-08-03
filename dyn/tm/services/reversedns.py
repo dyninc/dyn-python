@@ -1,11 +1,11 @@
+# -*- coding: utf-8 -*-
 import logging
-from dyn.tm import Active
-import dyn.tm.session
+
+from ..utils import Active
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['ReverseDNS']
-
-session = dyn.tm.session.session
 
 
 class ReverseDNS(object):

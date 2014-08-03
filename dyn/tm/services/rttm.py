@@ -1,13 +1,13 @@
+# -*- coding: utf-8 -*-
 import logging
-from dyn.tm import _APIList, Active
-import dyn.tm.session
-from dyn.tm.errors import DynectInvalidArgumentError
+
+from ..utils import APIList, Active
+from ..errors import DynectInvalidArgumentError
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
            'RTTM']
-
-session = dyn.tm.session.session
 
 
 class Monitor(object):
@@ -643,7 +643,7 @@ class RTTM(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._performance_monitor = None
         self._contact_nickname = self._active = None
-        self._region = _APIList(session, 'region')
+        self._region = APIList(session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -729,7 +729,7 @@ class RTTM(object):
         """Build the neccesary substructures under this :class:`RTTM`"""
         for key, val in data.items():
             if key == 'region':
-                self._region = _APIList(session, 'region')
+                self._region = APIList(session, 'region')
                 for region in val:
                     code = region.pop('region_code', None)
                     pool = region.pop('pool', None)
@@ -930,9 +930,9 @@ class RTTM(object):
         return self._region
     @region.setter
     def region(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._region = _APIList(session, 'region', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._region = APIList(session, 'region', None, value)
+        elif isinstance(value, APIList):
             self._region = value
         self._region.uri = self.uri
 

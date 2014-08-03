@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module contains API wrappers for the Geo TM service.
 NOTE: The Geo Traffic Management Service is deprecated. Legacy users of the
 service should contact Concierge for any questions on adding a Geo Traffic
@@ -5,8 +6,9 @@ Management  service to your zone. All other users should use Traffic Director
 (DSF) instead.
 """
 import logging
-import dyn.tm.session
-from dyn.tm.records import *
+
+from ..records import *
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['GeoARecord', 'GeoAAAARecord', 'GeoCERTRecord', 'GeoCNAMERecord',
@@ -15,8 +17,6 @@ __all__ = ['GeoARecord', 'GeoAAAARecord', 'GeoCERTRecord', 'GeoCNAMERecord',
            'GeoMXRecord', 'GeoNAPTRRecord', 'GeoPTRRecord', 'GeoPXRecord',
            'GeoNSAPRecord', 'GeoRPRecord', 'GeoNSRecord', 'GeoSPFRecord',
            'GeoSRVRecord', 'GeoTXTRecord', 'GeoRegionGroup', 'Geo']
-
-session = dyn.tm.session.session
 
 
 class GeoARecord(ARecord):

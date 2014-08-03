@@ -1,20 +1,28 @@
-# coding=utf-8
-import dyn.mm.session
-import dyn.mm.errors as errors
+# -*- coding: utf-8 -*-
+"""The message module allows for quickly and easily sending emails. For quickly
+sending messages consider using the send_message function, however, there is
+also the :class:`dyn.mm.message.EMail` class which will give you additional
+control over the messages you're sending.
+"""
+from .errors import DynInvalidArgumentError
+from .session import session
 
 __author__ = 'jnappi'
-
-session = dyn.mm.session.session
 
 
 def send_message(from_field, to, subject, cc=None, body=None, html=None,
                  replyto=None, xheaders=None):
-    """Quickly send an Email"""
+    """Create and send an email on the fly. For information on the arguments
+    accepted by this function see the documentation for
+    :class:`dyn.mm.message.EMail`
+    """
     EMail(from_field, to, subject, cc, body, html, replyto, xheaders).send()
 
 
 class EMail(object):
-    """Send an Email. from one of your approved senders"""
+    """Create an and Send it from one of your approved senders"""
+    uri = '/send'
+
     def __init__(self, from_field, to, subject, cc=None, body=None, html=None,
                  replyto=None, xheaders=None):
         """Create a new :class:`EMail` object
@@ -46,7 +54,7 @@ class EMail(object):
             as the value (example: x-demonheader=zoom).
         """
         if body is None and html is None:
-            raise errors.DynInvalidArgumentError('body and html', (None, None))
+            raise DynInvalidArgumentError('body and html', (None, None))
         self.from_field = from_field
         self.to = to
         self.subject = subject
@@ -63,5 +71,4 @@ class EMail(object):
         d = self.__dict__
         api_args = {x: d[x] for x in d if d[x] is not None and
                     not hasattr(d[x], '__call__')}
-        uri = '/send'
-        session().execute(uri, 'POST', api_args)
+        session().execute(self.uri, 'POST', api_args)

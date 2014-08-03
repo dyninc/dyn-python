@@ -4,16 +4,13 @@ import logging
 import os
 from time import sleep
 
-import dyn.tm.session
-from dyn.tm.records import *
-
-from .services import *
 from .errors import *
+from .records import *
+from .session import session
+from .services import *
 
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
-
-session = dyn.tm.session.session
 
 RECS = {'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord,
         'CNAME': CNAMERecord, 'DHCID': DHCIDRecord, 'DNAME': DNAMERecord,

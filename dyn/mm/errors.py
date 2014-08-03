@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 """This module contains all Dyn Email Errors. Each Error subclass inherits from
 the base EmailError class which is only ever directly raised if something
 completely unexpected happens
 """
+__all__ = ['EmailKeyError', 'DynInvalidArgumentError',
+           'EmailInvalidArgumentError', 'EmailObjectError']
 __author__ = 'jnappi'
 
 

@@ -1,13 +1,14 @@
+# -*- coding: utf-8 -*-
 """This module contains all Zone related API objects."""
 import logging
 import os
 from time import sleep
 
 import dyn.tm.session
-import dyn.tm.errors as errors
 from dyn.tm.records import *
-from dyn.tm.services import *
-from dyn.tm.errors import DynectInvalidArgumentError
+
+from .services import *
+from .errors import *
 
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
@@ -86,7 +87,7 @@ class Zone(object):
               file_name=None, master_ip=None, timeout=None):
         """Create a new :class:`Zone` object on the DynECT System"""
         if contact is None and file_name is None and master_ip is None:
-            raise errors.DynectInvalidArgumentError('contact', None)
+            raise DynectInvalidArgumentError('contact', None)
         if file_name is not None:
             self._post_with_file(file_name)
         elif master_ip is not None:
@@ -114,7 +115,7 @@ class Zone(object):
         full_path = os.path.abspath(file_name)
         file_size = os.path.getsize(full_path)
         if file_size > 1048576:
-            raise errors.DynectInvalidArgumentError('Zone File Size', file_size,
+            raise DynectInvalidArgumentError('Zone File Size', file_size,
                                                     'Under 1MB')
         else:
             uri = '/ZoneFile/{}/'.format(self.name)
@@ -155,7 +156,7 @@ class Zone(object):
                 self._get()
                 got = True
                 break
-            except errors.DynectGetError:
+            except DynectGetError:
                 sleep(2)
                 count += 1
         if not got and xfer:
@@ -167,7 +168,7 @@ class Zone(object):
             error_labels = ['running', 'waiting', 'failed', 'canceled']
             ok_labels = ['ready', 'unpublished', 'ok']
             if response['data']['status'] in error_labels:
-                raise errors.DynectCreateError(response['msgs'])
+                raise DynectCreateError(response['msgs'])
             elif response['data']['status'] in ok_labels:
                 self._get()
             else:

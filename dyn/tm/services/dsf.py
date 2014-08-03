@@ -1,13 +1,12 @@
+# -*- coding: utf-8 -*-
 """This module contains wrappers for interfacing with every element of a Traffic
 Director (DSF) service.
 """
 import logging
-from dyn.tm import _APIList
-import dyn.tm.session
-from dyn.tm import Active
-from dyn.tm.errors import DynectInvalidArgumentError
-from dyn.tm.records import *
-from dyn.tm.accounts import Notifier
+from ..utils import APIList, Active
+from ..errors import DynectInvalidArgumentError
+from ..records import *
+from ..session import session
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
@@ -19,8 +18,6 @@ __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
            'DSFTXTRecord', 'DSFRecordSet', 'DSFFailoverChain',
            'DSFResponsePool', 'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor',
            'TrafficDirector']
-
-session = dyn.tm.session.session
 
 
 def get_all_dsf_services():
@@ -2018,9 +2015,9 @@ class TrafficDirector(object):
         self.logger = logging.getLogger(str(self.__class__))
         self._label = self._ttl = self._publish = self._response_pools = None
         self._record_sets = self.uri = self._service_id = None
-        self._notifiers = _APIList(session, 'notifiers')
-        self._nodes = _APIList(session, 'nodes')
-        self._rulesets = _APIList(session, 'rulesets')
+        self._notifiers = APIList(session, 'notifiers')
+        self._nodes = APIList(session, 'nodes')
+        self._rulesets = APIList(session, 'rulesets')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -2062,17 +2059,17 @@ class TrafficDirector(object):
         for key, val in data.items():
             if key == 'notifiers':
                 # Don't do anything special with these dicts for now
-                self._notifiers = _APIList(session, 'notifiers', None, val)
+                self._notifiers = APIList(session, 'notifiers', None, val)
             elif key == 'rulesets':
                 # Clear Rulesets
-                self._rulesets = _APIList(session, 'rulesets')
+                self._rulesets = APIList(session, 'rulesets')
                 self._rulesets.uri = None
                 # For each Ruleset returned, create a new DSFRuleset object
                 for ruleset in val:
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
                 # Don't do anything special with these dicts for now
-                self._nodes = _APIList(session, 'nodes', None, val)
+                self._nodes = APIList(session, 'nodes', None, val)
             else:
                 setattr(self, '_' + key, val)
         self.uri = '/DSF/{}/'.format(self._service_id)
@@ -2179,9 +2176,9 @@ class TrafficDirector(object):
         return self._notifiers
     @notifiers.setter
     def notifiers(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._notifiers = _APIList(session, 'notifiers', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._notifiers = APIList(session, 'notifiers', None, value)
+        elif isinstance(value, APIList):
             self._notifiers = value
         self._notifiers.uri = self.uri
 
@@ -2193,9 +2190,9 @@ class TrafficDirector(object):
         return self._rulesets
     @rulesets.setter
     def rulesets(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._rulesets = _APIList(session, 'rulesets', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._rulesets = APIList(session, 'rulesets', None, value)
+        elif isinstance(value, APIList):
             self._rulesets = value
         self._rulesets.uri = self.uri
 
@@ -2206,9 +2203,9 @@ class TrafficDirector(object):
         return self._nodes
     @nodes.setter
     def nodes(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._nodes = _APIList(session, 'nodes', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._nodes = APIList(session, 'nodes', None, value)
+        elif isinstance(value, APIList):
             self._nodes = value
         self._nodes.uri = self.uri
 

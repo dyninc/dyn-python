@@ -14,7 +14,7 @@ setup(
     description='Dyn REST API wrapper',
     author='Jonathan Nappi, Cole Tuininga',
     author_email='jnappi@dyn.com',
-    url='https://github.com/dyninc/Dynect-API-Python-Library',
+    url='https://github.com/moogar0880/dyn-python',
     packages=['dyn', 'dyn/tm', 'dyn/mm', 'dyn/tm/services'],
     classifiers=[
         'Programming Language :: Python :: 2',

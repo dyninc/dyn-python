@@ -76,15 +76,6 @@ class SessionEngine(Singleton):
         self._token = self._conn = self._last_response = None
         self._permissions = None
 
-    def __new__(cls, *args, **kwargs):
-        try:
-            if globals()['SESSION'] is None:
-                globals()['SESSION'] = super(SessionEngine, cls).__new__(cls,
-                                                                         *args)
-        except KeyError:
-            globals()['SESSION'] = super(SessionEngine, cls).__new__(cls, *args)
-        return globals()['SESSION']
-
     @property
     def name(self):
         """A human readable version of the name of this object"""

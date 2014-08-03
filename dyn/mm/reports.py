@@ -1,9 +1,21 @@
-import dyn.mm.session
-import dyn.mm.errors as errors
+# -*- coding: utf-8 -*-
+"""The reports module provides users with an interface to the entire /reporting
+functionality of the Dyn Message Management API. While date ranges are not
+explicitly required for some calls, it is strongly recommended that you include
+a date range in any call that can accepts one. Without a starting and ending
+date, the call will retrieve data for all time, which can take a very long time.
+If you are specifically looking for data over your entire time, it is much more
+efficient to retrieve the data one piece (i.e. month) at a time rather than to
+retrieve it all at once.
+
+Also worth noting is Dyn's delivery data retention policy: "DynECT Email
+Delivery data retention policy states that detail data is kept for 30 days, and
+aggregate (count) data is kept for 18 months. So please be aware as you search
+history, that it is likely no results will appear beyond 30 days."
+"""
+from .session import session
 
 __author__ = 'jnappi'
-
-session = dyn.mm.session.session
 
 
 class _Retrieval(object):
@@ -36,7 +48,7 @@ class _Retrieval(object):
                 hasattr(d[x], '__call__') and x not in self._ignore}
         response = session().execute(self.uri, 'GET', args)
         self.sent = []
-        for sent in response['response']['data']['sent']:
+        for sent in response['sent']:
             self.sent.append(sent)
 
     def refresh(self):

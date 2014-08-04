@@ -6,7 +6,7 @@ from time import sleep
 
 from .errors import *
 from .records import *
-from .session import session
+from .session import DynectSession
 from .services import *
 
 __author__ = 'jnappi'
@@ -29,7 +29,7 @@ def get_all_zones():
     """
     uri = '/Zone/'
     api_args = {'detail': 'Y'}
-    response = session().execute(uri, 'GET', api_args)
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
     zones = []
     for zone in response['data']:
         zones.append(Zone(zone['zone'], api=False, **zone))
@@ -100,7 +100,7 @@ class Zone(object):
                         'rname': self._contact,
                         'ttl': self._ttl,
                         'serial_style': self._serial_style}
-            response = session().execute(self.uri, 'POST', api_args)
+            response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
             self._build(response['data'])
 
     def _post_with_file(self, file_name):
@@ -120,7 +120,7 @@ class Zone(object):
             content = f.read()
             f.close()
             api_args = {'file': content}
-            session().execute(uri, 'POST', api_args)
+            DynectSession.get_session().execute(uri, 'POST', api_args)
             self.__poll_for_get()
 
     def _xfer(self, master_ip, timeout=None):
@@ -129,11 +129,11 @@ class Zone(object):
         """
         uri = '/ZoneTransfer/{}/'.format(self.name)
         api_args = {'master_ip': master_ip}
-        session().execute(uri, 'POST', api_args)
+        DynectSession.get_session().execute(uri, 'POST', api_args)
         time_out = timeout or 10
         count = 0
         while count < time_out:
-            response = session().execute(uri, 'GET', {})
+            response = DynectSession.get_session().execute(uri, 'GET', {})
             if response['status'] == 'running' and response['message'] == '':
                 sleep(60)
                 count += 1
@@ -161,7 +161,7 @@ class Zone(object):
             api_args = {}
             if xfer_master_ip is not None:
                 api_args['master_ip'] = xfer_master_ip
-            response = session().execute(uri, 'GET', api_args)
+            response = DynectSession.get_session().execute(uri, 'GET', api_args)
             error_labels = ['running', 'waiting', 'failed', 'canceled']
             ok_labels = ['ready', 'unpublished', 'ok']
             if response['data']['status'] in error_labels:
@@ -174,7 +174,7 @@ class Zone(object):
     def _get(self):
         """Get an existing :class:`Zone` object from the DynECT System"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -265,7 +265,7 @@ class Zone(object):
         the zone until it is thawed.
         """
         api_args = {'freeze': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         self._build(response['data'])
         if response['status'] == 'success':
             self._status = 'frozen'
@@ -275,7 +275,7 @@ class Zone(object):
         changes to again be made to the zone.
         """
         api_args = {'thaw': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         self._build(response['data'])
         if response['status'] == 'success':
             self._status = 'active'
@@ -286,7 +286,7 @@ class Zone(object):
         to the nameservers.
         """
         api_args = {'publish': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         self._build(response['data'])
 
     def get_notes(self, offset=None, limit=None):
@@ -302,7 +302,7 @@ class Zone(object):
             api_args['offset'] = offset
         if limit:
             api_args['limit'] = limit
-        response = session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']
 
     def add_record(self, name, record_type='A', *args, **kwargs):
@@ -381,7 +381,7 @@ class Zone(object):
         if self.fqdn is not None:
             uri += '{}/'.format(self.fqdn)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
                         response['data'].items() if rec_list != []}
@@ -424,7 +424,7 @@ class Zone(object):
         constructor = RECS[record_type]
         uri = '/{}/{}/{}/'.format(names[record_type], self._name, self.fqdn)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         records = []
         for record in response['data']:
             del record['fqdn']
@@ -445,7 +445,7 @@ class Zone(object):
             return
         api_args = {'detail': 'Y'}
         uri = '/ANYRecord/{}/{}/'.format(self._name, self.fqdn)
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in response['data'].items() if rec_list != []}
         records = {}
@@ -472,7 +472,7 @@ class Zone(object):
         """
         uri = '/Failover/{}/'.format(self._name)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         afos = []
         for failover in response['data']:
             del failover['zone']
@@ -489,7 +489,7 @@ class Zone(object):
         """
         uri = '/DDNS/{}/'.format(self._name)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         ddnses = []
         for ddns in response['data']:
             del ddns['zone']
@@ -505,7 +505,7 @@ class Zone(object):
         """
         uri = '/GSLB/{}/'.format(self._name)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         gslbs = []
         for gslb in response['data']:
             del gslb['zone']
@@ -521,7 +521,7 @@ class Zone(object):
         """
         uri = '/IPTrack/{}/'.format(self._name)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         rdnses = []
         for rdns in response['data']:
             del rdns['zone']
@@ -537,7 +537,7 @@ class Zone(object):
         """
         uri = '/RTTM/{}/'.format(self._name)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         rttms = []
         for rttm in response['data']:
             del rttm['zone']
@@ -574,7 +574,7 @@ class Zone(object):
     def delete(self):
         """Delete this :class:`Zone` and perform nessecary cleanups"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
 class SecondaryZone(object):
@@ -602,7 +602,7 @@ class SecondaryZone(object):
     def _get(self):
         """Get a :class:`SecondaryZone` object from the DynECT System"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -616,7 +616,7 @@ class SecondaryZone(object):
             api_args['contact_nickname'] = self._contact_nickname
         if tsig_key_name:
             api_args['tsig_key_name'] = self._tsig_key_name
-        response = session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -638,7 +638,7 @@ class SecondaryZone(object):
     def masters(self, value):
         self._masters = value
         api_args = {'masters': self._masters}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -652,7 +652,7 @@ class SecondaryZone(object):
     def contact_nickname(self, value):
         self._contact_nickname = value
         api_args = {'contact_nickname': self._contact_nickname}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -666,21 +666,21 @@ class SecondaryZone(object):
     def tsig_key_name(self, value):
         self._tsig_key_name = value
         api_args = {'tsig_key_name': self._tsig_key_name}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
     def activate(self):
         """Activates this secondary zone"""
         api_args = {'activate': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
     def deactivate(self):
         """Deactivates this secondary zone"""
         api_args = {'deactivate': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -689,7 +689,7 @@ class SecondaryZone(object):
         Dyn's Managed DNS
         """
         api_args = {'retransfer': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -697,7 +697,7 @@ class SecondaryZone(object):
         """Delete this :class:`SecondaryZone`"""
         api_args = {}
         uri = '/Zone/{}/'.format(self._zone)
-        session().execute(uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
     def __str__(self):
         """str override"""
@@ -777,7 +777,7 @@ class Node(object):
         if self.fqdn is not None:
             uri += '{}/'.format(self.fqdn)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in response['data'].items() if rec_list != []}
         records = {}
@@ -820,7 +820,7 @@ class Node(object):
         uri = '/{}/{}/{}/'.format(names[record_type], self.zone,
                                   self.fqdn)
         api_args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         records = []
         for record in response['data']:
             del record['fqdn']
@@ -839,7 +839,7 @@ class Node(object):
             return
         api_args = {'detail': 'Y'}
         uri = '/ANYRecord/{}/{}/'.format(self.zone, self.fqdn)
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in response['data'].items() if rec_list != []}
         records = {}
@@ -863,7 +863,7 @@ class Node(object):
         underneath this node
         """
         uri = '/Node/{}/{}'.format(self.zone, self.fqdn)
-        session().execute(uri, 'DELETE', {})
+        DynectSession.get_session().execute(uri, 'DELETE', {})
 
     def __str__(self):
         """str override"""

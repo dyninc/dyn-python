@@ -8,7 +8,7 @@ Management  service to your zone. All other users should use Traffic Director
 import logging
 
 from ..records import *
-from ..session import session
+from ..session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['GeoARecord', 'GeoAAAARecord', 'GeoCERTRecord', 'GeoCNAMERecord',
@@ -502,7 +502,7 @@ class GeoRegionGroup(object):
 
     def _get(self):
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -512,7 +512,7 @@ class GeoRegionGroup(object):
 
     def delete(self):
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
 class Geo(object):
@@ -588,7 +588,7 @@ class Geo(object):
         if self._ttl:
             api_args['ttl'] = self._ttl
         api_args['nodes'] = nodes
-        response = session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response['data'].items():
             if key == 'groups':
                 pass
@@ -600,7 +600,7 @@ class Geo(object):
     def _get(self):
         """Get an existing :class:`Geo` service from the DynECT System"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
         for key, val in response['data'].items():
             if key == 'groups':
                 pass
@@ -611,7 +611,7 @@ class Geo(object):
 
     def _update(self, api_args):
         """Private Update method"""
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         for key, val in response['data'].items():
             if key == 'groups':
                 pass
@@ -661,4 +661,4 @@ class Geo(object):
     def delete(self):
         """Delete this :class:`Geo` service from the DynECT System"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

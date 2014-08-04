@@ -3,7 +3,7 @@ import logging
 
 from ..utils import Active
 from ..errors import DynectInvalidArgumentError
-from ..session import session
+from ..session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['HealthMonitor', 'ActiveFailover']
@@ -80,7 +80,7 @@ class HealthMonitor(object):
         """
         api_args = {}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        respnose = session().execute(uri, 'GET', api_args)
+        respnose = DynectSession.get_session().execute(uri, 'GET', api_args)
         return respnose['data']['status']
 
     @property
@@ -94,7 +94,7 @@ class HealthMonitor(object):
         self._protocol = value
         api_args = {'monitor': {'protocol': self._protocol}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def interval(self):
@@ -107,7 +107,7 @@ class HealthMonitor(object):
         self._interval = value
         api_args = {'monitor': {'interval': self._interval}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def retries(self):
@@ -120,7 +120,7 @@ class HealthMonitor(object):
         self._retries = value
         api_args = {'monitor': {'retries': self._retries}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def timeout(self):
@@ -133,7 +133,7 @@ class HealthMonitor(object):
         self._timeout = value
         api_args = {'monitor': {'timeout': self._timeout}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def port(self):
@@ -144,7 +144,7 @@ class HealthMonitor(object):
         self._port = value
         api_args = {'monitor': {'port': self._port}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def path(self):
@@ -155,7 +155,7 @@ class HealthMonitor(object):
         self._path = value
         api_args = {'monitor': {'path': self._path}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def host(self):
@@ -166,7 +166,7 @@ class HealthMonitor(object):
         self._host = value
         api_args = {'monitor': {'host': self._host}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def header(self):
@@ -179,7 +179,7 @@ class HealthMonitor(object):
         self._header = value
         api_args = {'monitor': {'header': self._header}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     @property
     def expected(self):
@@ -193,7 +193,7 @@ class HealthMonitor(object):
         self._expected = value
         api_args = {'monitor': {'expected': self._expected}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        session().execute(uri, 'PUT', api_args)
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
 
 
 class ActiveFailover(object):
@@ -252,7 +252,7 @@ class ActiveFailover(object):
     def _get(self):
         """Build an object around an existing DynECT Active Failover Service"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
         self._build(response['data'])
 
     def _post(self, address, failover_mode, failover_data, monitor,
@@ -287,7 +287,7 @@ class ActiveFailover(object):
                          'failover_data': self._failover_data,
                          'monitor': self.monitor.to_json(),
                          'contact_nickname': self._contact_nickname}
-        response = session().execute(self.uri, 'POST', self.api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST', self.api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -304,7 +304,7 @@ class ActiveFailover(object):
         """Update this :class:`ActiveFailover`, via the API, with the args in
         api_args
         """
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         self._build(response['data'])
 
     @property
@@ -505,4 +505,4 @@ class ActiveFailover(object):
     def delete(self):
         """Delete this :class:`ActiveFailover` service from the Dynect System"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

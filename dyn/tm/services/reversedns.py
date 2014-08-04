@@ -2,7 +2,7 @@
 import logging
 
 from ..utils import Active
-from ..session import session
+from ..session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['ReverseDNS']
@@ -58,7 +58,7 @@ class ReverseDNS(object):
         if ttl is not None:
             api_args['ttl'] = self._ttl
         uri = '/IPTrack/{}/{}/'.format(self._zone, self._fqdn)
-        response = session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
         self.uri = '/IPTrack/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                self._iptrack_id)
@@ -69,7 +69,7 @@ class ReverseDNS(object):
         uri = '/IPTrack/{}/{}/{}/'.format(self._zone, self._fqdn,
                                           self._iptrack_id)
         api_args = {}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         self._build(response['data'])
         self.uri = '/IPTrack/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                self._iptrack_id)
@@ -78,7 +78,7 @@ class ReverseDNS(object):
         """Update this object by making a PUT API call with the provided
         api_args
         """
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -200,4 +200,4 @@ class ReverseDNS(object):
     def delete(self):
         """Delete this ReverseDNS service from the DynECT System"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

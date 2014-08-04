@@ -1,10 +1,7 @@
 .. _dyn-mm:
 
-dyn.mm (Message Management) (BETA) Module
-=========================================
-WARNING: The dyn.mm module is still very much in development and is not complete
-and has not been thuroughly tested.
-
+dyn.mm (Message Management) Module
+==================================
 The dyn.mm (MM) module provides access to all of the Message Management
 resources provided by
 `Dyn's Message Management REST API <https://help.dynect.net/api/>`_.

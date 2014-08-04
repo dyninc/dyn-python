@@ -643,7 +643,7 @@ class RTTM(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._performance_monitor = None
         self._contact_nickname = self._active = None
-        self._region = APIList(session, 'region')
+        self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -729,7 +729,7 @@ class RTTM(object):
         """Build the neccesary substructures under this :class:`RTTM`"""
         for key, val in data.items():
             if key == 'region':
-                self._region = APIList(session, 'region')
+                self._region = APIList(DynectSession.get_session, 'region')
                 for region in val:
                     code = region.pop('region_code', None)
                     pool = region.pop('pool', None)

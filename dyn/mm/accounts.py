@@ -102,7 +102,7 @@ class Account(object):
             self._get()
         else:
             self._post(*args, **kwargs)
-        self._xheaders = None
+        self._xheaders = APIDict(session, '/accounts/xheaders')
 
     def _post(self, password, companyname, phone, address=None, city=None,
               state=None, zipcode=None, country=None, timezone=None,

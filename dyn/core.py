@@ -84,6 +84,15 @@ class SessionEngine(Singleton):
         self._token = self._conn = self._last_response = None
         self._permissions = None
 
+    @classmethod
+    def get_session(cls):
+        """Return the current session for this Session type or None if there is
+        not an active session
+        """
+        cur_thread = threading.current_thread()
+        key = getattr(cls, '__metakey__')
+        return cls._instances.get(key, {}).get(cur_thread, None)
+
     @property
     def name(self):
         """A human readable version of the name of this object"""
@@ -204,11 +213,10 @@ class SessionEngine(Singleton):
         # Make sure the method is valid
         self._validate_method(method)
 
-        # Prepare arguments to send to API
-        raw_args, args, uri = self._prepare_arguments(args, method, uri)
-
         self.logger.debug('uri: {}, method: {}, args: {}'.format(uri, method,
                                                                  args))
+        # Prepare arguments to send to API
+        raw_args, args, uri = self._prepare_arguments(args, method, uri)
         # Send the command and deal with results
         self.send_command(uri, method, args)
 

@@ -78,7 +78,8 @@ class ReverseDNS(object):
         """Update this object by making a PUT API call with the provided
         api_args
         """
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):

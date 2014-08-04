@@ -252,7 +252,8 @@ class ActiveFailover(object):
     def _get(self):
         """Build an object around an existing DynECT Active Failover Service"""
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _post(self, address, failover_mode, failover_data, monitor,
@@ -287,7 +288,8 @@ class ActiveFailover(object):
                          'failover_data': self._failover_data,
                          'monitor': self.monitor.to_json(),
                          'contact_nickname': self._contact_nickname}
-        response = DynectSession.get_session().execute(self.uri, 'POST', self.api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       self.api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -304,7 +306,8 @@ class ActiveFailover(object):
         """Update this :class:`ActiveFailover`, via the API, with the args in
         api_args
         """
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property

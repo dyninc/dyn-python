@@ -52,7 +52,8 @@ class DynamicDNS(object):
         self.uri = '/DDNS/{}/{}/{}/'.format(self._zone, self._fqdn,
                                             self._record_type)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             if key == 'active':
                 self._active = Active(val)
@@ -71,7 +72,8 @@ class DynamicDNS(object):
         if user:
             api_args['user'] = self._user
             api_args['full_setup'] = True
-        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         for key, val in response['data'].items():
             if user:
                 if key == 'ddns':
@@ -152,28 +154,32 @@ class DynamicDNS(object):
     def address(self, value):
         self._address = value
         api_args = {'address': self._address}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
     def activate(self):
         """Activate this Dynamic DNS service"""
         api_args = {'activate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
     def deactivate(self):
         """Deactivate this Dynamic DNS service"""
         api_args = {'deactivate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
     def reset(self):
         """Resets the abuse count on this Dynamic DNS service"""
         api_args = {'reset': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 

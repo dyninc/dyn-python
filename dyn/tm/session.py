@@ -9,15 +9,6 @@ from ..core import SessionEngine
 from .errors import *
 
 
-def session():
-    """Accessor for the current Singleton DynectSession"""
-    s = DynectSession(None, None, None)
-    if s.customer is None:
-        del s
-        return None
-    return s
-
-
 class DynectSession(SessionEngine):
     """Base object representing a DynectSession Session"""
     __metakey__ = 'bf7886ea-c61d-40df-8c7b-4241ebed0544'

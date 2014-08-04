@@ -25,6 +25,14 @@ elif sys.version_info[0] == 3:
 from dyn import __version__
 
 
+def cleared_class_dict(dict_obj):
+    """Return a cleared dict of class attributes. The items cleared are any
+    fields which evaluate to None, and any methods
+    """
+    return {x: dict_obj[x] for x in dict_obj if dict_obj[x] is not None and
+            not hasattr(dict_obj[x], '__call__')}
+
+
 class _Singleton(type):
     """A :class:`Singleton` type for implementing a true Singleton design
     pattern, cleanly, using metaclasses

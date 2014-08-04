@@ -6,7 +6,10 @@ control over the messages you're sending.
 """
 from .errors import DynInvalidArgumentError
 from .session import session
+from ..core import cleared_class_dict
 
+__all__ = ['send_message', 'EMail', 'HTMLEMail', 'TemplateEMail',
+           'HTMLTemplateEMail']
 __author__ = 'jnappi'
 
 
@@ -14,7 +17,7 @@ def send_message(from_field, to, subject, cc=None, body=None, html=None,
                  replyto=None, xheaders=None):
     """Create and send an email on the fly. For information on the arguments
     accepted by this function see the documentation for
-    :class:`dyn.mm.message.EMail`
+    :class:`~dyn.mm.message.EMail`
     """
     EMail(from_field, to, subject, cc, body, html, replyto, xheaders).send()
 
@@ -53,22 +56,98 @@ class EMail(object):
             Pass the X-header's name as the field name and the X-header's value
             as the value (example: x-demonheader=zoom).
         """
-        if body is None and html is None:
-            raise DynInvalidArgumentError('body and html', (None, None))
         self.from_field = from_field
         self.to = to
         self.subject = subject
         self.cc = cc
-        self.body = body
-        self.html = html
+        self.bodytext = body
+        self.htmltext = html
         self.replyto = replyto
         self.xheaders = xheaders
 
-    def send(self):
+    def send(self, content=None):
         """Send the content of this :class:`Email` object to the provided list
         of recipients.
+
+        :param content: The optional content field can be used to overrwrite, or
+            to specify the actual content of the body of the message. Note: If
+            *content*, this instance's body, and this instance's html fields are
+            all *None*, then an
+            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
-        d = self.__dict__
-        api_args = {x: d[x] for x in d if d[x] is not None and
-                    not hasattr(d[x], '__call__')}
+        if content is None and self.body is None and self.html is None:
+            raise DynInvalidArgumentError('body and html', (None, None))
+        api_args = cleared_class_dict(self.__dict__)
+        if content is not None:
+            api_args['body'] = content
         session().execute(self.uri, 'POST', api_args)
+
+
+class HTMLEMail(EMail):
+    """:class:`~dyn.mm.message.EMail` subclass with an overridden send method
+    for specifying html content on the fly
+    """
+    def send(self, content=None):
+        """Send the content of this :class:`Email` object to the provided list
+        of recipients.
+
+        :param content: The optional content field can be used to overrwrite, or
+            to specify the actual content of the html of the message. Note: If
+            *content*, this instance's body, and this instance's html fields are
+            all *None*, then an
+            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+        """
+        if content is None and self.body is None and self.html is None:
+            raise DynInvalidArgumentError('body and html', (None, None))
+        api_args = cleared_class_dict(self.__dict__)
+        if content is not None:
+            api_args['html'] = content
+        session().execute(self.uri, 'POST', api_args)
+
+
+class TemplateEMail(EMail):
+    """:class:`~dyn.mm.message.EMail` subclass which treats it's body field as
+    a template before sending.
+    """
+    def send(self, formatters=None):
+        """Send the content of this :class:`Email` object to the provided list
+        of recipients.
+
+        :param formatters: The optional content field can be used to overrwrite, or
+            to specify the actual content of the html of the message. Note: If
+            *content*, this instance's body, and this instance's html fields are
+            all *None*, then an
+            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+        """
+        if formatters is None:
+            raise DynInvalidArgumentError('send content', None)
+
+        if self.body is None and self.html is None:
+            raise DynInvalidArgumentError('body and html', (None, None))
+
+        for formatter in formatters:
+            super(TemplateEMail, self).send(self.body % formatter)
+
+
+class HTMLTemplateEMail(HTMLEMail):
+    """:class:`~dyn.mm.message.EMail` subclass which treats it's body field as
+    a template before sending.
+    """
+    def send(self, formatters=None):
+        """Send the content of this :class:`Email` object to the provided list
+        of recipients.
+
+        :param formatters: The optional content field can be used to overrwrite, or
+            to specify the actual content of the html of the message. Note: If
+            *content*, this instance's body, and this instance's html fields are
+            all *None*, then an
+            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+        """
+        if formatters is None:
+            raise DynInvalidArgumentError('send content', None)
+
+        if self.body is None and self.html is None:
+            raise DynInvalidArgumentError('body and html', (None, None))
+
+        for formatter in formatters:
+            super(HTMLTemplateEMail, self).send(self.html % formatter)

@@ -47,6 +47,9 @@ class _Singleton(type):
                 # passed to class __init__ method via type.__call__
                 cur_thread: super(_Singleton, cls).__call__(*args, **kwargs)
             }
+        elif key in cls._instances and cur_thread not in cls._instances[key]:
+            cls._instances[key][cur_thread] = \
+                super(_Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[key][cur_thread]
 
 
@@ -92,6 +95,20 @@ class SessionEngine(Singleton):
         cur_thread = threading.current_thread()
         key = getattr(cls, '__metakey__')
         return cls._instances.get(key, {}).get(cur_thread, None)
+
+    @classmethod
+    def close_session(cls):
+        """Remove the current session from the dict of instances and return it.
+        If there was not currently a session being stored, return None. If,
+        after removing this session, there is nothing under the current key,
+        delete that key's entry in the _instances dict.
+        """
+        cur_thread = threading.current_thread()
+        key = getattr(cls, '__metakey__')
+        closed = cls._instances.get(key, {}).pop(cur_thread, None)
+        if len(cls._instances.get(key, {})) == 0:
+            del cls._instances[key]
+        return closed
 
     @property
     def name(self):

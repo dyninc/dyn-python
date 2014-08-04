@@ -14,25 +14,14 @@ except ImportError:
     except ImportError:
         sys.exit('Could not find json or simplejson libraries.')
 if sys.version_info[0] == 2:
-    from urllib import urlencode
+    from urllib import urlencode, pathname2url
 elif sys.version_info[0] == 3:
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, pathname2url
 # API Libs
 from ..core import SessionEngine
 from .errors import *
 
 __author__ = 'jnappi'
-
-
-def session():
-    """Accessor for the current MMSession, if there isn't currently an
-    MMSession, return None.
-    """
-    s = MMSession(None)
-    if s.apikey is None:
-        del s
-        return None
-    return s
 
 
 class MMSession(SessionEngine):
@@ -68,9 +57,11 @@ class MMSession(SessionEngine):
             args['apikey'] = self.apikey
 
         if method == 'GET':
+            if '%' not in uri:
+                uri = pathname2url(uri)
             uri = '?'.join([uri, urlencode(args)])
             return {}, '', uri
-        return args, json.dumps(args), uri
+        return args, urlencode(args), uri
 
     def _handle_response(self, response, uri, method, raw_args, final):
         """Handle the processing of the API's response"""

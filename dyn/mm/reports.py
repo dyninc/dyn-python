@@ -13,26 +13,35 @@ Delivery data retention policy states that detail data is kept for 30 days, and
 aggregate (count) data is kept for 18 months. So please be aware as you search
 history, that it is likely no results will appear beyond 30 days."
 """
+from datetime import datetime
+
+from ..core import cleared_class_dict
+from .utils import str_to_date, date_to_str
 from .session import MMSession
 
 __author__ = 'jnappi'
 
 
 class _Retrieval(object):
-    def __init__(self, starttime, endtime, startindex=0, sender=None,
+    """The base Report type. Because all reports have basically the same exact
+    structure this class will handle all the heavy lifting. Really the only
+    thing that will change between classes is the URI.
+    """
+    uri = ''
+    def __init__(self, starttime, endtime=None, startindex=0, sender=None,
                  xheaders=None):
         """Create a :class:`Sent` object to perform the specified analytics
         searches against the Dyn Message Management API
 
-        :param starttime: Start date/time range in full ISO 8601 format
-        :param endtime: End date/time range in full ISO 8601 format
+        :param starttime: Start as a datetime.datetime object
+        :param endtime: End as a datetime.datetime object. Defaults to
+            the value of datetime.datetime.now()
         :param startindex: Starting index value
         :param sender: Email address of sender to filter by
         :param xheaders: Name of custom X-header to search on
         """
-        self.uri = ''
         self.starttime = starttime
-        self.endtime = endtime
+        self.endtime = endtime or datetime.now()
         self.startindex = startindex
         self.sender = sender
         self.xheaders = xheaders
@@ -43,12 +52,15 @@ class _Retrieval(object):
 
     def _update(self):
         """Private update method"""
-        d = self.__dict__
-        args = {x: d[x] for x in d if x is not None and not
-                hasattr(d[x], '__call__') and x not in self._ignore}
+        d = cleared_class_dict(self.__dict__)
+        args = {x: d[x] for x in d if x not in self._ignore}
+        args['starttime'] = date_to_str(args['starttime'])
+        args['endtime'] = date_to_str(args['endtime'])
         response = MMSession.get_session().execute(self.uri, 'GET', args)
         self.sent = []
         for sent in response['sent']:
+            if 'date' in sent:
+                sent['date'] = str_to_date(sent['date'])
             self.sent.append(sent)
 
     def refresh(self):
@@ -65,11 +77,10 @@ class _Retrieval(object):
         """Return the result of a /reports/sent/count API call"""
         if self._count is None:
             uri = ''.join([self.uri, '/count/'])
-            d = self.__dict__
-            args = {x: d[x] for x in d if x is not None and not
-                    hasattr(d[x], '__call__') and x != 'startindex'}
+            d = cleared_class_dict(self.__dict__)
+            args = {x: d[x] for x in d if x != 'startindex'}
             response = MMSession.get_session().execute(uri, 'GET', args)
-            self._count = int(response['response']['data']['count'])
+            self._count = response['count']
         return self._count
     @count.setter
     def count(self, value):
@@ -77,84 +88,97 @@ class _Retrieval(object):
 
 
 class _Unique(_Retrieval):
-    pass
+    """A subclass of _Retrieval which accepts some additional arguments and
+    provides access to the "unique" query
+    """
+    def __init__(self, starttime, endtime=None, startindex=0, sender=None,
+                 xheaders=None, domain=None, recipient=None):
+        super(_Unique, self).__init__(starttime, endtime, startindex, sender,
+                                      xheaders)
+        self.domain = domain
+        self.recipient = recipient
+        self._unique = self._unique_count = None
+
+    @property
+    def unique(self):
+        """A listing of all the unique interactions that occured in the provided
+        time frame
+        """
+        if self._unique is None:
+            uri = '/'.join([self.uri, 'unique'])
+            d = cleared_class_dict(self.__dict__)
+            args = {x: d[x] for x in d if x != 'startindex'}
+            response = MMSession.get_session().execute(uri, 'GET', args)
+            self._count = response['unique']
+        return self._unique
+    @unique.setter
+    def unique(self, value):
+        pass
+
+    @property
+    def unique_count(self):
+        """A Count of all the unique interactions that occured in the provided
+        time frame
+        """
+        if self._unique_count is None:
+            uri = '/'.join([self.uri, 'count', 'unique'])
+            d = cleared_class_dict(self.__dict__)
+            args = {x: d[x] for x in d if x != 'startindex'}
+            response = MMSession.get_session().execute(uri, 'GET', args)
+            self._count = response['unique']
+        return self._unique_count
+    @unique_count.setter
+    def unique_count(self, value):
+        pass
 
 
 class Sent(_Retrieval):
-    def __init__(self, *args, **kwargs):
-        """Create a :class:`Sent` object to perform the specified analytics
-        searches against the Dyn Message Management API
-
-        :param starttime: Start date/time range in full ISO 8601 format
-        :param endtime: End date/time range in full ISO 8601 format
-        :param startindex: Starting index value
-        :param sender: Email address of sender to filter by
-        :param xheaders: Name of custom X-header to search on
-        """
-        self.uri = '/reports/sent'
-        super(Sent, self).__init__(*args, **kwargs)
+    """Returns all emails sent through the specified account for the specified
+    date range, optionally filtered by sender.
+    """
+    uri = '/reports/sent'
 
 
 class Delivered(_Retrieval):
-    def __init__(self, *args, **kwargs):
-        """Create a :class:`Sent` object to perform the specified analytics
-        searches against the Dyn Message Management API
-
-        :param starttime: Start date/time range in full ISO 8601 format
-        :param endtime: End date/time range in full ISO 8601 format
-        :param startindex: Starting index value
-        :param sender: Email address of sender to filter by
-        :param xheaders: Name of custom X-header to search on
-        """
-        self.uri = '/reports/delivered'
-        super(Delivered, self).__init__(*args, **kwargs)
+    """Returns all emails sent through the specified account that were
+    successfully delivered for the specified date range, optionally filtered by
+    sender. Including a date range is highly recommended.
+    """
+    uri = '/reports/delivered'
 
 
 class Bounce(_Retrieval):
-    def __init__(self, *args, **kwargs):
-        """Create a :class:`Sent` object to perform the specified analytics
-        searches against the Dyn Message Management API
-
-        :param starttime: Start date/time range in full ISO 8601 format
-        :param endtime: End date/time range in full ISO 8601 format
-        :param startindex: Starting index value
-        :param sender: Email address of sender to filter by
-        :param xheaders: Name of custom X-header to search on
-        """
-        self.uri = '/reports/bounces'
-        super(Bounce, self).__init__(*args, **kwargs)
+    """Returns all email bounces for the specified account for the specified
+    date range, optionally filtered by sender.
+    """
+    uri = '/reports/bounces'
 
 
 class Complaint(_Retrieval):
-    def __init__(self, *args, **kwargs):
-        """Create a :class:`Sent` object to perform the specified analytics
-        searches against the Dyn Message Management API
-
-        :param starttime: Start date/time range in full ISO 8601 format
-        :param endtime: End date/time range in full ISO 8601 format
-        :param startindex: Starting index value
-        :param sender: Email address of sender to filter by
-        :param xheaders: Name of custom X-header to search on
-        """
-        self.uri = '/reports/complaints'
-        super(Complaint, self).__init__(*args, **kwargs)
+    """Returns all spam complaints that the specified account received for the
+    specified date range, optionally filtered by sender. Including a date range
+    is highly recommended.
+    """
+    uri = '/reports/complaints'
 
 
 class Issue(_Retrieval):
-    def __init__(self, *args, **kwargs):
-        """Create a :class:`Sent` object to perform the specified analytics
-        searches against the Dyn Message Management API
-
-        :param starttime: Start date/time range in full ISO 8601 format
-        :param endtime: End date/time range in full ISO 8601 format
-        :param startindex: Starting index value
-        :param sender: Email address of sender to filter by
-        :param xheaders: Name of custom X-header to search on
-        """
-        self.uri = '/reports/issues'
-        super(Issue, self).__init__(*args, **kwargs)
+    """Returns all issues concerning the specified account for the specified
+    date range. Including a date range is highly recommended.
+    """
+    uri = '/reports/issues'
 
 
-class Interaction(object):
-    # TODO: https://help.dynect.net/api/methods/reports/interactions/
-    pass
+class Opens(_Unique):
+    """Returns total number of opens (or unique opens) for the specified account
+    for the specified date range. Including a date range is highly recommended.
+    """
+    uri = '/reports/opens'
+
+
+class Clicks(_Unique):
+    """Returns total number of clicks (or unique clicks) for the specified
+    account for the specified date range. Including a date range is highly
+    recommended.
+    """
+    uri = '/reports/clicks'

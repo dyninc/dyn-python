@@ -260,13 +260,15 @@ class GSLBRegionPoolEntry(object):
         System
         """
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
     def _update(self, api_args):
         """Private update method"""
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -452,7 +454,8 @@ class GSLBRegion(object):
     def _get(self):
         """Get an existing :class:`GSLBRegion` object"""
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             if key == 'pool':
                 for pool in val:
@@ -469,7 +472,8 @@ class GSLBRegion(object):
 
     def _update(self, api_args):
         """Private udpate method for PUT commands"""
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key == 'pool':
                 for pool in val:
@@ -623,7 +627,7 @@ class GSLB(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._contact_nickname = None
         self._active = self._status = self.active = None
-        self._region = APIList(session, 'region')
+        self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -667,13 +671,15 @@ class GSLB(object):
             api_args['monitor'] = self._monitor.to_json()
             self._monitor.zone = self._zone
             self._monitor.fqdn = self._fqdn
-        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
 
     def _get(self):
         """Get an existing :class:`GSLB` service object"""
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data, region=True):
@@ -687,7 +693,7 @@ class GSLB(object):
         for key, val in data.items():
             if key == 'region':
                 if region:
-                    self._region = APIList(session, 'region')
+                    self._region = APIList(DynectSession.get_session, 'region')
                     for region in val:
                         region_code = region.pop('region_code', None)
                         self._region.append(GSLBRegion(self._zone, self._fqdn,
@@ -706,13 +712,15 @@ class GSLB(object):
     def activate(self):
         """Activate this :class:`GSLB` service on the DynECT System"""
         api_args = {'activate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     def deactivate(self):
         """Deactivate this :class:`GSLB` service on the DynECT System"""
         api_args = {'deactivate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     def recover(self, address=None):
@@ -725,7 +733,8 @@ class GSLB(object):
             api_args['address'] = address
         else:
             api_args['recover'] = True
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -742,7 +751,8 @@ class GSLB(object):
                                              self.valid_auto_recover)
         self._auto_recover = value
         api_args = {'auto_recover': self._auto_recover}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -751,7 +761,8 @@ class GSLB(object):
         'trouble', or 'failover'
         """
         api_args = {}
-        respnose = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        respnose = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._status = respnose['data']['status']
         return self._status
     @status.setter
@@ -792,7 +803,8 @@ class GSLB(object):
             raise DynectInvalidArgumentError('ttl', value, self.valid_ttls)
         self._ttl = value
         api_args = {'ttl': self._ttl}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -808,7 +820,8 @@ class GSLB(object):
                                              self.valid_notify_events)
         self._notify_events = value
         api_args = {'notify_events': self._notify_events}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -821,7 +834,8 @@ class GSLB(object):
     def syslog_server(self, value):
         self._syslog_server = value
         api_args = {'syslog_server': self._syslog_server}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -832,7 +846,8 @@ class GSLB(object):
     def syslog_port(self, value):
         self._syslog_port = value
         api_args = {'syslog_port': self._syslog_port}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -843,7 +858,8 @@ class GSLB(object):
     def syslog_ident(self, value):
         self._syslog_ident = value
         api_args = {'syslog_ident': self._syslog_ident}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -862,7 +878,8 @@ class GSLB(object):
                                              self.valid_syslog_facility)
         self._syslog_facility = value
         api_args = {'syslog_facility': self._syslog_facility}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     @property
@@ -872,7 +889,8 @@ class GSLB(object):
     @region.setter
     def region(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
-            self._region = APIList(session, 'region', None, value)
+            self._region = APIList(DynectSession.get_session, 'region', None,
+                                   value)
         elif isinstance(value, APIList):
             self._region = value
         self._region.uri = self.uri
@@ -888,7 +906,8 @@ class GSLB(object):
             self._monitor = value
             api_args = {'performance_monitor':
                         self._monitor.to_json()}
-            response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+            response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                           api_args)
             self._build(response['data'], region=False)
 
     @property
@@ -901,7 +920,8 @@ class GSLB(object):
     def contact_nickname(self, value):
         self._contact_nickname = value
         api_args = {'contact_nickname': self._contact_nickname}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'], region=False)
 
     def delete(self):

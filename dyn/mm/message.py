@@ -104,22 +104,27 @@ class HTMLEMail(EMail):
         api_args = cleared_class_dict(self.__dict__)
         if content is not None:
             api_args['html'] = content
+        from_field = api_args.pop('from_field')
+        api_args['from'] = from_field
         MMSession.get_session().execute(self.uri, 'POST', api_args)
 
 
 class TemplateEMail(EMail):
-    """:class:`~dyn.mm.message.EMail` subclass which treats it's body field as
-    a template before sending.
+    """:class:`~dyn.mm.message.EMail` subclass which treats it's bodytext
+    attribute as a template. Allowing you to send out chains of emails by
+    only writing the templated email once, and then specifying an iterable with
+    the formatting content at send time.
     """
     def send(self, formatters=None):
         """Send the content of this :class:`Email` object to the provided list
         of recipients.
 
-        :param formatters: The optional content field can be used to overrwrite, or
-            to specify the actual content of the html of the message. Note: If
-            *content*, this instance's body, and this instance's html fields are
-            all *None*, then an
-            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+        :param formatters: Any iterable containing the data you wish inserted
+            into your template. Unlike in the :class:`~dyn.mm.message.EMail`
+            class this field is not optional and will raise an
+            :exception:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
+            This exception will also be raised if this instances bodytext
+            attribute has not also been set.
         """
         if formatters is None:
             raise DynInvalidArgumentError('send content', None)
@@ -132,18 +137,23 @@ class TemplateEMail(EMail):
 
 
 class HTMLTemplateEMail(HTMLEMail):
-    """:class:`~dyn.mm.message.EMail` subclass which treats it's body field as
-    a template before sending.
+    """Similar to the :class:`~dyn.mm.message.TemplateEMail` class the
+    :class:`~dyn.mm.message.HTMLEMail` subclass which treats it's htmltext
+    attribute as a template. Allowing you to send out chains of emails by
+    only writing the templated html email once, and then specifying an iterable
+    with the formatting content at send time.
     """
     def send(self, formatters=None):
         """Send the content of this :class:`Email` object to the provided list
         of recipients.
 
-        :param formatters: The optional content field can be used to overrwrite, or
-            to specify the actual content of the html of the message. Note: If
-            *content*, this instance's body, and this instance's html fields are
-            all *None*, then an
-            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+        :param formatters: Any iterable containing the data you wish inserted
+            into your html template. Unlike in the
+            :class:`~dyn.mm.message.HTMLEMail` class this field is not optional
+            and will raise an
+            :exception:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
+            This exception will also be raised if this instances htmltext
+            attribute has not also been set.
         """
         if formatters is None:
             raise DynInvalidArgumentError('send content', None)

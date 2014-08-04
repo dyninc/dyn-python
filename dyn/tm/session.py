@@ -142,7 +142,7 @@ class DynectSession(SessionEngine):
     def log_out(self):
         """Log the current session out from the DynECT API system"""
         self.execute('/Session/', 'DELETE', {})
-        globals().pop('SESSION', None)
+        self.close_session()
 
     @property
     def auth_data(self):

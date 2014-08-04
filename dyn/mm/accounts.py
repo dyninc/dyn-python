@@ -102,7 +102,7 @@ class Account(object):
             self._get()
         else:
             self._post(*args, **kwargs)
-        self._xheaders = APIDict(session, '/accounts/xheaders')
+        self._xheaders = APIDict(MMSession.get_session, '/accounts/xheaders')
 
     def _post(self, password, companyname, phone, address=None, city=None,
               state=None, zipcode=None, country=None, timezone=None,
@@ -156,7 +156,7 @@ class Account(object):
     @xheaders.setter
     def xheaders(self, value):
         if isinstance(value, dict) and not isinstance(value, APIDict):
-            new_xheaders = APIDict(session)
+            new_xheaders = APIDict(MMSession.get_session)
             for key, val in value.items():
                 new_xheaders[key] = val
             new_xheaders.uri = '/accounts/xheaders'
@@ -181,7 +181,7 @@ class Account(object):
         uri = '/accounts/xheaders'
         api_args = {}
         response = MMSession.get_session().execute(uri, 'GET', api_args)
-        xheaders = APIDict(session)
+        xheaders = APIDict(MMSession.get_session)
         for key, val in response.items():
             xheaders[key] = val
         xheaders.uri = '/accounts/xheaders'

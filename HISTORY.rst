@@ -1,5 +1,18 @@
 Release History
 ---------------
+1.0.0 (TBD)
++++++++++++
+
+* Revamed how sessions are structured to support the new SessionEngine interface
+* Message Management is now out of BETA due to many bug fixes and additional testing
+* You can now have one SessionEngine instance (Singleton) per Thread
+* Added File Encoding definitions to source code
+* Updated dyn.mm docs to actually include code samples
+* Adding some general information on sessions, primarily for my own sanity
+* Added EMail subclasses for easier formatting/sending of EMail messages
+* mm.session.session and tm.session.session functions have been replaced by the SessionEngine get_session class method
+* Completed the dyn.mm.reports module
+
 0.9.11 (2014-07-25)
 +++++++++++++++++++
 

@@ -13,7 +13,7 @@ Delivery data retention policy states that detail data is kept for 30 days, and
 aggregate (count) data is kept for 18 months. So please be aware as you search
 history, that it is likely no results will appear beyond 30 days."
 """
-from .session import session
+from .session import MMSession
 
 __author__ = 'jnappi'
 
@@ -46,7 +46,7 @@ class _Retrieval(object):
         d = self.__dict__
         args = {x: d[x] for x in d if x is not None and not
                 hasattr(d[x], '__call__') and x not in self._ignore}
-        response = session().execute(self.uri, 'GET', args)
+        response = MMSession.get_session().execute(self.uri, 'GET', args)
         self.sent = []
         for sent in response['sent']:
             self.sent.append(sent)
@@ -68,7 +68,7 @@ class _Retrieval(object):
             d = self.__dict__
             args = {x: d[x] for x in d if x is not None and not
                     hasattr(d[x], '__call__') and x != 'startindex'}
-            response = session().execute(uri, 'GET', args)
+            response = MMSession.get_session().execute(uri, 'GET', args)
             self._count = int(response['response']['data']['count'])
         return self._count
     @count.setter

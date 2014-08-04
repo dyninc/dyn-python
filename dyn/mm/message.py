@@ -5,7 +5,7 @@ also the :class:`dyn.mm.message.EMail` class which will give you additional
 control over the messages you're sending.
 """
 from .errors import DynInvalidArgumentError
-from .session import session
+from .session import MMSession
 from ..core import cleared_class_dict
 
 __all__ = ['send_message', 'EMail', 'HTMLEMail', 'TemplateEMail',
@@ -75,12 +75,14 @@ class EMail(object):
             all *None*, then an
             :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
-        if content is None and self.body is None and self.html is None:
+        if content is None and self.bodytext is None and self.htmltext is None:
             raise DynInvalidArgumentError('body and html', (None, None))
         api_args = cleared_class_dict(self.__dict__)
         if content is not None:
             api_args['body'] = content
-        session().execute(self.uri, 'POST', api_args)
+        from_field = api_args.pop('from_field')
+        api_args['from'] = from_field
+        MMSession.get_session().execute(self.uri, 'POST', api_args)
 
 
 class HTMLEMail(EMail):
@@ -97,12 +99,12 @@ class HTMLEMail(EMail):
             all *None*, then an
             :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
-        if content is None and self.body is None and self.html is None:
+        if content is None and self.bodytext is None and self.htmltext is None:
             raise DynInvalidArgumentError('body and html', (None, None))
         api_args = cleared_class_dict(self.__dict__)
         if content is not None:
             api_args['html'] = content
-        session().execute(self.uri, 'POST', api_args)
+        MMSession.get_session().execute(self.uri, 'POST', api_args)
 
 
 class TemplateEMail(EMail):
@@ -122,11 +124,11 @@ class TemplateEMail(EMail):
         if formatters is None:
             raise DynInvalidArgumentError('send content', None)
 
-        if self.body is None and self.html is None:
-            raise DynInvalidArgumentError('body and html', (None, None))
+        if self.bodytext is None:
+            raise DynInvalidArgumentError('body', None)
 
         for formatter in formatters:
-            super(TemplateEMail, self).send(self.body % formatter)
+            super(TemplateEMail, self).send(self.bodytext % formatter)
 
 
 class HTMLTemplateEMail(HTMLEMail):
@@ -146,8 +148,8 @@ class HTMLTemplateEMail(HTMLEMail):
         if formatters is None:
             raise DynInvalidArgumentError('send content', None)
 
-        if self.body is None and self.html is None:
-            raise DynInvalidArgumentError('body and html', (None, None))
+        if self.htmltext is None:
+            raise DynInvalidArgumentError('html', None)
 
         for formatter in formatters:
-            super(HTMLTemplateEMail, self).send(self.html % formatter)
+            super(HTMLTemplateEMail, self).send(self.htmltext % formatter)

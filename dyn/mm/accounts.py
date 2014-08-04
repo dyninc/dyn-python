@@ -6,7 +6,7 @@ and will be returned as such.
 from datetime import datetime
 
 from .utils import str_to_date, date_to_str, APIDict
-from .session import session
+from .session import MMSession
 
 __author__ = 'jnappi'
 
@@ -16,7 +16,7 @@ def get_all_accounts():
     authenticated user
     """
     uri = '/accounts'
-    response = session().execute(uri, 'GET')
+    response = MMSession.get_session().execute(uri, 'GET')
     accounts = []
     for account in response['accounts']:
         username = account.pop('username')
@@ -31,7 +31,7 @@ def get_all_senders(start_index=0):
     """
     uri = '/senders'
     args = {'start_index': start_index}
-    response = session().execute(uri, 'GET', args)
+    response = MMSession.get_session().execute(uri, 'GET', args)
     senders = []
     for sender in response['senders']:
         email = sender.pop('emailaddress')
@@ -43,7 +43,7 @@ def get_all_suppressions(startdate=None, enddate=datetime.now(), startindex=0):
     """Return a list of all :class:`Suppression`'s"""
     uri = '/suppressions'
     args = {'start_index': startindex}
-    response = session().execute(uri, 'GET', args)
+    response = MMSession.get_session().execute(uri, 'GET', args)
     suppressions = []
     for sender in response['senders']:
         email = sender.pop('emailaddress')
@@ -129,7 +129,7 @@ class Account(object):
         api_args = {x: d[x] for x in d if x is not None and
                     not hasattr(d[x], '__call__') and x != 'uri'
                     and x.startswith('_')}
-        response = session().execute(self.uri, 'POST', api_args)
+        response = MMSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
 
@@ -180,7 +180,7 @@ class Account(object):
         """
         uri = '/accounts/xheaders'
         api_args = {}
-        response = session().execute(uri, 'GET', api_args)
+        response = MMSession.get_session().execute(uri, 'GET', api_args)
         xheaders = APIDict(session)
         for key, val in response.items():
             xheaders[key] = val
@@ -191,7 +191,7 @@ class Account(object):
         """Delete this :class:`Account` from the Dyn Email System"""
         uri = '/accounts/delete'
         api_args = {'username': self._username}
-        session().execute(uri, 'POST', api_args)
+        MMSession.get_session().execute(uri, 'POST', api_args)
 
     def __str__(self):
         """str override"""
@@ -235,7 +235,7 @@ class ApprovedSender(object):
         self._seeding = seeding
         api_args = {'emailaddress': self._emailaddress,
                     'seeding': self._seeding}
-        response = session().execute(self.uri, 'POST', api_args)
+        response = MMSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
 
@@ -245,13 +245,13 @@ class ApprovedSender(object):
         """
         uri = '/senders/details'
         api_args = {'emailaddress': self._emailaddress}
-        response = session().execute(uri, 'GET', api_args)
+        response = MMSession.get_session().execute(uri, 'GET', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
 
     def _update(self, api_args):
         """Update this :class:`ApprovedSender` object."""
-        response = session().execute(self.uri, 'POST', api_args)
+        response = MMSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
 
@@ -279,7 +279,7 @@ class ApprovedSender(object):
         """
         uri = '/senders/status'
         args = {'emailaddress': self._emailaddress}
-        response = session().execute(uri, 'GET', args)
+        response = MMSession.get_session().execute(uri, 'GET', args)
         for key in response:
             self._status = response[key]
         return self._status
@@ -297,7 +297,7 @@ class ApprovedSender(object):
     def dkim(self, value):
         uri = '/senders/dkim'
         api_args = {'emailaddress': self._emailaddress, 'dkim': value}
-        response = session().execute(uri, 'POST', api_args)
+        response = MMSession.get_session().execute(uri, 'POST', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
 
@@ -321,7 +321,7 @@ class ApprovedSender(object):
         """Delete this :class:`ApprovedSender`"""
         uri = '/senders/delete'
         api_args = {'emailaddress': self._emailaddress}
-        session().execute(uri, 'POST', api_args)
+        MMSession.get_session().execute(uri, 'POST', api_args)
 
     def __str__(self):
         """str override"""
@@ -355,7 +355,7 @@ class Recipient(object):
         """Private getter method"""
         uri = '/recipients/status'
         api_args = {'emailaddress': self.emailaddress}
-        response = session().execute(uri, 'GET', api_args)
+        response = MMSession.get_session().execute(uri, 'GET', api_args)
         for key, val in response.items():
             setattr(self, key, val)
 
@@ -364,7 +364,7 @@ class Recipient(object):
         uri = '/recipients/activate'
         api_args = {'emailaddress': self.emailaddress}
         # Note: this api call returns nothing, so we won't parse it for data
-        session().execute(uri, 'POST', api_args)
+        MMSession.get_session().execute(uri, 'POST', api_args)
 
     def activate(self):
         """Updates the status of this recipient to active which allows them to
@@ -372,7 +372,7 @@ class Recipient(object):
         """
         uri = '/recipients/activate'
         api_args = {'emailaddress': self.emailaddress}
-        session().execute(uri, 'POST', api_args)
+        MMSession.get_session().execute(uri, 'POST', api_args)
 
 
 class Suppression(object):
@@ -401,7 +401,7 @@ class Suppression(object):
         """Activate a new recipient"""
         api_args = {'emailaddress': self.emailaddress}
         # Note: this api call returns nothing, so we won't parse it for data
-        session().execute(self.uri, 'POST', api_args)
+        MMSession.get_session().execute(self.uri, 'POST', api_args)
 
     def get_count(self, startdate=None, enddate=None):
         """Get the count attribute of this suppression for the provided range"""
@@ -410,7 +410,7 @@ class Suppression(object):
 
         uri = self.uri + '/count'
         api_args = {'startdate': startdate, 'enddate': enddate}
-        response = session().execute(uri, 'GET', api_args)
+        response = MMSession.get_session().execute(uri, 'GET', api_args)
         self._count = response['count']
         return self._count
 
@@ -431,4 +431,4 @@ class Suppression(object):
         """
         uri = self.uri + '/activate'
         api_args = {'emailaddress': self.emailaddress}
-        session().execute(uri, 'POST', api_args)
+        MMSession.get_session().execute(uri, 'POST', api_args)

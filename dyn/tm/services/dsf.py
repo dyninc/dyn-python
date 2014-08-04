@@ -91,7 +91,8 @@ class _DSFRecord(object):
                     key.startswith('_'):
                 if key != '_dsf_id' and key != '_record_set_id':
                     api_args[key[1:]] = val
-        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
 
     def _get(self, dsf_id, record_set_id):
@@ -106,7 +107,8 @@ class _DSFRecord(object):
         self._record_set_id = record_set_id
         self.uri = '/DSFRecord/{}/{}/'.format(self._dsf_id, self._record_set_id)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -148,7 +150,8 @@ class _DSFRecord(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -159,7 +162,8 @@ class _DSFRecord(object):
     def weight(self, value):
         self._weight = value
         api_args = {'weight': self._weight}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -172,7 +176,8 @@ class _DSFRecord(object):
     def automation(self, value):
         self._automation = value
         api_args = {'automation': self._automation}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -185,7 +190,8 @@ class _DSFRecord(object):
     def endpoints(self, value):
         self._endpoints = value
         api_args = {'endpoints': self._endpoints}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -197,7 +203,8 @@ class _DSFRecord(object):
     def endpoint_up_count(self, value):
         self._endpoint_up_count = value
         api_args = {'endpoint_up_count': self._endpoint_up_count}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -208,7 +215,8 @@ class _DSFRecord(object):
     def eligible(self, value):
         self._eligible = value
         api_args = {'eligible': self._eligible}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def to_json(self):
@@ -407,8 +415,8 @@ class DSFDNAMERecord(_DSFRecord, DNAMERecord):
 
 
 class DSFDNSKEYRecord(_DSFRecord, DNSKEYRecord):
-    """An :class:`DNSKEYRecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`DNSKEYRecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
     def __init__(self, protocol, public_key, algorithm=5, flags=256, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
@@ -970,10 +978,12 @@ class DSFRecordSet(object):
             for record in records:
                 constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
                                 'cert': DSFCERTRecord, 'cname': DSFCNAMERecord,
-                                'dhcid': DSFDHCIDRecord, 'dname': DSFDNAMERecord,
+                                'dhcid': DSFDHCIDRecord,
+                                'dname': DSFDNAMERecord,
                                 'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
                                 'key': DSFKEYRecord, 'kx': DSFKXRecord,
-                                'loc': DSFLOCRecord, 'ipseckey': DSFIPSECKEYRecord,
+                                'loc': DSFLOCRecord,
+                                'ipseckey': DSFIPSECKEYRecord,
                                 'mx': DSFMXRecord, 'naptr': DSFNAPTRRecord,
                                 'ptr': DSFPTRRecord, 'px': DSFPXRecord,
                                 'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
@@ -1035,7 +1045,8 @@ class DSFRecordSet(object):
         self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
                                                  self._dsf_record_set_id)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -1075,7 +1086,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1099,7 +1111,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1114,7 +1127,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1129,7 +1143,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1146,7 +1161,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1163,7 +1179,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1178,7 +1195,8 @@ class DSFRecordSet(object):
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -1191,7 +1209,8 @@ class DSFRecordSet(object):
     def dsf_monitor_id(self, value):
         self._dsf_monitor_id = value
         api_args = {'dsf_monitor_id': self._dsf_monitor_id}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def to_json(self):
@@ -1280,7 +1299,8 @@ class DSFFailoverChain(object):
             api_args['core'] = self._core
         if self._record_sets:
             api_args['record_sets'] = self._record_sets.to_json()
-        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1298,7 +1318,8 @@ class DSFFailoverChain(object):
         self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
                                                               self._dsf_response_pool_id)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1311,7 +1332,8 @@ class DSFFailoverChain(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1326,7 +1348,8 @@ class DSFFailoverChain(object):
     def core(self, value):
         self._core = value
         api_args = {'core': self._core}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1441,7 +1464,8 @@ class DSFResponsePool(object):
         self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
                                                     self._dsf_response_pool_id)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'rs_chains':
                 setattr(self, '_' + key, val)
@@ -1454,7 +1478,8 @@ class DSFResponsePool(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1469,7 +1494,8 @@ class DSFResponsePool(object):
     def core_set_count(self, value):
         self._core_set_count = value
         api_args = {'core_set_count': self._core_set_count}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1483,7 +1509,8 @@ class DSFResponsePool(object):
     def eligible(self, value):
         self._eligible = value
         api_args = {'eligible': self._eligible}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1496,7 +1523,8 @@ class DSFResponsePool(object):
     def automation(self, value):
         self._automation = value
         api_args = {'automation': self._automation}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1511,7 +1539,8 @@ class DSFResponsePool(object):
     def dsf_ruleset_id(self, value):
         self._dsf_ruleset_id = value
         api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1611,7 +1640,8 @@ class DSFRuleset(object):
         self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
                                                self._dsf_ruleset_id)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'rs_chains':
                 setattr(self, '_' + key, val)
@@ -1624,7 +1654,8 @@ class DSFRuleset(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1639,7 +1670,8 @@ class DSFRuleset(object):
     def criteria_type(self, value):
         self._criteria_type = value
         api_args = {'criteria_type': self._criteria_type}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1654,7 +1686,8 @@ class DSFRuleset(object):
     def criteria(self, value):
         self._criteria = value
         api_args = {'criteria': self._criteria}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
@@ -1818,7 +1851,8 @@ class DSFMonitor(object):
         self._monitor_id = monitor_id
         self.uri = '/DSFMonitor/{}/'.format(self._monitor_id)
         api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _post(self, label, protocol, response_count, probe_interval, retries,
@@ -1867,7 +1901,8 @@ class DSFMonitor(object):
 
     def _update(self, api_args):
         """Private Update method"""
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -2015,9 +2050,9 @@ class TrafficDirector(object):
         self.logger = logging.getLogger(str(self.__class__))
         self._label = self._ttl = self._publish = self._response_pools = None
         self._record_sets = self.uri = self._service_id = None
-        self._notifiers = APIList(session, 'notifiers')
-        self._nodes = APIList(session, 'nodes')
-        self._rulesets = APIList(session, 'rulesets')
+        self._notifiers = APIList(DynectSession.get_session, 'notifiers')
+        self._nodes = APIList(DynectSession.get_session, 'nodes')
+        self._rulesets = APIList(DynectSession.get_session, 'rulesets')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -2059,17 +2094,19 @@ class TrafficDirector(object):
         for key, val in data.items():
             if key == 'notifiers':
                 # Don't do anything special with these dicts for now
-                self._notifiers = APIList(session, 'notifiers', None, val)
+                self._notifiers = APIList(DynectSession.get_session,
+                                          'notifiers', None, val)
             elif key == 'rulesets':
                 # Clear Rulesets
-                self._rulesets = APIList(session, 'rulesets')
+                self._rulesets = APIList(DynectSession.get_session, 'rulesets')
                 self._rulesets.uri = None
                 # For each Ruleset returned, create a new DSFRuleset object
                 for ruleset in val:
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
                 # Don't do anything special with these dicts for now
-                self._nodes = APIList(session, 'nodes', None, val)
+                self._nodes = APIList(DynectSession.get_session, 'nodes', None,
+                                      val)
             else:
                 setattr(self, '_' + key, val)
         self.uri = '/DSF/{}/'.format(self._service_id)
@@ -2080,14 +2117,16 @@ class TrafficDirector(object):
         self._service_id = service_id
         self.uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'pending_changes': 'Y'}
-        response = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _update(self, api_args):
         """Private update method"""
         if 'publish' not in api_args:
             api_args['publish'] = 'Y'
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def revert_changes(self):
@@ -2177,7 +2216,8 @@ class TrafficDirector(object):
     @notifiers.setter
     def notifiers(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
-            self._notifiers = APIList(session, 'notifiers', None, value)
+            self._notifiers = APIList(DynectSession.get_session, 'notifiers',
+                                      None, value)
         elif isinstance(value, APIList):
             self._notifiers = value
         self._notifiers.uri = self.uri
@@ -2191,7 +2231,8 @@ class TrafficDirector(object):
     @rulesets.setter
     def rulesets(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
-            self._rulesets = APIList(session, 'rulesets', None, value)
+            self._rulesets = APIList(DynectSession.get_session, 'rulesets',
+                                     None, value)
         elif isinstance(value, APIList):
             self._rulesets = value
         self._rulesets.uri = self.uri
@@ -2204,7 +2245,8 @@ class TrafficDirector(object):
     @nodes.setter
     def nodes(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
-            self._nodes = APIList(session, 'nodes', None, value)
+            self._nodes = APIList(DynectSession.get_session, 'nodes', None,
+                                  value)
         elif isinstance(value, APIList):
             self._nodes = value
         self._nodes.uri = self.uri

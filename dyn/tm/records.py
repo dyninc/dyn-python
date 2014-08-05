@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 """This module contains class objects for all supported DynDNS Record types
 
 These DNS_Records should really only need to be created via a zone instance but
 could also be created independently if passed valid zone, fqdn data
 """
 import logging
-import dyn.tm.session
-from dyn.tm.errors import DynectInvalidArgumentError
+from .errors import DynectInvalidArgumentError
+from .session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
@@ -13,8 +14,6 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
            'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TXTRecord']
-
-session = dyn.tm.session.session
 
 
 class DNSRecord(object):
@@ -42,7 +41,7 @@ class DNSRecord(object):
             if not self._record_type.endswith('Record'):
                 self._record_type += 'Record'
             uri = '/{}/{}/{}/'.format(self._record_type, self._zone, self._fqdn)
-            response = session().execute(uri, 'POST', api_args)
+            response = DynectSession.get_session().execute(uri, 'POST', api_args)
             self._build(response['data'])
 
     def _get_record(self, record_id):
@@ -58,7 +57,7 @@ class DNSRecord(object):
             self._record_id = record_id
             uri = '/{}/{}/{}/{}/'.format(self._record_type, self._zone,
                                          self._fqdn, self._record_id)
-            response = session().execute(uri, 'GET', {})
+            response = DynectSession.get_session().execute(uri, 'GET', {})
             self._build(response['data'])
 
     def _update_record(self, api_args):
@@ -72,7 +71,7 @@ class DNSRecord(object):
             self._record_type += 'Record'
         uri = '/{}/{}/{}/{}/'.format(self._record_type, self._zone, self._fqdn,
                                      self._record_id)
-        response = session().execute(uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -115,7 +114,7 @@ class DNSRecord(object):
             self._record_type += 'Record'
         uri = '/{}/{}/{}/{}/'.format(self._record_type, self.zone, self.fqdn,
                                      self._record_id)
-        session().execute(uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
     @property
     def zone(self):

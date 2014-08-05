@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module contains all API classes for DynDNS Service types
 
 These services do not always need to be created via a zone instance but could

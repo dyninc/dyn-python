@@ -1,13 +1,13 @@
+# -*- coding: utf-8 -*-
 import logging
-from dyn.tm import _APIList, Active
-import dyn.tm.session
-from dyn.tm.errors import DynectInvalidArgumentError
+
+from ..utils import APIList, Active
+from ..errors import DynectInvalidArgumentError
+from ..session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
            'RTTM']
-
-session = dyn.tm.session.session
 
 
 class Monitor(object):
@@ -76,13 +76,13 @@ class Monitor(object):
         """Update this :class:`Monitor` with data from the Dyn System"""
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
         api_args = {}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         self._build(response['data']['monitor'])
 
     def _update(self, api_args):
         """Update the Dyn System with data from this :class:`Monitor`"""
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
-        response = session().execute(uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._build(response['data']['monitor'])
 
     def _build(self, data):
@@ -217,14 +217,14 @@ class PerformanceMonitor(Monitor):
         """
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
         api_args = {}
-        response = session().execute(uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
         self._build(response['data']['performance_monitor'])
 
     def _update(self, api_args):
         """Update the Dyn System with data from this :class:`PerformanceMonitor`
         """
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
-        response = session().execute(uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._build(response['data']['performance_monitor'])
 
 
@@ -265,7 +265,7 @@ class RegionPoolEntry(object):
         uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                          self._region_code,
                                                          self._address)
-        response = session().execute(uri, 'PUT', args)
+        response = DynectSession.get_session().execute(uri, 'PUT', args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -274,7 +274,7 @@ class RegionPoolEntry(object):
                                                          self._region_code,
                                                          self._address)
         args = {'detail': 'Y'}
-        response = session().execute(uri, 'GET', args)
+        response = DynectSession.get_session().execute(uri, 'GET', args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -351,7 +351,7 @@ class RegionPoolEntry(object):
         uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                          self._region_code,
                                                          self._address)
-        session().execute(uri, 'DELETE', {})
+        DynectSession.get_session().execute(uri, 'DELETE', {})
 
 
 class RTTMRegion(object):
@@ -443,18 +443,20 @@ class RTTMRegion(object):
                                                  self._failover_data,
                                                  self.valid_modes)
             api_args['failover_data'] = self._failover_data
-        response = session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
 
     def _get(self):
         """Get an existing :class:`RTTMRegion` object from the DynECT System"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _update(self, api_args):
         """Private Update method to cut back on redundant code"""
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -595,7 +597,7 @@ class RTTMRegion(object):
         System
         """
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
 class RTTM(object):
@@ -643,7 +645,7 @@ class RTTM(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._performance_monitor = None
         self._contact_nickname = self._active = None
-        self._region = _APIList(session, 'region')
+        self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -711,25 +713,28 @@ class RTTM(object):
         if isinstance(self.notify_events, list):
             api_args['notify_events'] = ', '.join(self.notify_events)
 
-        response = session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
 
     def _get(self):
         """Build an object around an existing DynECT RTTM Service"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _update(self, api_args):
         """Perform a PUT api call using this objects data"""
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
         """Build the neccesary substructures under this :class:`RTTM`"""
         for key, val in data.items():
             if key == 'region':
-                self._region = _APIList(session, 'region')
+                self._region = APIList(DynectSession.get_session, 'region')
                 for region in val:
                     code = region.pop('region_code', None)
                     pool = region.pop('pool', None)
@@ -772,7 +777,8 @@ class RTTM(object):
         api_args = {'zone': self._zone,
                     'fqdn': self._fqdn,
                     'ts': ts}
-        response = session().execute('/RTTMRRSetReport/', 'POST', api_args)
+        response = DynectSession.get_session().execute('/RTTMRRSetReport/',
+                                                       'POST', api_args)
         return response['data']
 
     def get_log_report(self, start_ts, end_ts):
@@ -788,19 +794,22 @@ class RTTM(object):
                     'fqdn': self._fqdn,
                     'start_ts': start_ts,
                     'end_ts': end_ts}
-        response = session().execute('/RTTMLogReport/', 'POST', api_args)
+        response = DynectSession.get_session().execute('/RTTMLogReport/',
+                                                       'POST', api_args)
         return response['data']
 
     def activate(self):
         """Activate this RTTM Service"""
         api_args = {'activate': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def deactivate(self):
         """Deactivate this RTTM Service"""
         api_args = {'deactivate': True}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def recover(self, recoverip=None, address=None):
@@ -809,7 +818,8 @@ class RTTM(object):
         if recoverip:
             api_args['recoverip'] = recoverip
             api_args['address'] = address
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -930,9 +940,10 @@ class RTTM(object):
         return self._region
     @region.setter
     def region(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._region = _APIList(session, 'region', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._region = APIList(DynectSession.get_session, 'region', None,
+                                   value)
+        elif isinstance(value, APIList):
             self._region = value
         self._region.uri = self.uri
 
@@ -971,4 +982,4 @@ class RTTM(object):
     def delete(self):
         """Delete this RTTM Service"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

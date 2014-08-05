@@ -1,19 +1,19 @@
+# -*- coding: utf-8 -*-
 import logging
-from dyn.tm.errors import DynectInvalidArgumentError
-import dyn.tm.session
-from dyn.tm import _APIList, Active
+
+from ..utils import APIList, Active
+from ..errors import DynectInvalidArgumentError
+from ..session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dnssec', 'DNSSECKey', 'DNSSEC']
-
-session = dyn.tm.session.session
 
 
 def get_all_dnssec():
     """:return: A ``list`` of :class:`DNSSEC` Services"""
     uri = '/DNSSEC/'
     api_args = {'detail': 'Y'}
-    response = session().execute(uri, 'GET', api_args)
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
     dnssecs = []
     for dnssec in response['data']:
         zone = dnssec['zone']
@@ -97,7 +97,7 @@ class DNSSEC(object):
         self.valid_notify_events = ('create', 'expire', 'warning')
         self._zone = zone
         self._contact_nickname = self._notify_events = None
-        self._keys = _APIList(session, 'keys')
+        self._keys = APIList(DynectSession.get_session, 'keys')
         self._active = None
         self.uri = '/DNSSEC/{}/'.format(self._zone)
         if 'api' in kwargs:
@@ -126,7 +126,8 @@ class DNSSEC(object):
         # Need to cast to CSV for API
         if self._notify_events is not None:
             api_args['notify_events'] = ', '.join(self._notify_events)
-        response = session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
 
     def _get(self):
@@ -134,7 +135,8 @@ class DNSSEC(object):
         Dynect System.
         """
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -143,7 +145,7 @@ class DNSSEC(object):
         """
         for key, val in data.items():
             if key == 'keys':
-                self._keys = _APIList(session, 'keys')
+                self._keys = APIList(DynectSession.get_session, 'keys')
                 for key_data in val:
                     key_data['key_type'] = key_data['type']
                     del key_data['type']
@@ -195,7 +197,8 @@ class DNSSEC(object):
     def contact_nickname(self, value):
         self._contact_nickname = value
         api_args = {'contact_nickname': self._contact_nickname}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -214,7 +217,8 @@ class DNSSEC(object):
                                                  self.valid_notify_events)
         value = ', '.join(value)
         api_args = {'notify_events': value}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     @property
@@ -228,22 +232,24 @@ class DNSSEC(object):
         return self._keys
     @keys.setter
     def keys(self, value):
-        if isinstance(value, list) and not isinstance(value, _APIList):
-            self._keys = _APIList(session, 'keys', None, value)
-        elif isinstance(value, _APIList):
+        if isinstance(value, list) and not isinstance(value, APIList):
+            self._keys = APIList(DynectSession.get_session, 'keys', None, value)
+        elif isinstance(value, APIList):
             self._keys = value
         self._keys.uri = self.uri
 
     def activate(self):
         """Activate this :class:`DNSSEC` service"""
         api_args = {'activate': 'Y'}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def deactivate(self):
         """Deactivate this :class:`DNSSEC` service"""
         api_args = {'deactivate': 'Y'}
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def timeline_report(self, start_ts=None, end_ts=None):
@@ -256,10 +262,10 @@ class DNSSEC(object):
         if end_ts is not None:
             api_args['end_ts'] = end_ts
         uri = '/DNSSECTimelineReport/'
-        response = session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']
 
     def delete(self):
         """Delete this :class:`DNSSEC` Service from the DynECT System"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

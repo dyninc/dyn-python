@@ -5,16 +5,18 @@ with open('README.rst') as f:
     readme = f.read()
 with open('HISTORY.rst') as f:
     history = f.read()
+with open('LICENSE') as f:
+    license_file = f.read()
 
 setup(
     name='dyn',
     version=__version__,
     keywords=['dyn', 'api', 'dns', 'email', 'dyndns', 'dynemail'],
-    long_description='\n\n'.join([readme, history]),
+    long_description='\n\n'.join([readme, history, license_file]),
     description='Dyn REST API wrapper',
     author='Jonathan Nappi, Cole Tuininga',
     author_email='jnappi@dyn.com',
-    url='https://github.com/dyninc/Dynect-API-Python-Library',
+    url='https://github.com/moogar0880/dyn-python',
     packages=['dyn', 'dyn/tm', 'dyn/mm', 'dyn/tm/services'],
     classifiers=[
         'Programming Language :: Python :: 2',

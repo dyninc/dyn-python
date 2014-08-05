@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
 """This module contains all DynectDNS Errors. Each Error subclass inherits from
 the base DynectError class which is only ever directly raised if something
 completely unexpected happens
 TODO: add a DynectInvalidPermissionsError
 """
-
+__all__ = ['DynectAuthError', 'DynectInvalidArgumentError', 'DynectCreateError',
+           'DynectUpdateError', 'DynectGetError', 'DynectDeleteError',
+           'DynectQueryTimeout']
 __author__ = 'jnappi'
 
 

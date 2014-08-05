@@ -1,7 +1,11 @@
+# -*- coding: utf-8 -*-
 """This module contains all Dyn Email Errors. Each Error subclass inherits from
 the base EmailError class which is only ever directly raised if something
 completely unexpected happens
 """
+__all__ = ['EmailKeyError', 'DynInvalidArgumentError',
+           'EmailInvalidArgumentError', 'EmailObjectError',
+           'NoSuchAccountError']
 __author__ = 'jnappi'
 
 
@@ -25,14 +29,7 @@ class EmailError(BaseException):
 
 class EmailKeyError(EmailError):
     """Error raised if the associated API Key is missing or invalid"""
-    def __init__(self, *args, **kwargs):
-        super(EmailKeyError, self).__init__(*args, **kwargs)
-
-    def __repr__(self):
-        return self.message
-
-    def __str__(self):
-        return self.message
+    pass
 
 
 class DynInvalidArgumentError(EmailError):
@@ -46,37 +43,24 @@ class DynInvalidArgumentError(EmailError):
         if valid_args is not None:
             self.message += ' :: valid values are: {}'.format(valid_args)
 
-    def __repr__(self):
-        return self.message
-
-    def __str__(self):
-        return self.message
-
 
 class EmailInvalidArgumentError(EmailError):
     """Error raised if a required field is not provided. However, due to the
     nature or the wrapper being used this error is most likely caused but
     uncaught invalid input (i.e., letters instead of numbers, etc.).
     """
-    def __init__(self, *args, **kwargs):
-        super(EmailInvalidArgumentError, self).__init__(*args, **kwargs)
-
-    def __repr__(self):
-        return self.message
-
-    def __str__(self):
-        return self.message
+    pass
 
 
 class EmailObjectError(EmailError):
     """This error can come up if you try to create an object that already
     exists on the Dyn Email system.
     """
-    def __init__(self, *args, **kwargs):
-        super(EmailObjectError, self).__init__(*args, **kwargs)
+    pass
 
-    def __repr__(self):
-        return self.message
 
-    def __str__(self):
-        return self.message
+class NoSuchAccountError(EmailError):
+    """Error raised if you attempt to GET an :class:`~dyn.mm.accounts.Account`
+    that does not exist, or is not accessible to you
+    """
+    pass

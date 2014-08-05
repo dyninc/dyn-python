@@ -1,7 +1,7 @@
 Release History
 ---------------
-1.0.0 (TBD)
-+++++++++++
+1.0.0 (2014-08-05)
+++++++++++++++++++
 
 * Revamed how sessions are structured to support the new SessionEngine interface
 * Message Management is now out of BETA due to many bug fixes and additional testing
@@ -12,6 +12,7 @@ Release History
 * Added EMail subclasses for easier formatting/sending of EMail messages
 * mm.session.session and tm.session.session functions have been replaced by the SessionEngine get_session class method
 * Completed the dyn.mm.reports module
+* Misc MM related bug fixes
 
 0.9.11 (2014-07-25)
 +++++++++++++++++++

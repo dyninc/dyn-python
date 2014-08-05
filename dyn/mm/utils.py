@@ -39,7 +39,7 @@ class APIDict(dict):
         api_args = {x: self[x] for x in self if x is not None and
                     not hasattr(self[x], '__call__') and key != 'uri'}
         if self.session_func is not None and self.uri is not None:
-            self.session_func().execute(self.uri, 'PUT', api_args)
+            self.session_func().execute(self.uri, 'POST', api_args)
         return response
 
     def __delitem__(self, key):
@@ -50,5 +50,5 @@ class APIDict(dict):
         api_args = {x: self[x] for x in self if x is not None and
                     not hasattr(self[x], '__call__') and key != 'uri'}
         if self.session_func is not None and self.uri is not None:
-            self.session_func().execute(self.uri, 'PUT', api_args)
+            self.session_func().execute(self.uri, 'POST', api_args)
         return response

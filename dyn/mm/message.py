@@ -61,7 +61,7 @@ class EMail(object):
         self.subject = subject
         self.cc = cc
         self.bodytext = body
-        self.htmltext = html
+        self.bodyhtml = html
         self.replyto = replyto
         self.xheaders = xheaders
 
@@ -75,11 +75,11 @@ class EMail(object):
             all *None*, then an
             :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
-        if content is None and self.bodytext is None and self.htmltext is None:
+        if content is None and self.bodytext is None and self.bodyhtml is None:
             raise DynInvalidArgumentError('body and html', (None, None))
         api_args = cleared_class_dict(self.__dict__)
         if content is not None:
-            api_args['body'] = content
+            api_args['bodytext'] = content
         from_field = api_args.pop('from_field')
         api_args['from'] = from_field
         MMSession.get_session().execute(self.uri, 'POST', api_args)
@@ -99,7 +99,7 @@ class HTMLEMail(EMail):
             all *None*, then an
             :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
-        if content is None and self.bodytext is None and self.htmltext is None:
+        if content is None and self.bodytext is None and self.bodyhtml is None:
             raise DynInvalidArgumentError('body and html', (None, None))
         api_args = cleared_class_dict(self.__dict__)
         if content is not None:
@@ -138,7 +138,7 @@ class TemplateEMail(EMail):
 
 class HTMLTemplateEMail(HTMLEMail):
     """Similar to the :class:`~dyn.mm.message.TemplateEMail` class the
-    :class:`~dyn.mm.message.HTMLEMail` subclass which treats it's htmltext
+    :class:`~dyn.mm.message.HTMLEMail` subclass which treats it's bodyhtml
     attribute as a template. Allowing you to send out chains of emails by
     only writing the templated html email once, and then specifying an iterable
     with the formatting content at send time.
@@ -152,14 +152,14 @@ class HTMLTemplateEMail(HTMLEMail):
             :class:`~dyn.mm.message.HTMLEMail` class this field is not optional
             and will raise an
             :exception:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
-            This exception will also be raised if this instances htmltext
+            This exception will also be raised if this instances bodyhtml
             attribute has not also been set.
         """
         if formatters is None:
             raise DynInvalidArgumentError('send content', None)
 
-        if self.htmltext is None:
+        if self.bodyhtml is None:
             raise DynInvalidArgumentError('html', None)
 
         for formatter in formatters:
-            super(HTMLTemplateEMail, self).send(self.htmltext % formatter)
+            super(HTMLTemplateEMail, self).send(self.bodyhtml % formatter)

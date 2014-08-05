@@ -5,7 +5,9 @@ and will be returned as such.
 """
 from datetime import datetime
 
+from ..core import cleared_class_dict
 from .utils import str_to_date, date_to_str, APIDict
+from .errors import NoSuchAccountError
 from .session import MMSession
 
 __author__ = 'jnappi'
@@ -39,10 +41,14 @@ def get_all_senders(start_index=0):
     return senders
 
 
-def get_all_suppressions(startdate=None, enddate=datetime.now(), startindex=0):
+def get_all_suppressions(startdate=None, enddate=None, startindex=0):
     """Return a list of all :class:`Suppression`'s"""
     uri = '/suppressions'
     args = {'start_index': startindex}
+    if startdate:
+        args['startdate'] = date_to_str(startdate)
+        enddate = enddate or datetime.now()
+        args['enddate'] = date_to_str(enddate)
     response = MMSession.get_session().execute(uri, 'GET', args)
     suppressions = []
     for sender in response['senders']:
@@ -71,10 +77,11 @@ class Account(object):
         :param companyname: Name of the company assigned to this
             :class:`Account`
         :param phone: Contact Phone number for this :class:`Account`
-        :param address: Address
-        :param city: City
-        :param state: State
-        :param zipcode: Zipcode
+        :param address: The primary address associated with this
+            :class:`Account`
+        :param city: The City associated with this :class:`Account`
+        :param state: The State associated with this :class:`Account`
+        :param zipcode: The Zipcode associated with this :class:`Account`
         :param country: Two-letter English ISO 3166 country code
         :param timezone: The timezone of the account, in [+/-]h.mm format
         :param bounceurl: Bounce postback URL
@@ -102,7 +109,7 @@ class Account(object):
             self._get()
         else:
             self._post(*args, **kwargs)
-        self._xheaders = APIDict(MMSession.get_session, '/accounts/xheaders')
+        self._xheaders = None
 
     def _post(self, password, companyname, phone, address=None, city=None,
               state=None, zipcode=None, country=None, timezone=None,
@@ -125,10 +132,14 @@ class Account(object):
         self._tracklinks = tracklinks
         self._trackunsubscribes = trackunsubscribes
         self._generatenewapikey = generatenewapikey
-        d = self.__dict__
-        api_args = {x: d[x] for x in d if x is not None and
-                    not hasattr(d[x], '__call__') and x != 'uri'
-                    and x.startswith('_')}
+        
+        valid = ('username', 'password', 'companyname', 'phone', 'address',
+                 'city', 'state', 'zipcode', 'country', 'timezone', 'bounceurl',
+                 'spamurl', 'unsubscribeurl', 'trackopens', 'tracklinks',
+                 'trackunsubscribes', 'generatenewapikey')
+        d = cleared_class_dict(self.__dict__)
+        api_args = {x[1:]: d[x] for x in d if d[x] is not None and
+                    x[1:] in valid}
         response = MMSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
@@ -136,13 +147,18 @@ class Account(object):
     def _get(self):
         """Retrieve an existing :class:`Account` from the Dyn Email System"""
         accounts = get_all_accounts()
+        found = False
         for account in accounts:
             if account.username == self._username:
-                pass
+                self._update(cleared_class_dict(account.__dict__))
+                found = True
+        if not found:
+            raise NoSuchAccountError('No such Account')
 
     def _update(self, data):
         """Update the fields in this object with the provided data dict"""
-        for key, val in data.items():
+        resp = MMSession.get_session().execute(self.uri, 'POST', data)
+        for key, val in resp.items():
             setattr(self, '_' + key, val)
 
     @property
@@ -174,6 +190,170 @@ class Account(object):
     def username(self, value):
         pass
 
+    @property
+    def account_name(self):
+        return self._accountname
+    @account_name.setter
+    def account_name(self, value):
+        pass
+
+    @property
+    def address(self):
+        """The primary address associated with this :class:`Account`"""
+        return self._address
+    @address.setter
+    def address(self, value):
+        pass
+
+    @property
+    def apikey(self):
+        """The apikey for this account"""
+        return self._apikey
+    @apikey.setter
+    def apikey(self, value):
+        pass
+
+    @property
+    def city(self):
+        """The City associated with this :class:`Account`"""
+        return self._city
+    @city.setter
+    def city(self, value):
+        pass
+
+    @property
+    def company_name(self):
+        """The name of the company this :class:`Account` is registered under`"""
+        return self._companyname
+    @company_name.setter
+    def company_name(self, value):
+        pass
+
+    @property
+    def contact_name(self):
+        """The name of the contact associated with this :class:`Account`"""
+        return self._contactname
+    @contact_name.setter
+    def contact_name(self, value):
+        pass
+
+    @property
+    def country(self):
+        """The Two letter country code associated with this :class:`Account`"""
+        return self._country
+    @country.setter
+    def country(self, value):
+        pass
+
+    @property
+    def created(self):
+        return self._created
+    @created.setter
+    def created(self, value):
+        pass
+
+    @property
+    def email_sent(self):
+        return self._emailsent
+    @email_sent.setter
+    def email_sent(self, value):
+        pass
+
+    @property
+    def max_sample_count(self):
+        return self._max_sample_count
+    @max_sample_count.setter
+    def max_sample_count(self, value):
+        pass
+
+    @property
+    def phone(self):
+        """The primary telephone number of the contact associated with this
+        :class:`Account`"""
+        return self._phone
+    @phone.setter
+    def phone(self, value):
+        pass
+
+    @property
+    def state(self):
+        """The state associated with this :class:`Account`"""
+        return self._state
+    @state.setter
+    def state(self, value):
+        pass
+
+    @property
+    def timezone(self):
+        """The current timezone of the primary user of this :class:`Account`"""
+        return self._timezone
+    @timezone.setter
+    def timezone(self, value):
+        pass
+
+    @property
+    def track_links(self):
+        """A settings flag determining whether or not emails sent from this
+        :class:`Account` will be monitored for followed links
+        """
+        return self._tracklinks == 1
+    @track_links.setter
+    def track_links(self, value):
+        pass
+
+    @property
+    def track_opens(self):
+        """A settings flag determining whether or not emails sent from this
+        :class:`Account` will be monitored for opens
+        """
+        return self._trackopens == 1
+    @track_opens.setter
+    def track_opens(self, value):
+        pass
+
+    @property
+    def track_unsubscribes(self):
+        """A settings flag determining whether or not emails sent from this
+        :class:`Account` will be monitored for unsubscribes
+        """
+        return self._trackunsubscribes == 1
+    @track_unsubscribes.setter
+    def track_unsubscribes(self, value):
+        pass
+
+    @property
+    def user_type(self):
+        return self._usertype
+    @user_type.setter
+    def user_type(self, value):
+        pass
+
+    @property
+    def zipcode(self):
+        """The zipcode of this :class:`Account`
+        """
+        return self._zipcode
+    @zipcode.setter
+    def zipcode(self, value):
+        pass
+
+    @property
+    def password(self):
+        """The password for this :class:`Account`. Note: Unless you've just
+        created this :class:`Account`, this field will be None.
+        """
+        return self._password
+    @password.setter
+    def password(self, value):
+        pass
+
+    @property
+    def emailcap(self):
+        return self._emailcap
+    @emailcap.setter
+    def emailcap(self, value):
+        pass
+
     def _get_xheaders(self):
         """Build the list of the configured custom x-header field names
         associated with this :class:`Account`.
@@ -181,11 +361,11 @@ class Account(object):
         uri = '/accounts/xheaders'
         api_args = {}
         response = MMSession.get_session().execute(uri, 'GET', api_args)
-        xheaders = APIDict(MMSession.get_session)
+        xheaders = {}
         for key, val in response.items():
             xheaders[key] = val
-        xheaders.uri = '/accounts/xheaders'
-        self._xheaders = xheaders
+        self._xheaders = APIDict(MMSession.get_session, '/accounts/xheaders',
+                                 xheaders)
 
     def delete(self):
         """Delete this :class:`Account` from the Dyn Email System"""
@@ -251,6 +431,8 @@ class ApprovedSender(object):
 
     def _update(self, api_args):
         """Update this :class:`ApprovedSender` object."""
+        if 'emailaddress' not in api_args:
+            api_args['emailaddress'] = self._emailaddress
         response = MMSession.get_session().execute(self.uri, 'POST', api_args)
         for key, val in response.items():
             setattr(self, '_' + key, val)
@@ -405,13 +587,17 @@ class Suppression(object):
 
     def get_count(self, startdate=None, enddate=None):
         """Get the count attribute of this suppression for the provided range"""
-        startdate = date_to_str(startdate)
-        enddate = date_to_str(enddate)
+        if startdate:
+            startdate = date_to_str(startdate)
+            enddate = enddate or datetime.now()
+            enddate = date_to_str(enddate)
+            api_args = {'startdate': startdate, 'enddate': enddate}
+        else:
+            api_args = None
 
         uri = self.uri + '/count'
-        api_args = {'startdate': startdate, 'enddate': enddate}
         response = MMSession.get_session().execute(uri, 'GET', api_args)
-        self._count = response['count']
+        self._count = int(response['count'])
         return self._count
 
     @property

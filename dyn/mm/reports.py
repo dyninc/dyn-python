@@ -46,7 +46,7 @@ class _Retrieval(object):
         self.sender = sender
         self.xheaders = xheaders
         self._count = None
-        self.sent = []
+        self.report = []
         self._ignore = ('_ignore', '_count', 'startindex', 'uri')
         self._update()
 
@@ -57,11 +57,13 @@ class _Retrieval(object):
         args['starttime'] = date_to_str(args['starttime'])
         args['endtime'] = date_to_str(args['endtime'])
         response = MMSession.get_session().execute(self.uri, 'GET', args)
-        self.sent = []
-        for sent in response['sent']:
-            if 'date' in sent:
-                sent['date'] = str_to_date(sent['date'])
-            self.sent.append(sent)
+
+        self.report = []
+        for key in response:
+            for data in response[key]:
+                if 'date' in data:
+                    data['date'] = str_to_date(data['date'])
+                self.report.append(data)
 
     def refresh(self):
         """Refresh the current search results
@@ -70,7 +72,7 @@ class _Retrieval(object):
             emails sent
         """
         self._update()
-        return self.sent
+        return self.report
 
     @property
     def count(self):

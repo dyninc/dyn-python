@@ -66,3 +66,41 @@ formatting and, hopefully, helpful features.
 .. autoclass:: dyn.mm.message.HTMLTemplateEMail
     :members:
     :undoc-members:
+
+Using the EMail Subclasses
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The :class:`~dyn.mm.message.HTMLEMail` class is identical to the :class:`~dyn.mm.message.EMail`
+class, with the only difference being that content passed to it's send method will
+be added as the messages HTML content, rather than text content.
+
+The Templating subclasses behave slightly differently. For the :class:`~dyn.mm.message.TemplateEmail`
+class, you provide it a template at construction time, and an iterable with the content
+to substitute into the template at send time. For example::
+
+    >>> from dyn.mm.message import TemplateEmail
+    >>> from_email = 'user@email.com'
+    >>> to_email = 'your@email.com'
+    >>> subject = 'A Demo Email'
+    >>> template = 'Hello %s, thank you for registering at http://mysite.com!'
+    >>> mailer = TemplateEmail(from_email, to_email, subject, body=template)
+    >>> parameters = ['Jon', 'Ray', 'Carol', 'Margaret']
+    >>> mailer.send(parameters)
+
+Similarly you can use the :class:`~dyn.mm.message.HTMLTemplateEMail` class to template out and send
+multiple HTML formatted emails easily. Let's go over a slightly more complex for that class::
+
+    >>> from textwrap import dedent
+    >>> from dyn.mm.message import TemplateEmail
+    >>> from_email = 'user@email.com'
+    >>> to_email = 'your@email.com'
+    >>> subject = 'A Demo Email'
+    >>> template = """
+    <html>
+        <h1>What... is the air-speed velocity of an unladen swallow?</h1>
+        <h2>What do you mean? An %(choice1) or %(choice2) swallow?</h2>
+    </html>"""
+    >>> template = dedent(template)
+    >>> mailer = HTMLTemplateEmail(from_email, to_email, subject, html=template)
+    >>> parameters = {'choice1': 'African', 'choice2': 'European'}
+    >>> mailer.send(parameters)
+

@@ -51,9 +51,9 @@ dyn Message Management account::
     >>> new_account.apikey
     'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
     >>> new_account.xheaders
-    {'xheader1': 'xheader1_data', 'xheader2': 'xheader2_data'}
+    {'xheader1': '', 'xheader2': '', 'xheader3': '', 'xheader4': ''}
     >>> # The following creates a new xheader for the account
-    >>> new_account.xheaders['xheader3'] = 'xheader3_data'
+    >>> new_account.xheaders['xheader3'] = 'X-header3_data'
 
 
 Approved Sender

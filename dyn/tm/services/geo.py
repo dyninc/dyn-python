@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module contains API wrappers for the Geo TM service.
 NOTE: The Geo Traffic Management Service is deprecated. Legacy users of the
 service should contact Concierge for any questions on adding a Geo Traffic
@@ -5,8 +6,9 @@ Management  service to your zone. All other users should use Traffic Director
 (DSF) instead.
 """
 import logging
-import dyn.tm.session
-from dyn.tm.records import *
+
+from ..records import *
+from ..session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['GeoARecord', 'GeoAAAARecord', 'GeoCERTRecord', 'GeoCNAMERecord',
@@ -15,8 +17,6 @@ __all__ = ['GeoARecord', 'GeoAAAARecord', 'GeoCERTRecord', 'GeoCNAMERecord',
            'GeoMXRecord', 'GeoNAPTRRecord', 'GeoPTRRecord', 'GeoPXRecord',
            'GeoNSAPRecord', 'GeoRPRecord', 'GeoNSRecord', 'GeoSPFRecord',
            'GeoSRVRecord', 'GeoTXTRecord', 'GeoRegionGroup', 'Geo']
-
-session = dyn.tm.session.session
 
 
 class GeoARecord(ARecord):
@@ -147,8 +147,8 @@ class GeoDNAMERecord(DNAMERecord):
 
 
 class GeoDNSKEYRecord(DNSKEYRecord):
-    """An :class:`DNSKEYRecord` object which is able to store additional data for
-    use by a :class:`Geo` service.
+    """An :class:`DNSKEYRecord` object which is able to store additional data
+    for use by a :class:`Geo` service.
     """
     def __init__(self, label=None, ttl=None, *args, **kwargs):
         """Create a :class:`GeoDNSKEYRecord` object
@@ -174,8 +174,8 @@ class GeoDSRecord(DSRecord):
 
         :param *args: Non keyword args for the associated :class:`DSRecord`
         :param label: A unique label for this :class:`GeoDSRecord`
-        :param ttl: TTL for the associated :class:`DSRecord`, will override a ttl
-            specified in *args or **kwargs
+        :param ttl: TTL for the associated :class:`DSRecord`, will override a
+            ttl specified in *args or **kwargs
         :param **kwargs: Keyword args for the associated :class:`DSRecord`
         """
         # Set api flag so the record isn't really created
@@ -275,8 +275,8 @@ class GeoMXRecord(MXRecord):
 
         :param *args: Non keyword args for the associated :class:`MXRecord`
         :param label: A unique label for this :class:`GeoMXRecord`
-        :param ttl: TTL for the associated :class:`MXRecord`, will override a ttl
-            specified in *args or **kwargs
+        :param ttl: TTL for the associated :class:`MXRecord`, will override a
+            ttl specified in *args or **kwargs
         :param **kwargs: Keyword args for the associated :class:`MXRecord`
         """
         # Set api flag so the record isn't really created
@@ -502,7 +502,8 @@ class GeoRegionGroup(object):
 
     def _get(self):
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
@@ -512,7 +513,7 @@ class GeoRegionGroup(object):
 
     def delete(self):
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
 class Geo(object):
@@ -588,7 +589,8 @@ class Geo(object):
         if self._ttl:
             api_args['ttl'] = self._ttl
         api_args['nodes'] = nodes
-        response = session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         for key, val in response['data'].items():
             if key == 'groups':
                 pass
@@ -600,7 +602,8 @@ class Geo(object):
     def _get(self):
         """Get an existing :class:`Geo` service from the DynECT System"""
         api_args = {}
-        response = session().execute(self.uri, 'GET', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
         for key, val in response['data'].items():
             if key == 'groups':
                 pass
@@ -611,7 +614,8 @@ class Geo(object):
 
     def _update(self, api_args):
         """Private Update method"""
-        response = session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         for key, val in response['data'].items():
             if key == 'groups':
                 pass
@@ -661,4 +665,4 @@ class Geo(object):
     def delete(self):
         """Delete this :class:`Geo` service from the DynECT System"""
         api_args = {}
-        session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

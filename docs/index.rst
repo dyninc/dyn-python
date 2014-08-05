@@ -4,13 +4,13 @@
    contain the root `toctree` directive.
 
 
-dyn: The Dyn API Python Wrapper
-===============================
+dyn: The Dyn Python SDK
+=======================
 
 Release v\ |version|. (:ref:`Installation <install>`)
 
-With the latest release of this dyn wrapper, it's now even easier to manage
-both your Dyn Traffic Management and Message Management services.
+With the latest release of this sdk, it's now even easier to manage both your
+Dyn Traffic Management and Message Management services.
 
 ::
 

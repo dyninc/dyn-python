@@ -103,7 +103,7 @@ class HTMLEMail(EMail):
             raise DynInvalidArgumentError('body and html', (None, None))
         api_args = cleared_class_dict(self.__dict__)
         if content is not None:
-            api_args['html'] = content
+            api_args['bodyhtml'] = content
         from_field = api_args.pop('from_field')
         api_args['from'] = from_field
         MMSession.get_session().execute(self.uri, 'POST', api_args)

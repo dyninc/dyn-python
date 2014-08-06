@@ -1,5 +1,10 @@
 Release History
 ---------------
+1.0.1 (2014-08-06)
+++++++++++++++++++
+
+* Small bugfix for an issue affecting sending EMails via the HTMLEmail class
+
 1.0.0 (2014-08-05)
 ++++++++++++++++++
 

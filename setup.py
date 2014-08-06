@@ -16,7 +16,7 @@ setup(
     description='Dyn REST API wrapper',
     author='Jonathan Nappi, Cole Tuininga',
     author_email='jnappi@dyn.com',
-    url='https://github.com/moogar0880/dyn-python',
+    url='https://github.com/dyninc/dyn-python',
     packages=['dyn', 'dyn/tm', 'dyn/mm', 'dyn/tm/services'],
     classifiers=[
         'Programming Language :: Python :: 2',

@@ -10,9 +10,7 @@ The first step to using any software package is getting it properly installed.
 Distribute & Pip
 ----------------
 
-Installing dyn is simple via `pip <http://www.pip-installer.org/>`_. Currently
-the dyn module is only available internally within Dyn, because of this it can
-only be downloaded while on Dyn's internal VPN::
+Installing dyn is simple via `pip <http://www.pip-installer.org/>`_.
 
     $ pip install dyn
 

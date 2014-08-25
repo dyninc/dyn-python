@@ -25,5 +25,6 @@ this part of the documentation is for you.
    tm/accounts
    tm/records
    tm/services
+   tm/reports
    tm/errors
 

@@ -1,5 +1,5 @@
 """This module contains utilities to be used throughout the dyn.tm module"""
-import sys
+from ..compat import string_types
 
 __author__ = 'jnappi'
 
@@ -98,12 +98,7 @@ class Active(object):
         :param inp: If a string, must be one of 'Y' or 'N'. Otherwise a bool.
         """
         self.value = None
-        types = tuple()
-        if sys.version_info[0] == 2:
-            types = (str, unicode)
-        elif sys.version_info[0] == 3:
-            types = str
-        if isinstance(inp, (str, types)):
+        if isinstance(inp, string_types):
             self.value = inp.upper() == 'Y'
         if isinstance(inp, bool):
             self.value = inp

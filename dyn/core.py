@@ -4,25 +4,15 @@ itself. Although it's possible to use this functionality outside of the dyn
 library, it is not recommened and could possible result in some strange
 behavior.
 """
-import sys
 import time
 import locale
 import logging
 import threading
 from datetime import datetime
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        sys.exit('Could not find json or simplejson libraries.')
-if sys.version_info[0] == 2:
-    from httplib import HTTPConnection, HTTPSConnection, HTTPException
-elif sys.version_info[0] == 3:
-    from http.client import HTTPConnection, HTTPSConnection, HTTPException
-# API Libs
-from dyn import __version__
+
+from . import __version__
+from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
+                     is_py2, is_py3, prepare_to_send)
 
 
 def cleared_class_dict(dict_obj):
@@ -164,11 +154,7 @@ class SessionEngine(Singleton):
         if self.poll_incomplete:
             response, body = self.poll_response(response, body)
             self._last_response = response
-        ret_val = None
-        if sys.version_info[0] == 2:
-            ret_val = json.loads(body)
-        elif sys.version_info[0] == 3:
-            ret_val = json.loads(body.decode('UTF-8'))
+        ret_val = json.loads(body.decode('UTF-8'))
 
         self._meta_update(uri, method, ret_val)
         # Handle retrying if ZoneProp is blocking the current task
@@ -314,11 +300,7 @@ class SessionEngine(Singleton):
         self._conn.putheader('Content-length', '%d' % len(args))
         self._conn.endheaders()
 
-        if sys.version_info[0] == 2:
-            self._conn.send(bytes(args))
-        elif sys.version_info[0] == 3:
-            # noinspection PyArgumentList
-            self._conn.send(bytes(args, 'UTF-8'))
+        self._conn.send(prepare_to_send(args))
 
     def wait_for_job_to_complete(self, job_id, timeout=120):
         """When a response comes back with a status of "incomplete" we need to
@@ -347,3 +329,65 @@ class SessionEngine(Singleton):
         """str override"""
         return '<{}>'.format(self.name)
     __repr__ = __unicode__ = __str__
+
+
+class APIObject(object):
+    """Base object type for all class types in this library that interact with
+    the various REST APIs. This class will provide an internal API for these
+    classes to remove the need for some of the one off methods that have managed
+    to run rampant throughout the codebase. This base class will also take care
+    of setting up/configuring basic utilities that most subclasses will be able
+    to leverage.
+    """
+    uri = ''
+    engine = None
+
+    def __init__(self, *args, **kwargs):
+        """Create a new :class:`~dyn.core.APIObect` instance. This object will
+        come equipped with a logging.logger instance for use throughout the
+        class as well as handle calling _build on the kwargs attribute, if an
+        'api' argument is passed to it.
+
+        Note: The 'api' key is used internally to denote that we've received all
+        of the data we need already from the API, we just need to apply it to
+        this instance rather than needing to execute a GET or POST call.
+        """
+        self.built = False
+        self.logger = logging.getLogger(str(self.__class__))
+        if 'api' in kwargs:
+            kwargs.pop('api')
+            self._build(kwargs)
+
+    def _post(self, *args, **kwargs):
+        """A stub method to be implemented by subclasses to perform POST API
+        calls and call _build to apply any response data to this instance
+        """
+        pass
+
+    def _get(self, *args, **kwargs):
+        """A stub method to be implemented by subclasses to perform GET API
+        calls and call _build to apply the data to this instance. By default
+        this method will GET from this instances uri attribute and _build the
+        data
+        """
+        response = self.engine.get_session().execute(self.uri, 'GET')
+        self._build(response['data'])
+
+    def _update(self, api_args):
+        """A method to perform PUT API calls and call _build to apply any
+        response data to this instance. By default this instance's session is
+        used to PUT the provided data and call _build to process the data
+        """
+        response = self.engine.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(response['data'])
+        return response
+
+    def _build(self, data):
+        """A method to be implemented by subclasses to accept data returned
+        from the API and apply the data, in a meaningful way, to this instance.
+        By default it will apply each element in the data dict to the class with
+        a pre-pended '_' character
+        """
+        for key, val in data.items():
+            setattr(self, '_' + key, val)
+        self.built = True

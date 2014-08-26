@@ -16,7 +16,7 @@ def get_check_permission(permission, zone_name=None):
     :param permission: A list of permissions to check for the current user.
     :param zone_name: The zone to check for specific permissions.
     :return: A :class:`dict` containing permission information.
-     """
+    """
     api_args = {'permission': permission}
     if zone_name is not None:
         api_args['zone_name'] = zone_name

@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-"""This module contains interfaces for all Account management features of the
+"""This module contains interfaces for all Report generation features of the
 REST API
 """
 from .session import DynectSession
 
 __author__ = 'elarochelle'
-__all__ = ['get_qps']
+__all__ = ['get_check_permission', 'get_dnssec_timeline', 'get_qps',
+           'get_rttm_log', 'get_rttm_rrset', 'get_zone_notes']
 
 
 def get_check_permission(permission, zone_name=None):
     """Returns a list of allowed and forbidden permissions for the currently
-     logged in user based on the provided permissions array.
+    logged in user based on the provided permissions array.
 
-     :param permission: A list of permissions to check for the current user.
-     :param zone_name: The zone to check for specific permissions.
-     :return: A :class:`dict` containing permission information.
+    :param permission: A list of permissions to check for the current user.
+    :param zone_name: The zone to check for specific permissions.
+    :return: A :class:`dict` containing permission information.
      """
     api_args = {'permission': permission}
     if zone_name is not None:

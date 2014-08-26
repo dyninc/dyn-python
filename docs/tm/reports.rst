@@ -2,7 +2,7 @@
 
 TM Reports
 ==========
-The :mod:`reports` module contains interfaces for all of the various Report
+The :mod:`~dyn.tm.reports` module contains interfaces for all of the various Report
 collection calls offered by the dyn.tm REST API
 
 List Functions

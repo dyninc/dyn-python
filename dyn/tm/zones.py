@@ -608,7 +608,7 @@ class Zone(object):
 
 
 class SecondaryZone(object):
-    """"""
+    """A class representing DynECT Secondary zones"""
     def __init__(self, zone, *args, **kwargs):
         """Create a :class:`SecondaryZone` object
 

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+from datetime import datetime
 
-from ..utils import APIList, Active
+from ..utils import APIList, Active, unix_date
 from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
 
@@ -255,12 +256,20 @@ class DNSSEC(object):
     def timeline_report(self, start_ts=None, end_ts=None):
         """Generates a report of events this :class:`DNSSEC` service has
         performed and has scheduled to perform
+
+        :param start_ts: datetime.datetime instance identifying point in time
+            for the start of the timeline report
+        :param end_ts: datetime.datetime instance identifying point in time
+            for the end of the timeline report. Defaults to
+            datetime.datetime.now()
         """
         api_args = {'zone': self._zone}
         if start_ts is not None:
-            api_args['start_ts'] = start_ts
+            api_args['start_ts'] = unix_date(start_ts)
         if end_ts is not None:
-            api_args['end_ts'] = end_ts
+            api_args['end_ts'] = unix_date(end_ts)
+        elif end_ts is None and start_ts is not None:
+            api_args['end_ts'] = unix_date(datetime.now())
         uri = '/DNSSECTimelineReport/'
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']

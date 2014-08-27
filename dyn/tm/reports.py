@@ -110,7 +110,6 @@ def get_qps(start_ts, end_ts, breakdown=None, hosts=None, rrecs=None,
         api_args['rrecs'] = rrecs
     if zones is not None:
         api_args['zones'] = zones
-    print(api_args)
     response = DynectSession.get_session().execute('/QPSReport/',
                                                    'POST', api_args)
     return response['data']

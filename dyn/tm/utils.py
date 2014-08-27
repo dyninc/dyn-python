@@ -1,7 +1,14 @@
 """This module contains utilities to be used throughout the dyn.tm module"""
+import calendar
+
 from ..compat import string_types
 
 __author__ = 'jnappi'
+
+
+def unix_date(date):
+    """Return a python datetime.datetime object as a UNIX timestamp"""
+    return calendar.timegm(date.timetuple())
 
 
 class APIList(list):

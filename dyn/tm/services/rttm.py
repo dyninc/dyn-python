@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+from datetime import datetime
 
-from ..utils import APIList, Active
+from ..utils import APIList, Active, unix_date
 from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
 
@@ -781,19 +782,21 @@ class RTTM(object):
                                                        'POST', api_args)
         return response['data']
 
-    def get_log_report(self, start_ts, end_ts):
+    def get_log_report(self, start_ts, end_ts=None):
         """Generates a report with information about changes to an existing
         RTTM service
 
-        :param start_ts: UNIX timestamp identifying point in time for the log
-            report
-        :param end_ts: Name of zone where records will be retrieved
+        :param start_ts: datetime.datetime instance identifying point in time
+            for the start of the log report
+        :param end_ts: datetime.datetime instance identifying point in time
+            for the end of the log report. Defaults to datetime.datetime.now()
         :return: dictionary containing log report data
         """
+        end_ts = end_ts or datetime.now()
         api_args = {'zone': self._zone,
                     'fqdn': self._fqdn,
-                    'start_ts': start_ts,
-                    'end_ts': end_ts}
+                    'start_ts': unix_date(start_ts),
+                    'end_ts': unix_date(end_ts)}
         response = DynectSession.get_session().execute('/RTTMLogReport/',
                                                        'POST', api_args)
         return response['data']

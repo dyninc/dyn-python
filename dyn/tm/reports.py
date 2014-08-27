@@ -2,6 +2,9 @@
 """This module contains interfaces for all Report generation features of the
 REST API
 """
+from datetime import datetime
+
+from .utils import unix_date
 from .session import DynectSession
 
 __author__ = 'elarochelle'
@@ -31,38 +34,41 @@ def get_dnssec_timeline(zone_name, start_ts=None, end_ts=None):
     to perform.
 
     :param zone_name: The name of the zone with DNSSEC service
-    :param start_ts: UNIX timestamp identifying point in time for the
-        report
-    :param end_ts: UNIX timestamp indicating the end of the data range for
-        the report
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the start of the timeline report
+    :param end_ts: datetime.datetime instance identifying point in time
+        for the end of the timeline report. Defaults to datetime.datetime.now()
     :return: A :class:`dict` containing log report data
     """
     api_args = {'zone': zone_name}
     if start_ts is not None:
-        api_args['start_ts'] = start_ts
+        api_args['start_ts'] = unix_date(start_ts)
     if end_ts is not None:
-        api_args['end_ts'] = end_ts
+        api_args['end_ts'] = unix_date(end_ts)
+    elif end_ts is None and start_ts is not None:
+        api_args['end_ts'] = unix_date(datetime.now())
     response = DynectSession.get_session().execute('/DNSSECTimelineReport/',
                                                    'POST', api_args)
     return response['data']
 
 
-def get_rttm_log(zone_name, fqdn, start_ts, end_ts):
+def get_rttm_log(zone_name, fqdn, start_ts, end_ts=None):
     """Generates a report with information about changes to an existing
     RTTM service.
 
     :param zone_name: The name of the zone
     :param fqdn: The FQDN where RTTM is attached
-    :param start_ts: UNIX timestamp identifying point in time for the log
-        report
-    :param end_ts: UNIX timestamp indicating the end of the data range for
-        the report
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the log report to start
+    :param end_ts: datetime.datetime instance indicating the end of the data
+        range for the report. Defaults to datetime.datetime.now()
     :return: A :class:`dict` containing log report data
     """
+    end_ts = end_ts or datetime.now()
     api_args = {'zone': zone_name,
                 'fqdn': fqdn,
-                'start_ts': start_ts,
-                'end_ts': end_ts}
+                'start_ts': unix_date(start_ts),
+                'end_ts': unix_date(end_ts)}
     response = DynectSession.get_session().execute('/RTTMLogReport/',
                                                    'POST', api_args)
     return response['data']
@@ -74,25 +80,26 @@ def get_rttm_rrset(zone_name, fqdn, ts):
 
     :param zone_name: The name of the zone
     :param fqdn: The FQDN where RTTM is attached
-    :param ts: UNIX timestamp identifying point in time for the report
+    :param ts: datetime.datetime instance identifying point in time for the
+        report
     :return: A :class:`dict` containing rrset report data
     """
     api_args = {'zone': zone_name,
                 'fqdn': fqdn,
-                'ts': ts}
+                'ts': unix_date(ts)}
     response = DynectSession.get_session().execute('/RTTMRRSetReport/',
                                                    'POST', api_args)
     return response['data']
 
 
-def get_qps(start_ts, end_ts, breakdown=None, hosts=None, rrecs=None,
-            zones = None):
+def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+            zones=None):
     """Generates a report with information about Queries Per Second (QPS).
 
-    :param start_ts: UNIX timestamp identifying point in time for the QPS
-        report
-    :param end_ts: UNIX timestamp indicating the end of the data range for
-        the report
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the QPS report
+    :param end_ts: datetime.datetime instance indicating the end of the data
+        range for the report. Defaults to datetime.datetime.now()
     :param breakdown: By default, most data is aggregated together.
         Valid values ('hosts', 'rrecs', 'zones').
     :param hosts: List of hosts to include in the report.
@@ -100,8 +107,9 @@ def get_qps(start_ts, end_ts, breakdown=None, hosts=None, rrecs=None,
     :param zones: List of zones to include in report.
     :return: A :class:`str` with CSV data
     """
-    api_args = {'start_ts': start_ts,
-                'end_ts': end_ts}
+    end_ts = end_ts or datetime.now()
+    api_args = {'start_ts': unix_date(start_ts),
+                'end_ts': unix_date(end_ts)}
     if breakdown is not None:
         api_args['breakdown'] = breakdown
     if hosts is not None:

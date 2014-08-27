@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """This module contains all Zone related API objects."""
-import logging
 import os
+import logging
 from time import sleep
 
+from .utils import unix_date
 from .errors import *
 from .records import *
 from .session import DynectSession
@@ -544,6 +545,35 @@ class Zone(object):
             del rttm['fqdn']
             rttms.append(RTTM(self._name, self._fqdn, api=False, **rttm))
         return rttms
+
+    def get_qps(self, start_ts, end_ts=None, breakdown=None, hosts=None,
+                rrecs=None):
+        """Generates a report with information about Queries Per Second (QPS)
+        for this zone
+
+        :param start_ts: datetime.datetime instance identifying point in time
+            for the QPS report
+        :param end_ts: datetime.datetime instance indicating the end of the data
+            range for the report. Defaults to datetime.datetime.now()
+        :param breakdown: By default, most data is aggregated together.
+            Valid values ('hosts', 'rrecs', 'zones').
+        :param hosts: List of hosts to include in the report.
+        :param rrecs: List of record types to include in report.
+        :return: A :class:`str` with CSV data
+        """
+        end_ts = end_ts or datetime.now()
+        api_args = {'start_ts': unix_date(start_ts),
+                    'end_ts': unix_date(end_ts),
+                    'zones': [self.name]}
+        if breakdown is not None:
+            api_args['breakdown'] = breakdown
+        if hosts is not None:
+            api_args['hosts'] = hosts
+        if rrecs is not None:
+            api_args['rrecs'] = rrecs
+        response = DynectSession.get_session().execute('/QPSReport/',
+                                                       'POST', api_args)
+        return response['data']
 
     def __eq__(self, other):
         """Equivalence operations for easily pulling a :class:`Zone` out of a

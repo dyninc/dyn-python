@@ -1,5 +1,11 @@
 Release History
 ---------------
+1.0.2 (2014-08-26)
+++++++++++++++++++
+
+* Added reports module
+* Updated installation documentation.
+
 1.0.1 (2014-08-06)
 ++++++++++++++++++
 

@@ -904,7 +904,7 @@ class GSLB(object):
         # We're only going accept new monitors of type Monitor
         if isinstance(value, Monitor):
             self._monitor = value
-            api_args = {'performance_monitor':
+            api_args = {'monitor':
                         self._monitor.to_json()}
             response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                            api_args)

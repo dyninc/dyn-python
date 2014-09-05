@@ -12,7 +12,7 @@ from datetime import datetime
 
 from . import __version__
 from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
-                     is_py2, is_py3, prepare_to_send)
+                     is_py2, is_py3, prepare_to_send, force_unicode)
 
 
 def cleared_class_dict(dict_obj):
@@ -327,67 +327,9 @@ class SessionEngine(Singleton):
 
     def __str__(self):
         """str override"""
-        return '<{}>'.format(self.name)
+        return force_unicode('<{}>').format(self.name)
     __repr__ = __unicode__ = __str__
 
-
-class APIObject(object):
-    """Base object type for all class types in this library that interact with
-    the various REST APIs. This class will provide an internal API for these
-    classes to remove the need for some of the one off methods that have managed
-    to run rampant throughout the codebase. This base class will also take care
-    of setting up/configuring basic utilities that most subclasses will be able
-    to leverage.
-    """
-    uri = ''
-    engine = None
-
-    def __init__(self, *args, **kwargs):
-        """Create a new :class:`~dyn.core.APIObect` instance. This object will
-        come equipped with a logging.logger instance for use throughout the
-        class as well as handle calling _build on the kwargs attribute, if an
-        'api' argument is passed to it.
-
-        Note: The 'api' key is used internally to denote that we've received all
-        of the data we need already from the API, we just need to apply it to
-        this instance rather than needing to execute a GET or POST call.
-        """
-        self.built = False
-        self.logger = logging.getLogger(str(self.__class__))
-        if 'api' in kwargs:
-            kwargs.pop('api')
-            self._build(kwargs)
-
-    def _post(self, *args, **kwargs):
-        """A stub method to be implemented by subclasses to perform POST API
-        calls and call _build to apply any response data to this instance
-        """
-        pass
-
-    def _get(self, *args, **kwargs):
-        """A stub method to be implemented by subclasses to perform GET API
-        calls and call _build to apply the data to this instance. By default
-        this method will GET from this instances uri attribute and _build the
-        data
-        """
-        response = self.engine.get_session().execute(self.uri, 'GET')
-        self._build(response['data'])
-
-    def _update(self, api_args):
-        """A method to perform PUT API calls and call _build to apply any
-        response data to this instance. By default this instance's session is
-        used to PUT the provided data and call _build to process the data
-        """
-        response = self.engine.get_session().execute(self.uri, 'PUT', api_args)
-        self._build(response['data'])
-        return response
-
-    def _build(self, data):
-        """A method to be implemented by subclasses to accept data returned
-        from the API and apply the data, in a meaningful way, to this instance.
-        By default it will apply each element in the data dict to the class with
-        a pre-pended '_' character
-        """
-        for key, val in data.items():
-            setattr(self, '_' + key, val)
-        self.built = True
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

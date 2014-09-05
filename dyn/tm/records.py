@@ -5,8 +5,10 @@ These DNS_Records should really only need to be created via a zone instance but
 could also be created independently if passed valid zone, fqdn data
 """
 import logging
+
 from .errors import DynectInvalidArgumentError
 from .session import DynectSession
+from ..compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
@@ -150,6 +152,15 @@ class DNSRecord(object):
         self._ttl = value
         self.api_args['ttl'] = self._ttl
         self._update_record(self.api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<{}>: {}').format(self._record_type, self._fqdn)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class ARecord(DNSRecord):

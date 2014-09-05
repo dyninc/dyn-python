@@ -7,6 +7,7 @@ own respective functionality.
 # API Libs
 from ..core import SessionEngine
 from .errors import *
+from ..compat import force_unicode
 
 
 class DynectSession(SessionEngine):
@@ -153,4 +154,5 @@ class DynectSession(SessionEngine):
     def __str__(self):
         """str override"""
         header = super(DynectSession, self).__str__()
-        return header + ': {}, {}'.format(self.customer, self.username)
+        return header + force_unicode(': {}, {}').format(self.customer,
+                                                         self.username)

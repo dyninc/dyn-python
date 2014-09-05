@@ -6,6 +6,7 @@ import logging
 from ..utils import Active
 from ..session import DynectSession
 from ..accounts import User
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['DynamicDNS']
@@ -187,3 +188,12 @@ class DynamicDNS(object):
         """Delete this Dynamic DNS service from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<DynamicDNS>: {}').format(self._fqdn)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

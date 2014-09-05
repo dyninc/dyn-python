@@ -1,7 +1,7 @@
 """This module contains utilities to be used throughout the dyn.tm module"""
 import calendar
 
-from ..compat import string_types
+from ..compat import string_types, force_unicode
 
 __author__ = 'jnappi'
 
@@ -126,8 +126,10 @@ class Active(object):
         'N' depending on the value of ``self.value``
         """
         if self.value:
-            return 'Y'
-        return 'N'
+            return force_unicode('Y')
+        return force_unicode('N')
+    __repr__ = __unicode__ = __str__
 
-    # __repr__ and __str__ return the same data
-    __repr__ = __str__
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

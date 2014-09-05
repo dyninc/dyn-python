@@ -7,6 +7,7 @@ from ..utils import APIList, Active
 from ..errors import DynectInvalidArgumentError
 from ..records import *
 from ..session import DynectSession
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
@@ -2277,3 +2278,12 @@ class TrafficDirector(object):
         """Delete this :class:`TrafficDirector` from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<TrafficDirector>: {}').format(self._service_id)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

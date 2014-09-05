@@ -30,9 +30,9 @@ except ImportError:
         sys.exit('Could not find json or simplejson libraries.')
 
 
-# ---------
-# Specifics
-# ---------
+# -----------------
+# Version Specifics
+# -----------------
 
 if is_py2:
     # If we have no JSON-esque module installed, we can't do anything
@@ -54,6 +54,14 @@ if is_py2:
     def prepare_for_loads(body, encoding):
         return body
 
+    def force_unicode(s, encoding='UTF-8'):
+        try:
+            s = unicode(s)
+        except UnicodeDecodeError:
+            s = str(s).decode(encoding, 'replace')
+
+        return s
+
 elif is_py3:
     from http.client import HTTPConnection, HTTPSConnection, HTTPException
     from urllib.parse import urlencode, pathname2url
@@ -65,3 +73,6 @@ elif is_py3:
 
     def prepare_for_loads(body, encoding):
         return body.decode(encoding)
+
+    def force_unicode(s, encoding='UTF-8'):
+        return str(s)

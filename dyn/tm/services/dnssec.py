@@ -5,6 +5,7 @@ from datetime import datetime
 from ..utils import APIList, Active, unix_date
 from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dnssec', 'DNSSECKey', 'DNSSEC']
@@ -78,6 +79,15 @@ class DNSSECKey(object):
                 setattr(self, key, int(val))
             else:
                 setattr(self, key, val)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<DNSSECKey>: {}').format(self.algorithm)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class DNSSEC(object):
@@ -278,3 +288,12 @@ class DNSSEC(object):
         """Delete this :class:`DNSSEC` Service from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<DNSSEC>: {}').format(self._zone)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+
 from ..utils import APIList
 from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
@@ -194,6 +196,15 @@ class Monitor(object):
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
         DynectSession.get_session().execute(uri, 'PUT', api_args)
 
+    def __str__(self):
+        """str override"""
+        return force_unicode('<GSLBMonitor>: {}').format(self._protocol)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
+
 
 class GSLBRegionPoolEntry(object):
     """:class:`GSLBRegionPoolEntry`"""
@@ -370,6 +381,16 @@ class GSLBRegionPoolEntry(object):
         """Delete this :class:`GSLBRegionPoolEntry` from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        s = force_unicode('<GSLBRegionPoolEntry>: {}')
+        return s.format(self._region_code)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class GSLBRegion(object):
@@ -579,6 +600,15 @@ class GSLBRegion(object):
         """Delete this :class:`GSLBRegion`"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<GSLBRegion>: {}').format(self._region_code)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class GSLB(object):
@@ -903,12 +933,11 @@ class GSLB(object):
     def monitor(self, value):
         # We're only going accept new monitors of type Monitor
         if isinstance(value, Monitor):
-            self._monitor = value
-            api_args = {'monitor':
-                        self._monitor.to_json()}
+            api_args = {'monitor': value.to_json()}
             response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                            api_args)
             self._build(response['data'], region=False)
+            self._monitor = value
 
     @property
     def contact_nickname(self):
@@ -928,3 +957,12 @@ class GSLB(object):
         """Delete this :class:`GSLB` service from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<GSLB>: {}').format(self._fqdn)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

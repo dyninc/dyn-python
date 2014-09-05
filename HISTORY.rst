@@ -1,5 +1,10 @@
 Release History
 ---------------
+1.0.3 (2014-09-05)
+++++++++++++++++++
+
+* Adding changes provided by @thomasco to allow for GSLB monitor replacements
+
 1.0.2 (2014-08-26)
 ++++++++++++++++++
 

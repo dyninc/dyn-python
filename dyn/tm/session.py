@@ -8,6 +8,7 @@ own respective functionality.
 from ..core import SessionEngine
 from .errors import *
 from ..compat import force_unicode
+from ..encrypt import AESCipher
 
 
 class DynectSession(SessionEngine):
@@ -32,10 +33,11 @@ class DynectSession(SessionEngine):
         :return: DynectSession object
         """
         super(DynectSession, self).__init__(host, port, ssl)
+        self.__cipher = AESCipher()
         self.extra_headers = {'API-Version': api_version}
         self.customer = customer
         self.username = username
-        self.password = password
+        self.password = self.__cipher.encrypt(password)
         self.connect()
         if auto_auth:
             self.authenticate()
@@ -48,7 +50,7 @@ class DynectSession(SessionEngine):
         self._conn.close()
         self._conn.connect()
         # Need to get a new Session token
-        self.execute('/REST/Session/', 'POST', self.auth_data)
+        self.execute('/REST/Session/', 'POST', self.__auth_data)
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
         return self.execute(uri, method, raw_args, final=True)
@@ -91,11 +93,10 @@ class DynectSession(SessionEngine):
 
         :param new_password: The new password to use
         """
-        self.password = new_password
         uri = '/PASSWORD/'
-        api_args = {'password': self.password}
+        api_args = {'password': new_password}
         self.execute(uri, 'PUT', api_args)
-        self.password = new_password
+        self.password = self.__cipher.encrypt(new_password)
 
     def user_permissions_report(self, user_name=None):
         """Returns information regarding the requested user's permission access
@@ -129,7 +130,7 @@ class DynectSession(SessionEngine):
         credentials
         """
         api_args = {'customer_name': self.customer, 'user_name': self.username,
-                    'password': self.password}
+                    'password': self.__cipher.decrypt(self.password)}
         try:
             response = self.execute('/Session/', 'POST', api_args)
         except IOError:
@@ -146,10 +147,10 @@ class DynectSession(SessionEngine):
         self.close_session()
 
     @property
-    def auth_data(self):
+    def __auth_data(self):
         """A dict of the authdata required to authenticate as this user"""
         return {'customer': self.customer, 'username': self.username,
-                'password': self.password}
+                'password': self.__cipher.decrypt(self.password)}
 
     def __str__(self):
         """str override"""

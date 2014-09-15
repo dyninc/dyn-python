@@ -216,8 +216,13 @@ class SessionEngine(Singleton):
         # Make sure the method is valid
         self._validate_method(method)
 
+        # Don't display password when debug logging
+        cleaned_args = args
+        if 'password' in cleaned_args:
+            cleaned_args['password'] = '*****'
+
         self.logger.debug('uri: {}, method: {}, args: {}'.format(uri, method,
-                                                                 args))
+                                                                 cleaned_args))
         # Prepare arguments to send to API
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
         # Send the command and deal with results

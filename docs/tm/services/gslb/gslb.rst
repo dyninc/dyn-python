@@ -66,3 +66,23 @@ the dyn.tm System and how to edit some of the same fields mentioned above.
     >>> fqdn = zone + '.'
     >>> gslb = GSLB(zone, fqdn)
 
+Replacing a GSLB Monitor
+^^^^^^^^^^^^^^^^^^^^^^^^
+If you'd like to create a brand new :class:`Monitor` for your GSLB service, rather
+than update your existing one, the following example shows how simple it is to
+accomplish this task
+::
+
+    >>> from dyn.tm.services.gslb import GSLB, Monitor
+    >>> zone = 'example.com'
+    >>> fqdn = zone + '.'
+    >>> gslb = GSLB(zone, fqdn)
+    >>> gslb.monitor.protocol
+    'HTTP'
+    >>> expected_text = "This is the text you're looking for."
+    >>> new_monitor = Monitor('HTTPS', 10, timeout=500, port=5005,
+                              expected=expected_text)
+    >>> gslb.monitor = new_monitor
+    >>> gslb.monitor.protocol
+    'HTTPS'
+

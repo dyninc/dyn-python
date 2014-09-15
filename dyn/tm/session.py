@@ -149,7 +149,7 @@ class DynectSession(SessionEngine):
     @property
     def __auth_data(self):
         """A dict of the authdata required to authenticate as this user"""
-        return {'customer': self.customer, 'username': self.username,
+        return {'customer_name': self.customer, 'user_name': self.username,
                 'password': self.__cipher.decrypt(self.password)}
 
     def __str__(self):

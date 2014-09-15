@@ -217,7 +217,7 @@ class SessionEngine(Singleton):
         self._validate_method(method)
 
         # Don't display password when debug logging
-        cleaned_args = args
+        cleaned_args = args.copy()
         if 'password' in cleaned_args:
             cleaned_args['password'] = '*****'
 

@@ -211,6 +211,9 @@ class SessionEngine(Singleton):
         :param final: boolean flag representing whether or not we have already
             failed executing once or not
         """
+        if self._conn is None:
+            self.connect()
+
         uri = self._validate_uri(uri)
 
         # Make sure the method is valid
@@ -329,6 +332,22 @@ class SessionEngine(Singleton):
             time.sleep(10)
             response = self.execute(uri, 'GET', api_args)
         return response
+
+    def __getstate__(cls):
+        """Because HTTP/HTTPS connections are not serializeable, we need to
+        strip the connection instance out before we ship the pickled data
+        """
+        d = cls.__dict__.copy()
+        d.pop('_conn')
+        return d
+
+    def __setstate__(cls, state):
+        """Because the HTTP/HTTPS connection was stripped out in __getstate__ we
+        must manually re-enter it as None and let the sessions execute method
+        handle rebuilding it later
+        """
+        cls.__dict__ = state
+        cls.__dict__['_conn'] = None
 
     def __str__(self):
         """str override"""

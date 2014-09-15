@@ -18,7 +18,8 @@ class DynectSession(SessionEngine):
     uri_root = '/REST'
 
     def __init__(self, customer, username, password, host='api.dynect.net', 
-                 port=443, ssl=True, api_version='current', auto_auth=True):
+                 port=443, ssl=True, api_version='current', auto_auth=True,
+                 key=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
 
@@ -30,10 +31,11 @@ class DynectSession(SessionEngine):
         :param username: DynECT Customer's username
         :param password: User's password
         :param auto_auth: declare whether or not to automatically log in
-        :return: DynectSession object
+        :param key: A valid AES-256 password encryption key to be used when
+            encrypting your password
         """
         super(DynectSession, self).__init__(host, port, ssl)
-        self.__cipher = AESCipher()
+        self.__cipher = AESCipher(key)
         self.extra_headers = {'API-Version': api_version}
         self.customer = customer
         self.username = username

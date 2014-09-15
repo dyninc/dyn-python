@@ -64,7 +64,8 @@ if is_py2:
 
 elif is_py3:
     from http.client import HTTPConnection, HTTPSConnection, HTTPException
-    from urllib.parse import urlencode, pathname2url
+    from urllib.parse import urlencode
+    from urllib.request import pathname2url
     import json
     string_types = (str,)
 

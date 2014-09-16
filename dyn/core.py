@@ -223,7 +223,7 @@ class SessionEngine(Singleton):
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
 
         # Don't display password when debug logging
-        cleaned_args = args.copy()
+        cleaned_args = json.loads(args)
         if 'password' in cleaned_args:
             cleaned_args['password'] = '*****'
 

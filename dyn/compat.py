@@ -2,7 +2,6 @@
 """python 2-3 compatability layer. The bulk of this was borrowed from
 kennethreitz's requests module
 """
-
 import sys
 
 # -------
@@ -17,18 +16,6 @@ is_py2 = (_ver[0] == 2)
 
 #: Python 3.x?
 is_py3 = (_ver[0] == 3)
-
-# ---------
-# JSON
-# ---------
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        sys.exit('Could not find json or simplejson libraries.')
-
 
 # -----------------
 # Version Specifics

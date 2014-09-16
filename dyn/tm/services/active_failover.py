@@ -4,6 +4,7 @@ import logging
 from ..utils import Active
 from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['HealthMonitor', 'ActiveFailover']
@@ -194,6 +195,15 @@ class HealthMonitor(object):
         api_args = {'monitor': {'expected': self._expected}}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
         DynectSession.get_session().execute(uri, 'PUT', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<HealthMonitor>: {}').format(self._protocol)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class ActiveFailover(object):
@@ -509,3 +519,12 @@ class ActiveFailover(object):
         """Delete this :class:`ActiveFailover` service from the Dynect System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<ActiveFailover>: {}').format(self._fqdn)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

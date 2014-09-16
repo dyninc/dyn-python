@@ -1,5 +1,17 @@
 Release History
 ---------------
+1.1.0 (2014-09-16)
+++++++++++++++++++
+
+* Internally improved Python2/3 compaability with the intoduction of the dyn.compat module
+* Timestamps for various report types are accepted as Python datetime.datetime instances
+* Added qps report access to Zones
+* Added __str__, __repr__, __unicode__, and __bytes__ methods to all API object types
+* Added conditional password encryption to allow for better in-app security
+* Added the ability for users to specify their own password encryption keys
+* Added __getstate__ and __setstate__ methods to SessionEngine, allowing sessions to be serialized
+* Misc bug fixes
+
 1.0.3 (2014-09-05)
 ++++++++++++++++++
 
@@ -9,7 +21,7 @@ Release History
 ++++++++++++++++++
 
 * Added reports module
-* Updated installation documentation.
+* Updated installation documentation
 
 1.0.1 (2014-08-06)
 ++++++++++++++++++

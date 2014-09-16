@@ -4,21 +4,10 @@ easy access to all other functionality within the dynect library via
 methods that return various types of DynECT objects which will provide their
 own respective functionality.
 """
-import sys
 import locale
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        sys.exit('Could not find json or simplejson libraries.')
-if sys.version_info[0] == 2:
-    from urllib import urlencode, pathname2url
-elif sys.version_info[0] == 3:
-    from urllib.parse import urlencode, pathname2url
 # API Libs
 from ..core import SessionEngine
+from ..compat import urlencode, pathname2url, json, prepare_for_loads
 from .errors import *
 
 __author__ = 'jnappi'
@@ -66,11 +55,7 @@ class MMSession(SessionEngine):
     def _handle_response(self, response, uri, method, raw_args, final):
         """Handle the processing of the API's response"""
         body = response.read()
-        ret_val = None
-        if sys.version_info[0] == 2:
-            ret_val = json.loads(body)
-        elif sys.version_info[0] == 3:
-            ret_val = json.loads(body.decode(self._encoding))
+        ret_val = json.loads(prepare_for_loads(body, self._encoding))
         return self._process_response(ret_val['response'], method, final)
 
     def _process_response(self, response, method, final=False):

@@ -7,3 +7,30 @@ services.
 Requires Python 2.6 or higher, or the "simplejson" package.
 
 For full documentation and examples see the dyn module on `Read The Docs <http://dyn.readthedocs.org>`_.
+
+Installation
+------------
+
+To install the dyn SDK, simply:
+
+.. code-block:: bash
+
+    $ pip install dyn
+
+
+Documentation
+-------------
+
+Documentation is available on `Read The Docs`_
+
+Contribute
+----------
+
+#. Check for open issues or open a new issue to start a discussion around a feature idea or a bug.
+#. For bug reports especially it's encouraged for you to include a code snippet highlighting the bug.
+#. For feature requests it's encouraged for you to include sample code highlighting a use case for the new feature.
+#. Fork `the repository`_ on GitHub to start making your changes to the **master** branch (or branch off of it).
+#. Send a pull request and bug the maintainer until it gets merged and published. :)
+
+.. _`the repository`: http://github.com/dyninc/dyn-python
+.. _`Read The Docs`: http://dyn.readthedocs.org>

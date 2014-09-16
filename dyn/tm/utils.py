@@ -1,7 +1,16 @@
+# -*- coding: utf-8 -*-
 """This module contains utilities to be used throughout the dyn.tm module"""
-import sys
+import calendar
+
+from ..compat import string_types, force_unicode
 
 __author__ = 'jnappi'
+__all__ = ['unix_date', 'APIList', 'Active']
+
+
+def unix_date(date):
+    """Return a python datetime.datetime object as a UNIX timestamp"""
+    return calendar.timegm(date.timetuple())
 
 
 class APIList(list):
@@ -98,12 +107,7 @@ class Active(object):
         :param inp: If a string, must be one of 'Y' or 'N'. Otherwise a bool.
         """
         self.value = None
-        types = tuple()
-        if sys.version_info[0] == 2:
-            types = (str, unicode)
-        elif sys.version_info[0] == 3:
-            types = str
-        if isinstance(inp, (str, types)):
+        if isinstance(inp, string_types):
             self.value = inp.upper() == 'Y'
         if isinstance(inp, bool):
             self.value = inp
@@ -124,8 +128,10 @@ class Active(object):
         'N' depending on the value of ``self.value``
         """
         if self.value:
-            return 'Y'
-        return 'N'
+            return force_unicode('Y')
+        return force_unicode('N')
+    __repr__ = __unicode__ = __str__
 
-    # __repr__ and __str__ return the same data
-    __repr__ = __str__
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

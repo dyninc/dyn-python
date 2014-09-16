@@ -1,7 +1,13 @@
 .. _sessions:
 
-Advanced Sessions Overview
-==========================
+Advanced Topics
+===============
+This Section serves as a collective for advanced topics that most developers
+using this library will never need to know about, but that may be useful for
+developers who are destined to maintain this package
+
+Sessions
+--------
 
 The way in which sessions are handled in this library are designed to be super
 easy to use for developers who use this library, however, have become relatively
@@ -10,7 +16,7 @@ mainly for developers who would like to contribute to this code base, or who are
 just curious as to what is actually going on under the hood.
 
 Parent Class
-------------
+^^^^^^^^^^^^
 Both :class:`dyn.tm.session.DynectSession` and :class:`dyn.mm.session.MMSession`
 are subclasses of :class:`dyn.core.SessionEngine`. The :class:`dyn.core.SessionEngine`
 provides an easy to use internal API for preparing, sending, and processing outbound
@@ -18,7 +24,7 @@ API calls. This class was added in v1.0.0 and greatly reduced the amount of logi
 and duplicated code that made looking at these sessions so overly complex.
 
 Parent Type
------------
+^^^^^^^^^^^
 Since v0.4.0 sessions had always been implemented as a Singleton type. At this point
 you're probably asing "Why?" And that's a bit of a complicated question. One of the main
 reasons that these sessions were implemented as a Singleton was to make it easier for
@@ -120,3 +126,39 @@ other instances, since those instances are tied to the classes themselves instea
 of held in the *globals* of the session modules. In addition this allows users
 to have multiple active sessions across multiple threads, which was previously
 impossible in the prior implementation.
+
+
+Password Encryption
+-------------------
+The DynECT REST API only accepts passwords in plain text, and currently there is
+no way around that. However, for those of you that are particularly mindful of
+security (and even those of you who aren't) can probably see some serious pitfalls
+to this. As far as most users of this library are concerned the passwords stored in
+their :class:`~dyn.tm.session.DynectSession` objects will only ever live in memory,
+so it's really not a huge deal that their passwords are stored in plain text. However,
+for users looking to do more advanced things, such as serialize and store their session
+objects in something less secure, such as a database, then these plain text passwords
+are far less than ideal. Because of this in version 1.1.0 we've added optional
+AES-256 password encryption for all :class:`~dyn.tm.session.DynectSession`
+instances. All you need to do to enable password encryption is install
+`PyCrypto <http://www.dlitz.net/software/pycrypto/>`_. The rest will happen
+automatically.
+
+Key Generation
+^^^^^^^^^^^^^^
+Also in version 1.1.0 an optional key field parameter was added to the
+:class:`~dyn.tm.session.DynectSession` __init__ method. This field will allow
+you to specify the key that your password will be encrypted using. However,
+you may also choose to let the dyn module handle the key generation for you as
+well using the :func:`~dyn.encrypt.generate_key` function which generates a,
+nearly, random 50 character key that can be easily consumed by the
+:class:`~dyn.encrypt.AESCipher` class (the class responsible for performing
+the actual encryption and decryption.
+
+Encrypt Module
+^^^^^^^^^^^^^^
+.. autofunction:: dyn.encrypt.generate_key
+
+.. autoclass:: dyn.encrypt.AESCipher
+    :members:
+    :undoc-members:

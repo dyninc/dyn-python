@@ -37,7 +37,7 @@ Contents:
    quickstart
    tm
    mm
-   sessions
+   advanced
 
 
 Indices and tables

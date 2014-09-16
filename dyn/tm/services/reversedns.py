@@ -3,13 +3,14 @@ import logging
 
 from ..utils import Active
 from ..session import DynectSession
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['ReverseDNS']
 
 
 class ReverseDNS(object):
-    """docstring for ReverseDNS"""
+    """A DynECT ReverseDNS service"""
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create an new :class:`ReverseDNS` object instance
 
@@ -202,3 +203,12 @@ class ReverseDNS(object):
         """Delete this ReverseDNS service from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<ReverseDNS>: {}').format(self._fqdn)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

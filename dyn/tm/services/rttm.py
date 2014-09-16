@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
+from datetime import datetime
 
-from ..utils import APIList, Active
+from ..utils import APIList, Active, unix_date
 from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
+from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
@@ -205,6 +207,15 @@ class Monitor(object):
         api_args = {'monitor': {'expected': self._expected}}
         self._update(api_args)
 
+    def __str__(self):
+        """str override"""
+        return force_unicode('<HealthMonitor>: {}').format(self._protocol)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
+
 
 class PerformanceMonitor(Monitor):
     """A :class:`PerformanceMonitor` for RTTM Service."""
@@ -226,6 +237,15 @@ class PerformanceMonitor(Monitor):
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
         response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._build(response['data']['performance_monitor'])
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<PerformanceMonitor>: {}').format(self._protocol)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class RegionPoolEntry(object):
@@ -353,6 +373,15 @@ class RegionPoolEntry(object):
                                                          self._address)
         DynectSession.get_session().execute(uri, 'DELETE', {})
 
+    def __str__(self):
+        """str override"""
+        return force_unicode('<RTTMRegionPoolEntry>: {}').format(self._address)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
+
 
 class RTTMRegion(object):
     """docstring for RTTMRegion"""
@@ -414,7 +443,6 @@ class RTTMRegion(object):
 
     def _post(self):
         """Create a new :class:`RTTMRegion` on the DynECT System"""
-
         uri = '/RTTMRegion/{}/{}/'.format(self._zone, self._fqdn)
         api_args = {'region_code': self._region_code,
                     'pool': self._pool.to_json()}
@@ -596,8 +624,16 @@ class RTTMRegion(object):
         """Delete an existing :class:`RTTMRegion` object from the DynECT
         System
         """
-        api_args = {}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE')
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<RTTMRegion>: {}').format(self._region_code)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
 
 
 class RTTM(object):
@@ -781,19 +817,21 @@ class RTTM(object):
                                                        'POST', api_args)
         return response['data']
 
-    def get_log_report(self, start_ts, end_ts):
+    def get_log_report(self, start_ts, end_ts=None):
         """Generates a report with information about changes to an existing
         RTTM service
 
-        :param start_ts: UNIX timestamp identifying point in time for the log
-            report
-        :param end_ts: Name of zone where records will be retrieved
+        :param start_ts: datetime.datetime instance identifying point in time
+            for the start of the log report
+        :param end_ts: datetime.datetime instance identifying point in time
+            for the end of the log report. Defaults to datetime.datetime.now()
         :return: dictionary containing log report data
         """
+        end_ts = end_ts or datetime.now()
         api_args = {'zone': self._zone,
                     'fqdn': self._fqdn,
-                    'start_ts': start_ts,
-                    'end_ts': end_ts}
+                    'start_ts': unix_date(start_ts),
+                    'end_ts': unix_date(end_ts)}
         response = DynectSession.get_session().execute('/RTTMLogReport/',
                                                        'POST', api_args)
         return response['data']
@@ -983,3 +1021,12 @@ class RTTM(object):
         """Delete this RTTM Service"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<RTTM>: {}').format(self._fqdn)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

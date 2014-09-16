@@ -14,4 +14,3 @@ List Functions
 .. autofunction:: dyn.tm.reports.get_rttm_rrset
 .. autofunction:: dyn.tm.reports.get_qps
 .. autofunction:: dyn.tm.reports.get_zone_notes
-

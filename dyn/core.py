@@ -4,25 +4,15 @@ itself. Although it's possible to use this functionality outside of the dyn
 library, it is not recommened and could possible result in some strange
 behavior.
 """
-import sys
 import time
 import locale
 import logging
 import threading
 from datetime import datetime
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json
-    except ImportError:
-        sys.exit('Could not find json or simplejson libraries.')
-if sys.version_info[0] == 2:
-    from httplib import HTTPConnection, HTTPSConnection, HTTPException
-elif sys.version_info[0] == 3:
-    from http.client import HTTPConnection, HTTPSConnection, HTTPException
-# API Libs
-from dyn import __version__
+
+from . import __version__
+from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
+                     is_py2, is_py3, prepare_to_send, force_unicode)
 
 
 def cleared_class_dict(dict_obj):
@@ -107,7 +97,7 @@ class SessionEngine(Singleton):
         key = getattr(cls, '__metakey__')
         closed = cls._instances.get(key, {}).pop(cur_thread, None)
         if len(cls._instances.get(key, {})) == 0:
-            del cls._instances[key]
+            cls._instances.pop(key, None)
         return closed
 
     @property
@@ -164,11 +154,7 @@ class SessionEngine(Singleton):
         if self.poll_incomplete:
             response, body = self.poll_response(response, body)
             self._last_response = response
-        ret_val = None
-        if sys.version_info[0] == 2:
-            ret_val = json.loads(body)
-        elif sys.version_info[0] == 3:
-            ret_val = json.loads(body.decode('UTF-8'))
+        ret_val = json.loads(body.decode('UTF-8'))
 
         self._meta_update(uri, method, ret_val)
         # Handle retrying if ZoneProp is blocking the current task
@@ -225,15 +211,24 @@ class SessionEngine(Singleton):
         :param final: boolean flag representing whether or not we have already
             failed executing once or not
         """
+        if self._conn is None:
+            self.connect()
+
         uri = self._validate_uri(uri)
 
         # Make sure the method is valid
         self._validate_method(method)
 
-        self.logger.debug('uri: {}, method: {}, args: {}'.format(uri, method,
-                                                                 args))
         # Prepare arguments to send to API
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
+
+        # Don't display password when debug logging
+        cleaned_args = json.loads(args)
+        if 'password' in cleaned_args:
+            cleaned_args['password'] = '*****'
+
+        self.logger.debug('uri: {}, method: {}, args: {}'.format(uri, method,
+                                                                 cleaned_args))
         # Send the command and deal with results
         self.send_command(uri, method, args)
 
@@ -314,11 +309,7 @@ class SessionEngine(Singleton):
         self._conn.putheader('Content-length', '%d' % len(args))
         self._conn.endheaders()
 
-        if sys.version_info[0] == 2:
-            self._conn.send(bytes(args))
-        elif sys.version_info[0] == 3:
-            # noinspection PyArgumentList
-            self._conn.send(bytes(args, 'UTF-8'))
+        self._conn.send(prepare_to_send(args))
 
     def wait_for_job_to_complete(self, job_id, timeout=120):
         """When a response comes back with a status of "incomplete" we need to
@@ -343,7 +334,27 @@ class SessionEngine(Singleton):
             response = self.execute(uri, 'GET', api_args)
         return response
 
+    def __getstate__(cls):
+        """Because HTTP/HTTPS connections are not serializeable, we need to
+        strip the connection instance out before we ship the pickled data
+        """
+        d = cls.__dict__.copy()
+        d.pop('_conn')
+        return d
+
+    def __setstate__(cls, state):
+        """Because the HTTP/HTTPS connection was stripped out in __getstate__ we
+        must manually re-enter it as None and let the sessions execute method
+        handle rebuilding it later
+        """
+        cls.__dict__ = state
+        cls.__dict__['_conn'] = None
+
     def __str__(self):
         """str override"""
-        return '<{}>'.format(self.name)
+        return force_unicode('<{}>').format(self.name)
     __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

@@ -358,8 +358,13 @@ class Zone(object):
         fqdn = self.name + '.'
         if name:
             fqdn = name + '.' + fqdn
-        # noinspection PyCallingNonCallable
-        service = constructors[service_type](self.name, fqdn, *args, **kwargs)
+        if service_type == 'DNSSEC':
+            # noinspection PyCallingNonCallable
+            service = constructors[service_type](self.name, *args, **kwargs)
+        else:
+            # noinspection PyCallingNonCallable
+            service = constructors[service_type](self.name, fqdn, *args,
+                                                 **kwargs)
         if service_type in self.services:
             self.services[service_type].append(service)
         else:

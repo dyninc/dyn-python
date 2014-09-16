@@ -35,4 +35,4 @@ nosetests.xml
 .pydevproject
 
 # PyCharm
-.idea
+.idea/

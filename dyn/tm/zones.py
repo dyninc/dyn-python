@@ -3,6 +3,7 @@
 import os
 import logging
 from time import sleep
+from datetime import datetime
 
 from .utils import unix_date
 from ..compat import force_unicode
@@ -326,6 +327,7 @@ class Zone(object):
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
         fqdn = name + '.' + self.name + '.'
+        # noinspection PyCallingNonCallable
         rec = RECS[record_type](self.name, fqdn, *args, **kwargs)
         if record_type in self.records:
             self.records[record_type].append(rec)
@@ -356,6 +358,7 @@ class Zone(object):
         fqdn = self.name + '.'
         if name:
             fqdn = name + '.' + fqdn
+        # noinspection PyCallingNonCallable
         service = constructors[service_type](self.name, fqdn, *args, **kwargs)
         if service_type in self.services:
             self.services[service_type].append(service)
@@ -517,10 +520,10 @@ class Zone(object):
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         gslbs = []
-        for gslb in response['data']:
-            del gslb['zone']
-            del gslb['fqdn']
-            gslbs.append(GSLB(self._name, self._fqdn, api=False, **gslb))
+        for gslb_svc in response['data']:
+            del gslb_svc['zone']
+            del gslb_svc['fqdn']
+            gslbs.append(GSLB(self._name, self._fqdn, api=False, **gslb_svc))
         return gslbs
 
     def get_all_rdns(self):
@@ -549,10 +552,10 @@ class Zone(object):
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         rttms = []
-        for rttm in response['data']:
-            del rttm['zone']
-            del rttm['fqdn']
-            rttms.append(RTTM(self._name, self._fqdn, api=False, **rttm))
+        for rttm_svc in response['data']:
+            del rttm_svc['zone']
+            del rttm_svc['fqdn']
+            rttms.append(RTTM(self._name, self._fqdn, api=False, **rttm_svc))
         return rttms
 
     def get_qps(self, start_ts, end_ts=None, breakdown=None, hosts=None,
@@ -784,6 +787,7 @@ class Node(object):
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
+        # noinspection PyCallingNonCallable
         rec = RECS[record_type](self.zone, self.fqdn, *args, **kwargs)
         if record_type in self.records:
             self.records[record_type].append(rec)
@@ -807,6 +811,7 @@ class Node(object):
                         'GSLB': GSLB,
                         'RDNS': ReverseDNS,
                         'RTTM': RTTM}
+        # noinspection PyCallingNonCallable
         service = constructors[service_type](self.zone, self.fqdn, *args,
                                              **kwargs)
         self.services.append(service)

@@ -97,7 +97,7 @@ class SessionEngine(Singleton):
         key = getattr(cls, '__metakey__')
         closed = cls._instances.get(key, {}).pop(cur_thread, None)
         if len(cls._instances.get(key, {})) == 0:
-            cls._instances.pop(key)
+            cls._instances.pop(key, None)
         return closed
 
     @property

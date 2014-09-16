@@ -10,6 +10,7 @@ Release History
 * Added conditional password encryption to allow for better in-app security
 * Added the ability for users to specify their own password encryption keys
 * Added __getstate__ and __setstate__ methods to SessionEngine, allowing sessions to be serialized
+* Misc bug fixes
 
 1.0.3 (2014-09-05)
 ++++++++++++++++++

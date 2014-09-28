@@ -4,7 +4,7 @@ Release History
 ++++++++++++++++++
 
 * Addition of dyn.tm.tools module
-* Added change_ip function to dyn.tm.tools
+* Added change_ip and map_ip functions to dyn.tm.tools
 * Added dyn.tm.session.VolatileSession for forced logouts
 * Added dyn.core.SessionEngine.new_session classmethod for forcing new session generation
 

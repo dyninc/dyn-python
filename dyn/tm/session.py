@@ -159,3 +159,10 @@ class DynectSession(SessionEngine):
         header = super(DynectSession, self).__str__()
         return header + force_unicode(': {}, {}').format(self.customer,
                                                          self.username)
+
+
+class VolatileSession(DynectSession):
+    """A DynectSession subclass that will automatically close it's own session
+    once this instance is garbage colleted or explicitly deleted."""
+    def __del__(self):
+        self.close_session()

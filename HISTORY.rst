@@ -1,5 +1,13 @@
 Release History
 ---------------
+1.2.0 (2014-??-??)
+++++++++++++++++++
+
+* Addition of dyn.tm.tools module
+* Added change_ip function to dyn.tm.tools
+* Added dyn.tm.session.VolatileSession for forced logouts
+* Added dyn.core.SessionEngine.new_session classmethod for forcing new session generation
+
 1.1.0 (2014-09-16)
 ++++++++++++++++++
 

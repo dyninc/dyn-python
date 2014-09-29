@@ -1,4 +1,4 @@
-.. _sessions:
+.. _advanced:
 
 Advanced Topics
 ===============

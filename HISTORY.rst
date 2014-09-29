@@ -1,6 +1,6 @@
 Release History
 ---------------
-1.2.0 (2014-??-??)
+1.2.0 (2014-09-29)
 ++++++++++++++++++
 
 * Addition of dyn.tm.tools module

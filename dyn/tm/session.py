@@ -44,6 +44,18 @@ class DynectSession(SessionEngine):
         if auto_auth:
             self.authenticate()
 
+    def __enter__(self):
+        """Yield this instance as a reference for use within the context block
+        """
+        yield self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """We don't particularly care about any exceptions that occured within
+        the context block, so ignore them and force a log out, which handles
+        closing the current session.
+        """
+        self.log_out()
+
     def _handle_error(self, uri, method, raw_args):
         """Handle the processing of a connection error with the api"""
         # Our token is no longer valid because our session was killed

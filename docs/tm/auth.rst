@@ -1,0 +1,77 @@
+.. _auth-index:
+
+Authentication
+==============
+The :mod:`~dyn.tm.session` module is an interface to authentication via the
+dyn.tm REST API. As noted in the advanced section, :class:`~dyn.tm.session.DynectSession`'s
+are implemented as Singleton types, which means that, in most cases, you don't need to keep track
+of your :class:`~dyn.tm.session.DynectSession` instances after you create them. However,
+there are several examples of ways in which you can use these session instances which
+will be outlined below.
+
+.. autoclass:: dyn.tm.session.DynectSession
+    :members:
+    :undoc-members:
+
+
+The Basics
+----------
+For basic usage, you need not do anything more than simply
+::
+
+    >>> from dyn.tm.session import DynectSession
+    >>> DynectSession('customer', 'user', 'password')
+
+Permissions
+-----------
+Using a :class:`~dyn.tm.session.DynectSession` instance, you can also verify
+the current permissions associated with your session by simply checking the
+permissions property of your :class:`~dyn.tm.session.DynectSession` instance.
+::
+
+    >>> from dyn.tm.session import DynectSession
+    >>> s = DynectSession('customer', 'user', 'password')
+    >>> s.permissions
+    [u'ZoneGet', u'ZoneUpdate', u'ZoneCreate', u'ZoneDelete', ...
+
+Additional Features
+-------------------
+The majority of these features exist mainly to provide a cleaner interface to working
+with sessions as Singleton types.
+
+DynectSession as a Context Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As of version 1.2.0 you have the ability to use a DynectSession as a context
+manager, like so
+::
+
+    >>> from dyn.tm.session import DynectSession
+    >>> with DynectSession('customer', 'user', 'password') as s:
+    ...     return s.permissions
+
+This feature is particularly useful if you're looking to manage multiple user accounts
+programatically.
+
+
+Overriding Sessions
+^^^^^^^^^^^^^^^^^^^
+As of version 1.2.0 you have the ability to override an existing DynectSession
+with the use of the new_session class method like so
+::
+
+    >>> from dyn.tm.session import DynectSession
+    >>> s = DynectSession('customer', 'user', 'password')
+    >>> s = DynectSession.new_session('customer', 'another_user', 'password')
+
+Getting Sessions
+^^^^^^^^^^^^^^^^
+If you don't want to track your current DynectSession, but want to be able to
+access your current one later, you can make use of the get_session class method
+like so
+::
+
+    >>> from dyn.tm.session import DynectSession
+    >>> DynectSession('customer', 'user', 'password')
+    >>> DynectSession.get_session().username
+    'user'
+

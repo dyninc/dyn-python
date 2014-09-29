@@ -27,5 +27,6 @@ this part of the documentation is for you.
    tm/records
    tm/services
    tm/reports
+   tm/tools
    tm/errors
 

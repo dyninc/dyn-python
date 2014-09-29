@@ -21,6 +21,7 @@ this part of the documentation is for you.
    :maxdepth: 2
    :numbered:
 
+   tm/auth
    tm/zones
    tm/accounts
    tm/records

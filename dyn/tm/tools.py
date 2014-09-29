@@ -3,6 +3,7 @@
 common or complicated tasks one will likely find themselves needing to
 accomplish via the DynECT API
 """
+from .records import ARecord, AAAARecord
 from ..compat import string_types
 
 __author__ = 'jnappi'
@@ -21,8 +22,8 @@ def change_ip(zone, from_ip, to, v6=False):
         (ie, whether we're updating an ARecord or AAAARecord)
     """
     publish = False
-    records = zone.get_all_records_by_type('AAAA') if v6 else \
-        zone.get_all_records_by_type('A')
+    records = zone.get_all_records()
+    records = records['aaaa_records'] if v6 else records['a_records']
 
     def update_single_ip(f, t):
         changed = False
@@ -54,8 +55,8 @@ def map_ips(zone, mapping, v6=False):
         (ie, whether we're updating an ARecord or AAAARecord)
     """
     publish = False
-    records = zone.get_all_records_by_type('AAAA') if v6 else \
-        zone.get_all_records_by_type('A')
+    records = zone.get_all_records()
+    records = records['aaaa_records'] if v6 else records['a_records']
 
     for old, new in mapping.items():
         for record in records:

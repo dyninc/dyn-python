@@ -5,7 +5,7 @@ Release History
 
 * Addition of dyn.tm.tools module
 * Added change_ip and map_ip functions to dyn.tm.tools
-* Added dyn.tm.session.CollectedSession for forced logouts
+* Added __enter__ and __exit__ methods to DynectSession for allow for use as a context manager
 * Added dyn.core.SessionEngine.new_session classmethod for forcing new session generation
 
 1.1.0 (2014-09-16)

@@ -3,7 +3,6 @@
 common or complicated tasks one will likely find themselves needing to
 accomplish via the DynECT API
 """
-from .records import ARecord, AAAARecord
 from ..compat import string_types
 
 __author__ = 'jnappi'

@@ -161,7 +161,7 @@ class DynectSession(SessionEngine):
                                                          self.username)
 
 
-class VolatileSession(DynectSession):
+class CollectedSession(DynectSession):
     """A DynectSession subclass that will automatically close it's own session
     once this instance is garbage colleted or explicitly deleted."""
     def __del__(self):

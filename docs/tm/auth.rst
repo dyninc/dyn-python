@@ -50,13 +50,13 @@ manager, like so
     ...     return s.permissions
 
 This feature is particularly useful if you're looking to manage multiple user accounts
-proromatically.
+programatically.
 
 
 Overriding Sessions
 ^^^^^^^^^^^^^^^^^^^
 As of version 1.2.0 you have the ability to override an existing DynectSession
-with the use of the new new_session class method like so
+with the use of the new_session class method like so
 ::
 
     >>> from dyn.tm.session import DynectSession

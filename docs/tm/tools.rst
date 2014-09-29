@@ -27,7 +27,7 @@ it straight forward to apply these changes
     >>> my_zone = Zone('example.com')
     >>> old = '1.1.1.1'
     >>> new = '1.1.1.2'
-    >>> change_ip(my_zone, old, new)
+    >>> change_ip(my_zone, old, new, publish=True)
 
 This handles acquiring and ARecords under the provided zone and applying the changes
 as you've specified. Need to shift over a handful of ip addresses?
@@ -38,7 +38,7 @@ as you've specified. Need to shift over a handful of ip addresses?
     >>> my_zone = Zone('example.com')
     >>> old = ['1.1.1.1', '1.1.1.3', '1.1.1.5']
     >>> new = ['1.1.1.2', '1.1.1.4', '1.1.1.6']
-    >>> change_ip(my_zone, old, new)
+    >>> change_ip(my_zone, old, new, publish=True)
 
 Have IPv6 addresses you need to switch over?
 ::
@@ -48,7 +48,21 @@ Have IPv6 addresses you need to switch over?
     >>> my_zone = Zone('example.com')
     >>> old = '::1'
     >>> new = '2001:db8:85a3::8a2e:370:7334'
-    >>> change_ip(my_zone, old, new, v6=True)
+    >>> change_ip(my_zone, old, new, v6=True, publish=True)
+
+
+Don't want to automatically publish, but rather wait and validate the changes
+manually?
+::
+
+    >>> from dyn.tm.zones import Zone
+    >>> from dyn.tm.tools import change_ip
+    >>> my_zone = Zone('example.com')
+    >>> old = '1.1.1.1'
+    >>> new = '1.1.1.2'
+    >>> changeset = change_ip(my_zone, old, new)
+    >>> changeset
+    [(u'example.com.', u'1.1.1.1', u'1.1.1.2')]
 
 
 map_ips
@@ -64,5 +78,5 @@ as the same v6 flag for specifying that you're working ipv6 addresses.
     >>> old = '1.1.1.1'
     >>> new = '1.1.1.2'
     >>> mapping = {old: new}
-    >>> map_ips(my_zone, mapping)
+    >>> map_ips(my_zone, mapping, publish=True)
 

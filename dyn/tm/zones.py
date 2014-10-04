@@ -313,7 +313,7 @@ class Zone(object):
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']
 
-    def add_record(self, name, record_type='A', *args, **kwargs):
+    def add_record(self, name=None, record_type='A', *args, **kwargs):
         """Adds an a record with the provided name and data to this
         :class:`Zone`
 
@@ -326,7 +326,7 @@ class Zone(object):
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
-        fqdn = name + '.' + self.name + '.'
+        fqdn = name + '.' + self.name + '.' if name else self.name + '.'
         # noinspection PyCallingNonCallable
         rec = RECS[record_type](self.name, fqdn, *args, **kwargs)
         if record_type in self.records:

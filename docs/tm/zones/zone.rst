@@ -55,3 +55,18 @@ The following example shows how to use the results of a call to the
     ...     if zone.serial_style != 'increment':
     ...         zone.serial_style = 'increment'
 
+
+Adding Records to a Zone
+^^^^^^^^^^^^^^^^^^^^^^^^
+The following examples show how to add records to a Zone using the add_record
+method.
+::
+
+    >>> from dyn.tm.zones import Zone
+    >>> # Create a dyn.tmSession
+    >>> my_zone = Zone('myzone.com')
+    # Add record to zone apex
+    >>> my_zone.add_record(record_type='MX', exchange='mail.example.com.')
+    # Add record to node under zone apex
+    >>> my_zone.add_record('my_node', record_type='A', address='1.1.1.1')
+

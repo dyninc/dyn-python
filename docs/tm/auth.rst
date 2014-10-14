@@ -75,3 +75,22 @@ like so
     >>> DynectSession.get_session().username
     'user'
 
+Session History
+^^^^^^^^^^^^^^^
+As of version 1.3.0 users can now optionally allow DynectSessions to store a
+history of API calls that are made. This can be particularly useful for
+debugging, as well as for use when contacting Support.
+::
+
+    >>> >>> from dyn.tm.session import DynectSession
+    >>> s = DynectSession('customer', 'user', 'password', history=True)
+    >>> s.history
+    ... [('2014-10-14T11:15:17.351740',
+    ...   '/REST/Session/',
+    ...   'POST',
+    ...   {'customer_name': 'customer', 'password': '*****', 'user_name': 'user'},
+    ...   u'success')]
+
+Please note that if you do not specify `history` as `True` when you log in, that
+your history will not be recorded and `s.history` will return `None`
+

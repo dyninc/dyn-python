@@ -12,7 +12,7 @@ from datetime import datetime
 
 from . import __version__
 from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
-                     is_py2, is_py3, prepare_to_send, force_unicode)
+                     prepare_to_send, force_unicode)
 
 
 def cleared_class_dict(dict_obj):
@@ -51,21 +51,36 @@ class Singleton(_Singleton('SingletonMeta', (object,), {})):
     pass
 
 
+class _History(list):
+    """A *list* subclass specifically targeted at being able to store the
+    history of calls made via a SessionEngine
+    """
+    def append(self, p_object):
+        """Override builtin list append operators to allow for the automatic
+        appendation of a timestamp for cleaner record keeping
+        """
+        now_ts = datetime.now().isoformat()
+        super(_History, self).append(tuple([now_ts] + list(p_object)))
+
+
 class SessionEngine(Singleton):
     """Base object representing a DynectSession Session"""
     _valid_methods = tuple()
     uri_root = '/'
 
-    def __init__(self, host=None, port=443, ssl=True):
+    def __init__(self, host=None, port=443, ssl=True, history=False):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
 
         :param host: DynECT API server address
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
+        :param history: A boolean flag determining whether or not you would
+            like to store a record of all API calls made to review later
         :return: SessionEngine object
         """
         super(SessionEngine, self).__init__()
+        self.__call_cache = _History() if history else None
         self.extra_headers = dict()
         self.logger = logging.getLogger(self.name)
         self.host = host
@@ -171,6 +186,8 @@ class SessionEngine(Singleton):
             response, body = self.poll_response(response, body)
             self._last_response = response
         ret_val = json.loads(body.decode('UTF-8'))
+        if self.__call_cache is not None:
+            self.__call_cache.append((uri, method, raw_args, ret_val['status']))
 
         self._meta_update(uri, method, ret_val)
         # Handle retrying if ZoneProp is blocking the current task
@@ -374,3 +391,12 @@ class SessionEngine(Singleton):
     def __bytes__(self):
         """bytes override"""
         return bytes(self.__str__())
+
+    @property
+    def history(self):
+        """A history of all API calls that have been made during the duration
+        of this Session's existence. These API call details are returned as a
+        *list* of 5-tuples of the form: (timestamp, uri, method, args, status)
+        where status will be one of 'success' or 'failure'
+        """
+        return self.__call_cache

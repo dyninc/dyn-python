@@ -4,6 +4,7 @@ itself. Although it's possible to use this functionality outside of the dyn
 library, it is not recommened and could possible result in some strange
 behavior.
 """
+import copy
 import time
 import locale
 import logging
@@ -21,6 +22,18 @@ def cleared_class_dict(dict_obj):
     """
     return {x: dict_obj[x] for x in dict_obj if dict_obj[x] is not None and
             not hasattr(dict_obj[x], '__call__')}
+
+
+def clean_args(dict_obj):
+    """Clean a dictionary of API arguments to prevent the display of plain text
+    passwords to users
+
+    :param dict_obj: The dictionary of arguments to be cleaned
+    """
+    cleaned_args = copy.deepcopy(dict_obj)
+    if 'password' in cleaned_args:
+        cleaned_args['password'] = '*****'
+    return cleaned_args
 
 
 class _Singleton(type):
@@ -187,7 +200,8 @@ class SessionEngine(Singleton):
             self._last_response = response
         ret_val = json.loads(body.decode('UTF-8'))
         if self.__call_cache is not None:
-            self.__call_cache.append((uri, method, raw_args, ret_val['status']))
+            self.__call_cache.append((uri, method, clean_args(raw_args),
+                                      ret_val['status']))
 
         self._meta_update(uri, method, ret_val)
         # Handle retrying if ZoneProp is blocking the current task
@@ -255,13 +269,9 @@ class SessionEngine(Singleton):
         # Prepare arguments to send to API
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
 
-        # Don't display password when debug logging
-        cleaned_args = json.loads(args)
-        if 'password' in cleaned_args:
-            cleaned_args['password'] = '*****'
+        msg = 'uri: {}, method: {}, args: {}'
+        self.logger.debug(msg.format(uri, method, clean_args(json.loads(args))))
 
-        self.logger.debug('uri: {}, method: {}, args: {}'.format(uri, method,
-                                                                 cleaned_args))
         # Send the command and deal with results
         self.send_command(uri, method, args)
 

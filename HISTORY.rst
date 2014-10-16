@@ -1,5 +1,15 @@
 Release History
 ---------------
+1.3.1 (2014-10-16)
+++++++++++++++++++
+
+* Adding additional hooks to dyn.tm.errors that return collections of exceptions
+
+1.3.0 (2014-10-14)
+++++++++++++++++++
+
+* dyn.tm.session.DynectSession now accepts a `history` flag to enable per-session history recording
+
 1.2.0 (2014-09-29)
 ++++++++++++++++++
 

@@ -234,7 +234,6 @@ class Zone(object):
     @property
     def serial(self):
         """The current serial of this :class:`Zone`"""
-        self._get()
         return self._serial
     @serial.setter
     def serial(self, value):

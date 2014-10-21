@@ -1,5 +1,10 @@
 Release History
 ---------------
+1.3.2 (2014-10-21)
+++++++++++++++++++
+
+* Fixed an issue where attempting to access a Zone's serial resulted in always performing a GET call
+
 1.3.1 (2014-10-16)
 ++++++++++++++++++
 

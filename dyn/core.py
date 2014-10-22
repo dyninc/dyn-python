@@ -110,8 +110,8 @@ class SessionEngine(Singleton):
         """Return a new session instance, regardless of whether or not there is
         already an existing session.
 
-        :param *args: Arguments to be passed to the Singleton __call__ method
-        :param *kwargs: keyword arguments to be passed to the Singleton __call__
+        :param args: Arguments to be passed to the Singleton __call__ method
+        :param kwargs: keyword arguments to be passed to the Singleton __call__
             method
         """
         cur_thread = threading.current_thread()

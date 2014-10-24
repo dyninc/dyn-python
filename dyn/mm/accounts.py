@@ -611,9 +611,9 @@ class Suppression(object):
         pass
 
     def activate(self):
-        """Removes one or more :class:`Recipient`'s from the user's suppression
-        list. This will not unbounce/uncomplain the :class:`Recipient`(s), but
-        you will be permitted to send to them again.
+        """Removes a :class:`Recipient` from the user's suppression list.
+        This will not unbounce/uncomplain the :class:`Recipient`, but you will
+        be permitted to send to them again.
         """
         uri = self.uri + '/activate'
         api_args = {'emailaddress': self.emailaddress}

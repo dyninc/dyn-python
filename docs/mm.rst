@@ -25,5 +25,5 @@ this part of the documentation is for you.
    mm/message
    mm/reports
    mm/session
-   mmerrors
+   mm/errors
 

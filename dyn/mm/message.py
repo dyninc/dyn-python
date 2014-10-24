@@ -72,8 +72,8 @@ class EMail(object):
         :param content: The optional content field can be used to overrwrite, or
             to specify the actual content of the body of the message. Note: If
             *content*, this instance's body, and this instance's html fields are
-            all *None*, then an
-            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+            all *None*, then a
+            :class:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
         if content is None and self.bodytext is None and self.bodyhtml is None:
             raise DynInvalidArgumentError('body and html', (None, None))
@@ -96,8 +96,8 @@ class HTMLEMail(EMail):
         :param content: The optional content field can be used to overrwrite, or
             to specify the actual content of the html of the message. Note: If
             *content*, this instance's body, and this instance's html fields are
-            all *None*, then an
-            :exception:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
+            all *None*, then a
+            :class:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
         if content is None and self.bodytext is None and self.bodyhtml is None:
             raise DynInvalidArgumentError('body and html', (None, None))
@@ -121,8 +121,8 @@ class TemplateEMail(EMail):
 
         :param formatters: Any iterable containing the data you wish inserted
             into your template. Unlike in the :class:`~dyn.mm.message.EMail`
-            class this field is not optional and will raise an
-            :exception:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
+            class this field is not optional and will raise a
+            :class:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
             This exception will also be raised if this instances bodytext
             attribute has not also been set.
         """
@@ -150,8 +150,8 @@ class HTMLTemplateEMail(HTMLEMail):
         :param formatters: Any iterable containing the data you wish inserted
             into your html template. Unlike in the
             :class:`~dyn.mm.message.HTMLEMail` class this field is not optional
-            and will raise an
-            :exception:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
+            and will raise a
+            :class:`~dyn.mm.errors.DynInvalidArgumentError` if not provided.
             This exception will also be raised if this instances bodyhtml
             attribute has not also been set.
         """

@@ -4,8 +4,6 @@
 These DNS_Records should really only need to be created via a zone instance but
 could also be created independently if passed valid zone, fqdn data
 """
-import logging
-
 from .errors import DynectInvalidArgumentError
 from .session import DynectSession
 from ..compat import force_unicode
@@ -43,7 +41,8 @@ class DNSRecord(object):
             if not self._record_type.endswith('Record'):
                 self._record_type += 'Record'
             uri = '/{}/{}/{}/'.format(self._record_type, self._zone, self._fqdn)
-            response = DynectSession.get_session().execute(uri, 'POST', api_args)
+            response = DynectSession.get_session().execute(uri, 'POST',
+                                                           api_args)
             self._build(response['data'])
 
     def _get_record(self, record_id):
@@ -88,8 +87,8 @@ class DNSRecord(object):
         """Return a records rdata"""
         rdata = {}
         for key, val in self.__dict__.items():
-            if key.startswith('_') and not hasattr(val, '__call__') and \
-                            key != '_record_type' and key != '_record_id':
+            if key.startswith('_') and not hasattr(val, '__call__') \
+                    and key != '_record_type' and key != '_record_id':
                 if 'ttl' not in key and 'zone' not in key and 'fqdn' not in key:
                     rdata[key[1:]] = val
         return rdata
@@ -125,7 +124,7 @@ class DNSRecord(object):
     @zone.setter
     def zone(self, value):
         pass
-    
+
     @property
     def fqdn(self):
         """Once the fqdn is set, it will be a read only property"""
@@ -141,7 +140,7 @@ class DNSRecord(object):
     @record_id.setter
     def record_id(self, value):
         pass
-    
+
     @property
     def ttl(self):
         """The TTL for this record"""
@@ -179,11 +178,9 @@ class ARecord(DNSRecord):
             del kwargs['create']
             self._build(kwargs)
             self._record_type = 'ARecord'
-            self.logger = logging.getLogger(str(self.__class__))
         else:
             super(ARecord, self).__init__(zone, fqdn)
             self._record_type = 'ARecord'
-            self.logger = logging.getLogger(str(self.__class__))
             self._ttl = self._address = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
@@ -243,11 +240,9 @@ class AAAARecord(DNSRecord):
             del kwargs['create']
             self._build(kwargs)
             self._record_type = 'AAAARecord'
-            self.logger = logging.getLogger(str(self.__class__))
         else:
             super(AAAARecord, self).__init__(zone, fqdn)
             self._record_type = 'AAAARecord'
-            self.logger = logging.getLogger(str(self.__class__))
             self._address = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
@@ -308,13 +303,12 @@ class CERTRecord(DNSRecord):
             super(CERTRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'CERTRecord'
         else:
             super(CERTRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'CERTRecord'
-            self._format = self._tag = self._algorithm = self._certificate = None
+            self._format = self._tag = self._algorithm = None
+            self._certificate = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
@@ -399,11 +393,9 @@ class CNAMERecord(DNSRecord):
             super(CNAMERecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'CNAMERecord'
         else:
             super(CNAMERecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'CNAMERecord'
             self._cname = None
             if 'record_id' in kwargs:
@@ -462,11 +454,9 @@ class DHCIDRecord(DNSRecord):
             super(DHCIDRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DHCIDRecord'
         else:
             super(DHCIDRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DHCIDRecord'
             self._digest = None
             if 'record_id' in kwargs:
@@ -522,11 +512,9 @@ class DNAMERecord(DNSRecord):
             super(DNAMERecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DNAMERecord'
         else:
             super(DNAMERecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DNAMERecord'
             self._dname = None
             if 'record_id' in kwargs:
@@ -584,13 +572,12 @@ class DNSKEYRecord(DNSRecord):
             super(DNSKEYRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DNSKEYRecord'
         else:
             super(DNSKEYRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DNSKEYRecord'
-            self._algorithm = self._flags = self._protocol = self._public_key = None
+            self._algorithm = self._flags = self._protocol = None
+            self._public_key = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
@@ -633,7 +620,7 @@ class DNSKEYRecord(DNSRecord):
         self._algorithm = value
         self.api_args['rdata']['algorithm'] = self._algorithm
         self._update_record(self.api_args)
-    
+
     @property
     def flags(self):
         """Numeric value confirming this is the zone's DNSKEY"""
@@ -643,7 +630,7 @@ class DNSKEYRecord(DNSRecord):
         self._flags = value
         self.api_args['rdata']['flags'] = self._flags
         self._update_record(self.api_args)
-    
+
     @property
     def protocol(self):
         """Numeric value for protocol. Set to 3 for DNSSEC"""
@@ -653,7 +640,7 @@ class DNSKEYRecord(DNSRecord):
         self._protocol = value
         self.api_args['rdata']['protocol'] = self._protocol
         self._update_record(self.api_args)
-    
+
     @property
     def public_key(self):
         """The public key for the DNSSEC signed zone"""
@@ -691,11 +678,9 @@ class DSRecord(DNSRecord):
             super(DSRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DSRecord'
         else:
             super(DSRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'DSRecord'
             self._algorithm = self._digest = self._digtype = self._keytag = None
             if 'record_id' in kwargs:
@@ -751,7 +736,7 @@ class DSRecord(DNSRecord):
         self._digest = value
         self.api_args['rdata']['digest'] = self._digest
         self._update_record(self.api_args)
-    
+
     @property
     def digtype(self):
         """Identifies which digest mechanism to use to verify the digest"""
@@ -761,7 +746,7 @@ class DSRecord(DNSRecord):
         self._digtype = value
         self.api_args['rdata']['digtype'] = self._digtype
         self._update_record(self.api_args)
-    
+
     @property
     def keytag(self):
         """Identifies which digest mechanism to use to verify the digest"""
@@ -799,13 +784,12 @@ class KEYRecord(DNSRecord):
             super(KEYRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'KEYRecord'
         else:
             super(KEYRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'KEYRecord'
-            self._algorithm = self._flags = self._protocol = self._public_key = None
+            self._algorithm = self._flags = self._protocol = None
+            self._public_key = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
@@ -848,7 +832,7 @@ class KEYRecord(DNSRecord):
         self._algorithm = value
         self.api_args['rdata']['algorithm'] = self._algorithm
         self._update_record(self.api_args)
-    
+
     @property
     def flags(self):
         """See RFC 2535 for information about Key record flags"""
@@ -858,7 +842,7 @@ class KEYRecord(DNSRecord):
         self._flags = value
         self.api_args['rdata']['flags'] = self._flags
         self._update_record(self.api_args)
-    
+
     @property
     def protocol(self):
         """Numeric identifier of the protocol for this KEY record"""
@@ -868,7 +852,7 @@ class KEYRecord(DNSRecord):
         self._protocol = value
         self.api_args['rdata']['protocol'] = self._protocol
         self._update_record(self.api_args)
-    
+
     @property
     def public_key(self):
         """The public key for this record"""
@@ -901,18 +885,17 @@ class KXRecord(DNSRecord):
             super(KXRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'KXRecord'
         else:
             super(KXRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'KXRecord'
             self._exchange = self._preference = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
                 self._get_record(*args, **kwargs)
-            elif 'exchange' in kwargs or 'preference' in kwargs or 'ttl' in kwargs:
+            elif 'exchange' in kwargs or 'preference' in \
+                    kwargs or 'ttl' in kwargs:
                 self._post(*args, **kwargs)
             elif len(args) + len(kwargs) > 1:
                 self._post(*args, **kwargs)
@@ -982,11 +965,9 @@ class LOCRecord(DNSRecord):
             super(LOCRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'LOCRecord'
         else:
             super(LOCRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'LOCRecord'
             self._altitude = self._latitude = self._longitude = None
             self._horiz_pre = self._size = self._vert_pre = None
@@ -994,9 +975,10 @@ class LOCRecord(DNSRecord):
             self._version = 0
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
-            elif 'altitude' in kwargs or 'latitude' in kwargs or 'longitude' in \
-                    kwargs or 'horiz_pre' in kwargs or 'size' in \
-                    kwargs or 'vert_pre' in kwargs or 'ttl' in kwargs:
+            elif 'altitude' in kwargs or 'latitude' in \
+                    kwargs or 'longitude' in kwargs or 'horiz_pre' in \
+                    kwargs or 'size' in kwargs or 'vert_pre' in \
+                    kwargs or 'ttl' in kwargs:
                 self._post(*args, **kwargs)
             elif len(args) + len(kwargs) > 1:
                 self._post(*args, **kwargs)
@@ -1036,7 +1018,7 @@ class LOCRecord(DNSRecord):
         self._altitude = value
         self.api_args['rdata']['altitude'] = self._altitude
         self._update_record(self.api_args)
-    
+
     @property
     def latitude(self):
         """Measured in degrees, minutes, and seconds with N/S indicator for 
@@ -1049,7 +1031,7 @@ class LOCRecord(DNSRecord):
         self._latitude = value
         self.api_args['rdata']['latitude'] = self._latitude
         self._update_record(self.api_args)
-    
+
     @property
     def longitude(self):
         """Measured in degrees, minutes, and seconds with E/W indicator for 
@@ -1062,7 +1044,7 @@ class LOCRecord(DNSRecord):
         self._longitude = value
         self.api_args['rdata']['longitude'] = self._longitude
         self._update_record(self.api_args)
-    
+
     @property
     def horiz_pre(self):
         """Defaults to 10,000 meters"""
@@ -1072,7 +1054,7 @@ class LOCRecord(DNSRecord):
         self._horiz_pre = value
         self.api_args['rdata']['horiz_pre'] = self._horiz_pre
         self._update_record(self.api_args)
-    
+
     @property
     def size(self):
         """Defaults to 1 meter"""
@@ -1082,7 +1064,7 @@ class LOCRecord(DNSRecord):
         self._size = value
         self.api_args['rdata']['size'] = self._size
         self._update_record(self.api_args)
-    
+
     @property
     def vert_pre(self):
         return self._vert_pre
@@ -1124,11 +1106,9 @@ class IPSECKEYRecord(DNSRecord):
             super(IPSECKEYRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'IPSECKEYRecord'
         else:
             super(IPSECKEYRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self.valid_gatetypes = range(0, 4)
             self.valid_algorithms = range(0, 3)
             self._record_type = 'IPSECKEYRecord'
@@ -1136,9 +1116,9 @@ class IPSECKEYRecord(DNSRecord):
             self._gateway = self._public_key = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
-            elif 'precedence' in kwargs or 'gatetype' in kwargs or 'algorithm' in \
-                    kwargs or 'gateway' in kwargs or 'public_key' in \
-                    kwargs or 'ttl' in kwargs:
+            elif 'precedence' in kwargs or 'gatetype' in \
+                    kwargs or 'algorithm' in kwargs or 'gateway' in \
+                    kwargs or 'public_key' in kwargs or 'ttl' in kwargs:
                 self._post(*args, **kwargs)
             elif len(args) + len(kwargs) > 1:
                 self._post(*args, **kwargs)
@@ -1183,7 +1163,7 @@ class IPSECKEYRecord(DNSRecord):
         self._precedence = value
         self.api_args['rdata']['precedence'] = self._precedence
         self._update_record(self.api_args)
-    
+
     @property
     def gatetype(self):
         """Gateway type. Must be one of 0, 1, 2, or 3"""
@@ -1193,7 +1173,7 @@ class IPSECKEYRecord(DNSRecord):
         self._gatetype = value
         self.api_args['rdata']['gatetype'] = self._gatetype
         self._update_record(self.api_args)
-    
+
     @property
     def algorithm(self):
         """Public key's cryptographic algorithm and format"""
@@ -1203,7 +1183,7 @@ class IPSECKEYRecord(DNSRecord):
         self._algorithm = value
         self.api_args['rdata']['algorithm'] = self._algorithm
         self._update_record(self.api_args)
-    
+
     @property
     def gateway(self):
         """Gateway used to create IPsec tunnel. Based on Gateway type"""
@@ -1213,7 +1193,7 @@ class IPSECKEYRecord(DNSRecord):
         self._gateway = value
         self.api_args['rdata']['gateway'] = self._gateway
         self._update_record(self.api_args)
-    
+
     @property
     def public_key(self):
         """Base64 encoding of the public key. Whitespace is allowed"""
@@ -1245,16 +1225,15 @@ class MXRecord(DNSRecord):
             super(MXRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'MXRecord'
         else:
             super(MXRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'MXRecord'
             self._exchange = self._preference = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
-            elif 'exchange' in kwargs or 'preference' in kwargs or 'ttl' in kwargs:
+            elif 'exchange' in kwargs or 'preference' in \
+                    kwargs or 'ttl' in kwargs:
                 self._post(*args, **kwargs)
             elif len(args) + len(kwargs) >= 1:
                 self._post(*args, **kwargs)
@@ -1274,7 +1253,7 @@ class MXRecord(DNSRecord):
         guts = super(MXRecord, self).rdata()
         shell = {'mx_rdata': guts}
         return shell
-    
+
     @property
     def exchange(self):
         """Hostname of the server responsible for accepting mail messages in 
@@ -1327,11 +1306,9 @@ class NAPTRRecord(DNSRecord):
             super(NAPTRRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'NAPTRRecord'
         else:
             super(NAPTRRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'NAPTRRecord'
             self._order = self._preference = self._flags = self._services = None
             self._regexp = self._replacement = None
@@ -1427,7 +1404,7 @@ class NAPTRRecord(DNSRecord):
         self._regexp = value
         self.api_args['rdata']['regexp'] = self._regexp
         self._update_record(self.api_args)
-    
+
     @property
     def replacement(self):
         """The next domain name to find. Only applies if this NAPTR record is 
@@ -1457,11 +1434,9 @@ class PTRRecord(DNSRecord):
             super(PTRRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'PTRRecord'
         else:
             super(PTRRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'PTRRecord'
             self._ptrdname = None
             if 'record_id' in kwargs:
@@ -1516,11 +1491,9 @@ class PXRecord(DNSRecord):
             super(PXRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'PXRecord'
         else:
             super(PXRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'PXRecord'
             self._preference = self._map822 = self._mapx400 = None
             if 'record_id' in kwargs:
@@ -1599,11 +1572,9 @@ class NSAPRecord(DNSRecord):
             super(NSAPRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'NSAPRecord'
         else:
             super(NSAPRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'NSAPRecord'
             self._nsap = None
             if 'record_id' in kwargs:
@@ -1659,11 +1630,9 @@ class RPRecord(DNSRecord):
             super(RPRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'RPRecord'
         else:
             super(RPRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'RPRecord'
             self._mbox = self._txtdname = None
             if 'record_id' in kwargs:
@@ -1702,7 +1671,7 @@ class RPRecord(DNSRecord):
         self._mbox = value
         self.api_args['rdata']['mbox'] = self._mbox
         self._update_record(self.api_args)
-    
+
     @property
     def txtdname(self):
         """Hostname where a TXT record exists with more information on the 
@@ -1734,11 +1703,9 @@ class NSRecord(DNSRecord):
             super(NSRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'NSRecord'
         else:
             super(NSRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'NSRecord'
             self._nsdname = None
             self._service_class = None
@@ -1804,11 +1771,9 @@ class SOARecord(DNSRecord):
             super(SOARecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'SOARecord'
         else:
             super(SOARecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'SOARecord'
             self._rname = self._serial_style = self._minimum = None
             if 'record_id' in kwargs:
@@ -1816,7 +1781,7 @@ class SOARecord(DNSRecord):
             elif len(args) > 0:
                 self._get_record(*args)
             else:
-                self.logger.info('Users can not POST or DELETE SOA Records')
+                # Users can not POST or DELETE SOA Records
                 pass
             self.api_args = {'rdata': {'rname': self._rname}}
 
@@ -1893,11 +1858,9 @@ class SPFRecord(DNSRecord):
             super(SPFRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'SPFRecord'
         else:
             super(SPFRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'SPFRecord'
             self._txtdata = None
             if 'record_id' in kwargs:
@@ -1957,11 +1920,9 @@ class SRVRecord(DNSRecord):
             super(SRVRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'SRVRecord'
         else:
             super(SRVRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'SRVRecord'
             self._port = self._priority = self._target = self._weight = None
             if 'record_id' in kwargs:
@@ -2013,7 +1974,7 @@ class SRVRecord(DNSRecord):
         self._priority = value
         self.api_args['rdata']['priority'] = self._priority
         self._update_record(self.api_args)
-    
+
     @property
     def target(self):
         """The domain name of a host where the service is running on the 
@@ -2025,7 +1986,7 @@ class SRVRecord(DNSRecord):
         self._target = value
         self.api_args['rdata']['target'] = self._target
         self._update_record(self.api_args)
-    
+
     @property
     def weight(self):
         """Secondary prioritizing of records to serve. Records of equal 
@@ -2057,11 +2018,9 @@ class TXTRecord(DNSRecord):
             super(TXTRecord, self).__init__(zone, fqdn, kwargs['create'])
             del kwargs['create']
             self._build(kwargs)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'TXTRecord'
         else:
             super(TXTRecord, self).__init__(zone, fqdn)
-            self.logger = logging.getLogger(str(self.__class__))
             self._record_type = 'TXTRecord'
             self._txtdata = None
             if 'record_id' in kwargs:

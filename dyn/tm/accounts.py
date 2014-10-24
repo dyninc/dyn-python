@@ -175,7 +175,6 @@ class UpdateUser(object):
             :class:`UpdateUser` uses to log into the System
         """
         super(UpdateUser, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.uri = '/UpdateUser/'
         self._password = self._status = self._user_name = self._nickname = None
         if 'api' in kwargs:
@@ -345,7 +344,6 @@ class User(object):
         :param website: This :class:`User`'s website
         """
         super(User, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._user_name = user_name
         self.uri = '/User/{}/'.format(self._user_name)
         self._password = self._email = self._first_name = self._last_name = None
@@ -767,7 +765,6 @@ class PermissionsGroup(object):
         :param zone: A list of zones where the group's permissions apply
         """
         super(PermissionsGroup, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._group_name = group_name
         self._description = self._group_type = self._all_users = None
         self._permission = self._user_name = self._subgroup = self._zone = None
@@ -1030,7 +1027,6 @@ class UserZone(object):
     """A DynECT system UserZoneEntry"""
     def __init__(self, user_name, zone_name, recurse='Y'):
         super(UserZone, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._user_name = user_name
         self._zone_name = zone_name
         self._recurse = recurse
@@ -1106,7 +1102,6 @@ class Notifier(object):
         :param notifier_id: The system id of this :class:`Notifier`
         """
         super(Notifier, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._label = self._recipients = self._services = None
         self._notifier_id = self.uri = None
         if 'api' in kwargs:
@@ -1232,7 +1227,6 @@ class Contact(object):
         :param website: The :class:`Contact`'s website
         """
         super(Contact, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._nickname = nickname
         self._email = self._first_name = self._last_name = None
         self._organization = self._address = self._address_2 = self._city = None

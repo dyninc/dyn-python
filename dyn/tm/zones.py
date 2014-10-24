@@ -60,7 +60,6 @@ class Zone(object):
             complete
         """
         super(Zone, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_serials = ('increment', 'epoch', 'day', 'minute')
         self._name = name
         self._fqdn = self._name
@@ -774,7 +773,6 @@ class Node(object):
         :param fqdn: the fully qualified domain name of this zone
         """
         super(Node, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.zone = zone
         self.fqdn = fqdn or self.zone + '.'
         self.records = self.my_records = {}

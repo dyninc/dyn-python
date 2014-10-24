@@ -59,8 +59,7 @@ class _DSFRecord(object):
             Record status to be 'up'
         :param eligible: Indicates whether or not the Record can be served
         """
-        # super(_DSFRecord, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
+        super(_DSFRecord, self).__init__()
         self.valid_automation = ('auto', 'auto_down', 'manual')
         self._label = label
         self._weight = weight
@@ -963,7 +962,6 @@ class DSFRecordSet(object):
             by the creation of other system objects.
         """
         super(DSFRecordSet, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._label = label
         self._rdata_class = rdata_class
         self._ttl = ttl
@@ -1257,7 +1255,6 @@ class DSFFailoverChain(object):
             :class:`DSFFailoverChain`
         """
         super(DSFFailoverChain, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._label = label
         self._core = core
         if isinstance(record_sets, list) and len(record_sets) > 0 and \
@@ -1404,7 +1401,6 @@ class DSFResponsePool(object):
             for this :class:`DSFResponsePool`
         """
         super(DSFResponsePool, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._label = label
         self._core_set_count = core_set_count
         self._eligible = eligible
@@ -1588,7 +1584,6 @@ class DSFRuleset(object):
             :class:`DSFRuleset`
         """
         super(DSFRuleset, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_criteria_types = ('always', 'geoip')
         self.valid_criteria = {'always': (),
                                'geoip': ()}
@@ -1829,7 +1824,6 @@ class DSFMonitor(object):
             associated with this :class:`DSFMonitor`
         """
         super(DSFMonitor, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.uri = None
         self._monitor_id = None
         self._label = self._protocol = self._response_count = None
@@ -2048,7 +2042,6 @@ class TrafficDirector(object):
             this :class:`TrafficDirector` service
         """
         super(TrafficDirector, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._label = self._ttl = self._publish = self._response_pools = None
         self._record_sets = self.uri = self._service_id = None
         self._notifiers = APIList(DynectSession.get_session, 'notifiers')

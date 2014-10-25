@@ -39,6 +39,19 @@ def get_all_zones():
     return zones
 
 
+def get_all_secondary_zones():
+    """Accessor function to retrieve a *list* of all :class:`SecondaryZone`'s
+    accessible to a user
+    """
+    uri = '/Secondary/'
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    zones = []
+    for zone in response['data']:
+        zones.append(SecondaryZone(zone.pop('zone'), api=False, **zone))
+    return zones
+
+
 class Zone(object):
     """A class representing a DynECT Zone"""
     def __init__(self, name, *args, **kwargs):
@@ -633,10 +646,14 @@ class SecondaryZone(object):
             transfer requests to this zone's master
         """
         super(SecondaryZone, self).__init__()
-        self._zone = zone
+        self._zone = self._name = zone
         self.uri = '/Secondary/{}/'.format(self._zone)
         self._masters = self._contact_nickname = self._tsig_key_name = None
-        if len(args) == 0 and len(kwargs) == 0:
+        if 'api' in kwargs:
+            del kwargs['api']
+            for key, val in kwargs.items():
+                setattr(self, '_' + key, val)
+        elif len(args) == 0 and len(kwargs) == 0:
             self._get()
         else:
             self._post(*args, **kwargs)

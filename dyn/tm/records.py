@@ -20,6 +20,7 @@ class DNSRecord(object):
     """Base record object contains functionality to be used across all other
     record type objects
     """
+
     def __init__(self, zone, fqdn, create=True):
         super(DNSRecord, self).__init__()
         self._zone = zone
@@ -40,7 +41,8 @@ class DNSRecord(object):
                 self._fqdn += '.'
             if not self._record_type.endswith('Record'):
                 self._record_type += 'Record'
-            uri = '/{}/{}/{}/'.format(self._record_type, self._zone, self._fqdn)
+            uri = '/{}/{}/{}/'.format(self._record_type, self._zone,
+                                      self._fqdn)
             response = DynectSession.get_session().execute(uri, 'POST',
                                                            api_args)
             self._build(response['data'])
@@ -121,6 +123,7 @@ class DNSRecord(object):
     def zone(self):
         """Once the zone is set, it will be a read only property"""
         return self._zone
+
     @zone.setter
     def zone(self, value):
         pass
@@ -129,6 +132,7 @@ class DNSRecord(object):
     def fqdn(self):
         """Once the fqdn is set, it will be a read only property"""
         return self._fqdn
+
     @fqdn.setter
     def fqdn(self, value):
         pass
@@ -137,6 +141,7 @@ class DNSRecord(object):
     def record_id(self):
         """The unique ID of this record from the DynECT System"""
         return self._record_id
+
     @record_id.setter
     def record_id(self, value):
         pass
@@ -145,6 +150,7 @@ class DNSRecord(object):
     def ttl(self):
         """The TTL for this record"""
         return self._ttl
+
     @ttl.setter
     def ttl(self, value):
         """Set the value of this record's ttl property"""
@@ -155,6 +161,7 @@ class DNSRecord(object):
     def __str__(self):
         """str override"""
         return force_unicode('<{}>: {}').format(self._record_type, self._fqdn)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -165,8 +172,9 @@ class DNSRecord(object):
 class ARecord(DNSRecord):
     """The IPv4 Address (A) Record forward maps a host name to an IPv4 address.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`ARecord` object
+        """Create an :class:`~dyn.tm.records.ARecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -188,7 +196,8 @@ class ARecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, address, ttl=0):
-        """Create a new :class:`ARecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.ARecord` on the DynECT System
+        """
         self._address = address
         self._ttl = ttl
         self.api_args = {'rdata': {'address': self._address},
@@ -196,7 +205,8 @@ class ARecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`ARecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.ARecord`'s rdata as a JSON blob
+        """
         guts = super(ARecord, self).rdata()
         shell = {'a_rdata': guts}
         return shell
@@ -205,6 +215,7 @@ class ARecord(DNSRecord):
     def address(self):
         """Return the value of this record's address property"""
         return self._address
+
     @address.setter
     def address(self, value):
         """Set the value of this record's address property"""
@@ -227,8 +238,9 @@ class AAAARecord(DNSRecord):
     """The IPv6 Address (AAAA) Record is used to forward map hosts to IPv6
     addresses and is the current IETF recommendation for this purpose.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`AAAARecord` object
+        """Create an :class:`~dyn.tm.records.AAAARecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -250,7 +262,9 @@ class AAAARecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, address, ttl=0):
-        """Create a new :class:`AAAARecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.AAAARecord` on the DynECT
+        System
+        """
         self._address = address
         self._ttl = ttl
         self.api_args = {'rdata': {'address': self._address},
@@ -258,7 +272,9 @@ class AAAARecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`AAAARecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.AAAARecord`'s rdata as a JSON
+        blob
+        """
         guts = super(AAAARecord, self).rdata()
         shell = {'aaaa_rdata': guts}
         return shell
@@ -267,6 +283,7 @@ class AAAARecord(DNSRecord):
     def address(self):
         """Return the value of this record's address property"""
         return self._address
+
     @address.setter
     def address(self, value):
         """Set the value of this record's address property"""
@@ -287,8 +304,9 @@ class CERTRecord(DNSRecord):
     """The Certificate (CERT) Record may be used to store either public key
     certificates or Certificate Revocation Lists (CRL) in the zone file.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`CERTRecord` object
+        """Create a :class:`~dyn.tm.records.CERTRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -317,7 +335,9 @@ class CERTRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, format, tag, algorithm, certificate, ttl=0):
-        """Create a new :class:`CERTRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.CERTRecord` on the DynECT
+        System
+        """
         self._format = format
         self._tag = tag
         self._algorithm = algorithm
@@ -331,7 +351,9 @@ class CERTRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`CERTRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.CERTRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(CERTRecord, self).rdata()
         shell = {'cert_rdata': guts}
         return shell
@@ -340,6 +362,7 @@ class CERTRecord(DNSRecord):
     def format(self):
         """Numeric value for the certificate type."""
         return self._format
+
     @format.setter
     def format(self, value):
         self._format = value
@@ -350,6 +373,7 @@ class CERTRecord(DNSRecord):
     def tag(self):
         """Numeric value for the public key certificate"""
         return self._tag
+
     @tag.setter
     def tag(self, value):
         self._tag = value
@@ -360,6 +384,7 @@ class CERTRecord(DNSRecord):
     def algorithm(self):
         """Public key algorithm number used to generate the certificate"""
         return self._algorithm
+
     @algorithm.setter
     def algorithm(self, value):
         self._algorithm = value
@@ -370,6 +395,7 @@ class CERTRecord(DNSRecord):
     def certificate(self):
         """The public key certificate"""
         return self._certificate
+
     @certificate.setter
     def certificate(self, value):
         self._certificate = value
@@ -381,8 +407,9 @@ class CNAMERecord(DNSRecord):
     """The Canonical Name (CNAME) Records map an alias to the real or canonical
     name that may lie inside or outside the current zone.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`CNAMERecord` object
+        """Create an :class:`~dyn.tm.records.CNAMERecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -404,7 +431,9 @@ class CNAMERecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, cname, ttl=0):
-        """Create a new :class:`CNAMERecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.CNAMERecord` on the DynECT
+        System
+        """
         self._cname = cname
         self._ttl = ttl
         self.api_args = {'rdata': {'cname': self._cname},
@@ -412,7 +441,9 @@ class CNAMERecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`CNAME`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.CNAMERecord`'s rdata as a JSON
+        blob
+        """
         guts = super(CNAMERecord, self).rdata()
         shell = {'cname_rdata': guts}
         return shell
@@ -421,6 +452,7 @@ class CNAMERecord(DNSRecord):
     def cname(self):
         """Hostname"""
         return self._cname
+
     @cname.setter
     def cname(self, value):
         self._cname = value
@@ -437,13 +469,14 @@ class CNAMERecord(DNSRecord):
 
 
 class DHCIDRecord(DNSRecord):
-    """The :class:`DHCIDRecord` provides a means by which DHCP clients or
-    servers can associate a DHCP client's identity with a DNS name, so that
-    multiple DHCP clients and servers may deterministically perform dynamic DNS
-    updates to the same zone.
+    """The :class:`~dyn.tm.records.DHCIDRecord` provides a means by which DHCP
+    clients or servers can associate a DHCP client's identity with a DNS name,
+    so that multiple DHCP clients and servers may deterministically perform
+    dynamic DNS updates to the same zone.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`DHCIDRecord` object
+        """Create an :class:`~dyn.tm.records.DHCIDRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -469,7 +502,9 @@ class DHCIDRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, digest, ttl=0):
-        """Create a new :class:`DHCIDRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.DHCIDRecord` on the DynECT
+        System
+        """
         self._digest = digest
         self._ttl = ttl
         self.api_args = {'rdata': {'digest': self._digest},
@@ -477,7 +512,9 @@ class DHCIDRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`DHCIDRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.DHCIDRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(DHCIDRecord, self).rdata()
         shell = {'dhcid_rdata': guts}
         return shell
@@ -486,6 +523,7 @@ class DHCIDRecord(DNSRecord):
     def digest(self):
         """Base-64 encoded digest of DHCP data"""
         return self._digest
+
     @digest.setter
     def digest(self, value):
         self._digest = value
@@ -500,8 +538,9 @@ class DNAMERecord(DNSRecord):
     do not strictly require one. However, do note that without a bit label a
     DNAME is equivalent to a CNAME when used in a reverse-map zone file.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`DNAMERecord` object
+        """Create an :class:`~dyn.tm.records.DNAMERecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -525,7 +564,9 @@ class DNAMERecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, dname, ttl=0):
-        """Create a new :class:`DNAMERecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.DNAMERecord` on the DynECT
+        System
+        """
         self._dname = dname
         self._ttl = ttl
         self.api_args = {'rdata': {'dname': self._dname},
@@ -533,7 +574,9 @@ class DNAMERecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`DNAMERecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.DNAMERecord`'s rdata as a JSON
+        blob
+        """
         guts = super(DNAMERecord, self).rdata()
         shell = {'dname_rdata': guts}
         return shell
@@ -542,6 +585,7 @@ class DNAMERecord(DNSRecord):
     def dname(self):
         """Target hostname"""
         return self._dname
+
     @dname.setter
     def dname(self, value):
         self._dname = value
@@ -554,8 +598,9 @@ class DNSKEYRecord(DNSRecord):
     cryptographic algorithm used with DNSSEC.nis. It is typically used to
     authenticate signed keys or zones.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`DNSKEYRecord` object
+        """Create a :class:`~dyn.tm.records.DNSKEYRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -589,7 +634,9 @@ class DNSKEYRecord(DNSRecord):
 
     def _post(self, protocol, public_key, algorithm=5, flags=256,
               ttl=0):
-        """Create a new :class:`DNSKEYRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.DNSKEYRecord` on the DynECT
+        System
+        """
         valid = range(1, 6)
         if algorithm not in valid:
             raise DynectInvalidArgumentError('algorthim', algorithm, valid)
@@ -606,7 +653,9 @@ class DNSKEYRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`DNSKEYRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.DNSKEYRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(DNSKEYRecord, self).rdata()
         shell = {'dnskey_rdata': guts}
         return shell
@@ -615,6 +664,7 @@ class DNSKEYRecord(DNSRecord):
     def algorithm(self):
         """Public key encryption algorithm will sign the zone"""
         return self._algorithm
+
     @algorithm.setter
     def algorithm(self, value):
         self._algorithm = value
@@ -625,6 +675,7 @@ class DNSKEYRecord(DNSRecord):
     def flags(self):
         """Numeric value confirming this is the zone's DNSKEY"""
         return self._flags
+
     @flags.setter
     def flags(self, value):
         self._flags = value
@@ -635,6 +686,7 @@ class DNSKEYRecord(DNSRecord):
     def protocol(self):
         """Numeric value for protocol. Set to 3 for DNSSEC"""
         return self._protocol
+
     @protocol.setter
     def protocol(self, value):
         self._protocol = value
@@ -645,6 +697,7 @@ class DNSKEYRecord(DNSRecord):
     def public_key(self):
         """The public key for the DNSSEC signed zone"""
         return self._public_key
+
     @public_key.setter
     def public_key(self, value):
         self._public_key = value
@@ -657,8 +710,9 @@ class DSRecord(DNSRecord):
     chain of trust or authority from a signed parent zone to a signed child
     zone.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`DSRecord` object
+        """Create a :class:`~dyn.tm.records.DSRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -693,7 +747,8 @@ class DSRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, digest, keytag, algorithm=5, digtype=1, ttl=0):
-        """Create a new :class:`DSRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.DSRecord` on the DynECT System
+        """
         self._digest = digest
         self._keytag = keytag
         valid = range(1, 6)
@@ -710,7 +765,8 @@ class DSRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`DSRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.DSRecord`'s rdata as a JSON blob
+        """
         guts = super(DSRecord, self).rdata()
         shell = {'ds_rdata': guts}
         return shell
@@ -719,6 +775,7 @@ class DSRecord(DNSRecord):
     def algorithm(self):
         """Identifies the encoding algorithm"""
         return self._algorithm
+
     @algorithm.setter
     def algorithm(self, value):
         self._algorithm = value
@@ -731,6 +788,7 @@ class DSRecord(DNSRecord):
         one-way hash of the DNSKEY record surrounded by parenthesis characters
         """
         return self._digest
+
     @digest.setter
     def digest(self, value):
         self._digest = value
@@ -741,6 +799,7 @@ class DSRecord(DNSRecord):
     def digtype(self):
         """Identifies which digest mechanism to use to verify the digest"""
         return self._digtype
+
     @digtype.setter
     def digtype(self, value):
         self._digtype = value
@@ -751,6 +810,7 @@ class DSRecord(DNSRecord):
     def keytag(self):
         """Identifies which digest mechanism to use to verify the digest"""
         return self._keytag
+
     @keytag.setter
     def keytag(self, value):
         self._keytag = value
@@ -762,12 +822,13 @@ class KEYRecord(DNSRecord):
     """"Public Key" (KEY) Records are used for the storage of public keys for
     use by multiple applications such as IPSec, SSH, etc..., as well as for use
     by DNS security methods including the original DNSSEC protocol. However,
-    as of RFC3445 the use of :class:`KEYRecord`'s have been limited to use in
-    DNS Security operations such as DDNS and zone transfer due to the difficulty
-    of querying for specific uses.
+    as of RFC3445 the use of :class:`~dyn.tm.records.KEYRecord`'s have been
+    limited to use in DNS Security operations such as DDNS and zone transfer
+    due to the difficulty of querying for specific uses.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`KEYRecord` object
+        """Create a :class:`~dyn.tm.records.KEYRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -801,7 +862,8 @@ class KEYRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, algorithm, flags, protocol, public_key, ttl=0):
-        """Create a new :class:`KEYRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.KEYRecord` on the DynECT System
+        """
         valid = range(1, 6)
         if algorithm not in valid:
             raise DynectInvalidArgumentError('algorthim', algorithm, valid)
@@ -818,7 +880,9 @@ class KEYRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`KEYRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.KEYRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(KEYRecord, self).rdata()
         shell = {'key_rdata': guts}
         return shell
@@ -827,6 +891,7 @@ class KEYRecord(DNSRecord):
     def algorithm(self):
         """Numeric identifier for algorithm used"""
         return self._algorithm
+
     @algorithm.setter
     def algorithm(self, value):
         self._algorithm = value
@@ -837,6 +902,7 @@ class KEYRecord(DNSRecord):
     def flags(self):
         """See RFC 2535 for information about Key record flags"""
         return self._flags
+
     @flags.setter
     def flags(self, value):
         self._flags = value
@@ -847,6 +913,7 @@ class KEYRecord(DNSRecord):
     def protocol(self):
         """Numeric identifier of the protocol for this KEY record"""
         return self._protocol
+
     @protocol.setter
     def protocol(self, value):
         self._protocol = value
@@ -857,6 +924,7 @@ class KEYRecord(DNSRecord):
     def public_key(self):
         """The public key for this record"""
         return self._public_key
+
     @public_key.setter
     def public_key(self, value):
         self._public_key = value
@@ -868,14 +936,16 @@ class KXRecord(DNSRecord):
     """The "Key Exchanger" (KX) Record type is provided with one or more
     alternative hosts.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`KXRecord` object
+        """Create a :class:`~dyn.tm.records.KXRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
         :param exchange: Hostname that will act as the Key Exchanger. The
-            hostname must have a :class:`CNAMERecord`, an :class:`ARecord`
-            and/or an :class:`AAAARecord` associated with it
+            hostname must have a :class:`~dyn.tm.records.CNAMERecord`, an
+            :class:`~dyn.tm.records.ARecord` and/or an
+            :class:`~dyn.tm.records.AAAARecord` associated with it
         :param preference: Numeric value for priority usage. Lower value takes
             precedence over higher value where two records of the same type
             exist on the zone/node
@@ -901,7 +971,8 @@ class KXRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, exchange, preference, ttl=0):
-        """Create a new :class:`KXRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.KXRecord` on the DynECT System
+        """
         self._exchange = exchange
         self._preference = preference
         self._ttl = ttl
@@ -911,7 +982,8 @@ class KXRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`KXRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.KXRecord`'s rdata as a JSON blob
+        """
         guts = super(KXRecord, self).rdata()
         shell = {'kx_rdata': guts}
         return shell
@@ -922,6 +994,7 @@ class KXRecord(DNSRecord):
         a CNAME record, an A Record and/or an AAAA record associated with it
         """
         return self._exchange
+
     @exchange.setter
     def exchange(self, value):
         self._exchange = value
@@ -934,6 +1007,7 @@ class KXRecord(DNSRecord):
         higher value where two records of the same type exist on the zone/node
         """
         return self._preference
+
     @preference.setter
     def preference(self, value):
         self._preference = value
@@ -942,11 +1016,12 @@ class KXRecord(DNSRecord):
 
 
 class LOCRecord(DNSRecord):
-    """:class:`LOCRecord`'s allow for the definition of geographic positioning
-    information associated with a host or service name.
+    """:class:`~dyn.tm.records.LOCRecord`'s allow for the definition of
+    geographic positioning information associated with a host or service name.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`LOCRecord` object
+        """Create a :class:`~dyn.tm.records.LOCRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -985,7 +1060,8 @@ class LOCRecord(DNSRecord):
 
     def _post(self, altitude, latitude, longitude, horiz_pre=10000, size=1,
               vert_pre=10, ttl=0):
-        """Create a new :class:`LOCRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.LOCRecord` on the DynECT System
+        """
         self._altitude = altitude
         self._latitude = latitude
         self._longitude = longitude
@@ -1004,7 +1080,9 @@ class LOCRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`LOCRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.LOCRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(LOCRecord, self).rdata()
         shell = {'loc_rdata': guts}
         return shell
@@ -1013,6 +1091,7 @@ class LOCRecord(DNSRecord):
     def altitude(self):
         """Measured in meters above sea level"""
         return self._altitude
+
     @altitude.setter
     def altitude(self, value):
         self._altitude = value
@@ -1026,6 +1105,7 @@ class LOCRecord(DNSRecord):
         15 = seconds
         """
         return self._latitude
+
     @latitude.setter
     def latitude(self, value):
         self._latitude = value
@@ -1039,6 +1119,7 @@ class LOCRecord(DNSRecord):
         18 = seconds
         """
         return self._longitude
+
     @longitude.setter
     def longitude(self, value):
         self._longitude = value
@@ -1049,6 +1130,7 @@ class LOCRecord(DNSRecord):
     def horiz_pre(self):
         """Defaults to 10,000 meters"""
         return self._horiz_pre
+
     @horiz_pre.setter
     def horiz_pre(self, value):
         self._horiz_pre = value
@@ -1059,6 +1141,7 @@ class LOCRecord(DNSRecord):
     def size(self):
         """Defaults to 1 meter"""
         return self._size
+
     @size.setter
     def size(self, value):
         self._size = value
@@ -1068,6 +1151,7 @@ class LOCRecord(DNSRecord):
     @property
     def vert_pre(self):
         return self._vert_pre
+
     @vert_pre.setter
     def vert_pre(self, value):
         self._vert_pre = value
@@ -1086,8 +1170,9 @@ class IPSECKEYRecord(DNSRecord):
     """The IPSECKEY is used for storage of keys used specifically for IPSec
     oerations
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`IPSECKEYRecord` object
+        """Create an :class:`~dyn.tm.records.IPSECKEYRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1125,7 +1210,9 @@ class IPSECKEYRecord(DNSRecord):
 
     def _post(self, precedence, gatetype, algorithm, gateway, public_key,
               ttl=0):
-        """Create a new :class:`IPSECKEYRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.IPSECKEYRecord` on the DynECT
+        System
+        """
         self._precedence = precedence
         if gatetype not in self.valid_gatetypes:
             raise DynectInvalidArgumentError('gatetype', gatetype,
@@ -1147,7 +1234,9 @@ class IPSECKEYRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`IPSECKEYRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.IPSECKEYRecord`'s rdata as a
+        JSON blob
+        """
         guts = super(IPSECKEYRecord, self).rdata()
         shell = {'ipseckey_rdata': guts}
         return shell
@@ -1158,6 +1247,7 @@ class IPSECKEYRecord(DNSRecord):
         higher priority
         """
         return self._precedence
+
     @precedence.setter
     def precedence(self, value):
         self._precedence = value
@@ -1168,6 +1258,7 @@ class IPSECKEYRecord(DNSRecord):
     def gatetype(self):
         """Gateway type. Must be one of 0, 1, 2, or 3"""
         return self._gatetype
+
     @gatetype.setter
     def gatetype(self, value):
         self._gatetype = value
@@ -1178,6 +1269,7 @@ class IPSECKEYRecord(DNSRecord):
     def algorithm(self):
         """Public key's cryptographic algorithm and format"""
         return self._algorithm
+
     @algorithm.setter
     def algorithm(self, value):
         self._algorithm = value
@@ -1188,6 +1280,7 @@ class IPSECKEYRecord(DNSRecord):
     def gateway(self):
         """Gateway used to create IPsec tunnel. Based on Gateway type"""
         return self._gateway
+
     @gateway.setter
     def gateway(self, value):
         self._gateway = value
@@ -1198,6 +1291,7 @@ class IPSECKEYRecord(DNSRecord):
     def public_key(self):
         """Base64 encoding of the public key. Whitespace is allowed"""
         return self._public_key
+
     @public_key.setter
     def public_key(self, value):
         self._public_key = value
@@ -1209,8 +1303,9 @@ class MXRecord(DNSRecord):
     """The "Mail Exchanger" record type specifies the name and relative
     preference of mail servers for a Zone. Defined in RFC 1035
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`MXRecord` object
+        """Create an :class:`~dyn.tm.records.MXRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1239,7 +1334,8 @@ class MXRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, exchange, preference=10, ttl=0):
-        """Create a new :class:`MXRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.MXRecord` on the DynECT System
+        """
         self._exchange = exchange
         self._preference = preference
         self._ttl = ttl
@@ -1249,7 +1345,8 @@ class MXRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`MXRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.MXRecord`'s rdata as a JSON blob
+        """
         guts = super(MXRecord, self).rdata()
         shell = {'mx_rdata': guts}
         return shell
@@ -1260,6 +1357,7 @@ class MXRecord(DNSRecord):
         the zone
         """
         return self._exchange
+
     @exchange.setter
     def exchange(self, value):
         self._exchange = value
@@ -1272,6 +1370,7 @@ class MXRecord(DNSRecord):
         higher value where two records of the same type exist on the zone/node
         """
         return self._preference
+
     @preference.setter
     def preference(self, value):
         self._preference = value
@@ -1283,8 +1382,9 @@ class NAPTRRecord(DNSRecord):
     """Naming Authority Pointer Records are a part of the Dynamic Delegation
     Discovery System (DDDS). The NAPTR is a generic record that defines a `rule`
     that may be applied to private data owned by a client application."""
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`NAPTRRecord` object
+        """Create an :class:`~dyn.tm.records.NAPTRRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1294,10 +1394,11 @@ class NAPTRRecord(DNSRecord):
             have identical order values. Lowest value is used first.
         :param services: Always starts with "e2u+" (E.164 to URI). After the
             e2u+ there is a string that defines the type and optionally the
-            subtype of the URI where this :class:`NAPTRRecord` points.
+            subtype of the URI where this :class:`~dyn.tm.records.NAPTRRecord`
+            points.
         :param regexp: The NAPTR record accepts regular expressions
         :param replacement: The next domain name to find. Only applies if this
-            :class:`NAPTRRecord` is non-terminal.
+            :class:`~dyn.tm.records.NAPTRRecord` is non-terminal.
         :param flags: Should be the letter "U". This indicates that this NAPTR
             record terminal
         :param ttl: TTL for the record in seconds
@@ -1323,7 +1424,9 @@ class NAPTRRecord(DNSRecord):
 
     def _post(self, order, preference, services, regexp, replacement,
               flags='U', ttl=0):
-        """Create a new :class:`NAPTRRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.NAPTRRecord` on the DynECT
+        System
+        """
         self._order = order
         self._preference = preference
         self._flags = flags
@@ -1341,7 +1444,9 @@ class NAPTRRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`NAPTRRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.NAPTRRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(NAPTRRecord, self).rdata()
         shell = {'naptr_rdata': guts}
         return shell
@@ -1352,6 +1457,7 @@ class NAPTRRecord(DNSRecord):
         value is used first
         """
         return self._order
+
     @order.setter
     def order(self, value):
         self._order = value
@@ -1364,6 +1470,7 @@ class NAPTRRecord(DNSRecord):
         order values. Lowest value is used first.
         """
         return self._preference
+
     @preference.setter
     def preference(self, value):
         self._preference = value
@@ -1376,6 +1483,7 @@ class NAPTRRecord(DNSRecord):
         terminal (E.164 number that maps directly to a URI)
         """
         return self._flags
+
     @flags.setter
     def flags(self, value):
         self._flags = value
@@ -1389,6 +1497,7 @@ class NAPTRRecord(DNSRecord):
         where this NAPTR record points
         """
         return self._services
+
     @services.setter
     def services(self, value):
         self._services = value
@@ -1399,6 +1508,7 @@ class NAPTRRecord(DNSRecord):
     def regexp(self):
         """The NAPTR record accepts regular expressions"""
         return self._regexp
+
     @regexp.setter
     def regexp(self, value):
         self._regexp = value
@@ -1411,6 +1521,7 @@ class NAPTRRecord(DNSRecord):
         non-terminal
         """
         return self._replacement
+
     @replacement.setter
     def replacement(self, value):
         self._replacement = value
@@ -1422,8 +1533,9 @@ class PTRRecord(DNSRecord):
     """Pointer Records are used to reverse map an IPv4 or IPv6 IP address to a
     host name
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`PTRRecord` object
+        """Create a :class:`~dyn.tm.records.PTRRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1447,7 +1559,8 @@ class PTRRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, ptrdname, ttl=0):
-        """Create a new :class:`PTRRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.PTRRecord` on the DynECT System
+        """
         self._ptrdname = ptrdname
         self._ttl = ttl
         self.api_args = {'rdata': {'ptrdname': self._ptrdname},
@@ -1455,7 +1568,9 @@ class PTRRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`PTRRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.PTRRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(PTRRecord, self).rdata()
         shell = {'ptr_rdata': guts}
         return shell
@@ -1464,6 +1579,7 @@ class PTRRecord(DNSRecord):
     def ptrdname(self):
         """Hostname where the IP address should be directed"""
         return self._ptrdname
+
     @ptrdname.setter
     def ptrdname(self, value):
         self._ptrdname = value
@@ -1476,8 +1592,9 @@ class PXRecord(DNSRecord):
     addresses to RFC 822 format e-mail addresses using a MIXER-conformant
     gateway.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`PXRecord` object
+        """Create an :class:`~dyn.tm.records.PXRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1505,7 +1622,8 @@ class PXRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, preference, map822, mapx400, ttl=0):
-        """Create a new :class:`PXRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.PXRecord` on the DynECT System
+        """
         self._preference = preference
         self._map822 = map822
         self._mapx400 = mapx400
@@ -1517,7 +1635,9 @@ class PXRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`PXRRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.PXRRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(PXRecord, self).rdata()
         shell = {'pxr_rdata': guts}
         return shell
@@ -1528,6 +1648,7 @@ class PXRecord(DNSRecord):
         is processed first
         """
         return self._preference
+
     @preference.setter
     def preference(self, value):
         self._preference = value
@@ -1538,6 +1659,7 @@ class PXRecord(DNSRecord):
     def map822(self):
         """mail hostname"""
         return self._map822
+
     @map822.setter
     def map822(self, value):
         self._map822 = value
@@ -1548,6 +1670,7 @@ class PXRecord(DNSRecord):
     def mapx400(self):
         """Enter the domain name derived from the X.400 part of MCGAM"""
         return self._mapx400
+
     @mapx400.setter
     def mapx400(self, value):
         self._mapx400 = value
@@ -1560,8 +1683,9 @@ class NSAPRecord(DNSRecord):
     ISO's Open Systems Interconnect (OSI) system in that it maps a host name to
     an endpoint address.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`PXRecord` object
+        """Create an :class:`~dyn.tm.records.PXRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1585,7 +1709,9 @@ class NSAPRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, nsap, ttl=0):
-        """Create a new :class:`NSAPRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.NSAPRecord` on the DynECT
+        System
+        """
         self._nsap = nsap
         self._ttl = ttl
         self.api_args = {'rdata': {'nsap': self._nsap},
@@ -1593,7 +1719,9 @@ class NSAPRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`NSAPRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.NSAPRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(NSAPRecord, self).rdata()
         shell = {'nsap_rdata': guts}
         return shell
@@ -1602,6 +1730,7 @@ class NSAPRecord(DNSRecord):
     def nsap(self):
         """Hex-encoded NSAP identifier"""
         return self._nsap
+
     @nsap.setter
     def nsap(self, value):
         self._nsap = value
@@ -1612,12 +1741,13 @@ class NSAPRecord(DNSRecord):
 class RPRecord(DNSRecord):
     """The Respnosible Person record allows an email address and some optional
     human readable text to be associated with a host. Due to privacy and spam
-    considerations, :class:`RPRecords` are not widely used on public servers
-    but can provide very useful contact data during diagnosis and debugging
-    network problems.
+    considerations, :class:`~dyn.tm.records.RPRecords` are not widely used on
+    public servers but can provide very useful contact data during diagnosis
+    and debugging network problems.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`RPRecord` object
+        """Create an :class:`~dyn.tm.records.RPRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1643,7 +1773,8 @@ class RPRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, mbox, txtdname, ttl=0):
-        """Create a new :class:`RPRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.RPRecord` on the DynECT System
+        """
         if '@' in mbox:
             mbox = mbox.replace('@', '.')
         self._mbox = mbox
@@ -1655,7 +1786,8 @@ class RPRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`RPRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.RPRecord`'s rdata as a JSON blob
+        """
         guts = super(RPRecord, self).rdata()
         shell = {'rp_rdata': guts}
         return shell
@@ -1666,6 +1798,7 @@ class RPRecord(DNSRecord):
         symbol with a dot '.' in the address
         """
         return self._mbox
+
     @mbox.setter
     def mbox(self, value):
         self._mbox = value
@@ -1678,6 +1811,7 @@ class RPRecord(DNSRecord):
         responsible person
         """
         return self._txtdname
+
     @txtdname.setter
     def txtdname(self, value):
         self._txtdname = value
@@ -1689,8 +1823,9 @@ class NSRecord(DNSRecord):
     """Nameserver Records are used to list all the nameservers that will respond
     authoritatively for a domain.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`NSRecord` object
+        """Create an :class:`~dyn.tm.records.NSRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1718,16 +1853,19 @@ class NSRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, nsdname, service_class='', ttl=0):
-        """Create a new :class:`NSRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.NSRecord` on the DynECT System
+        """
         self._nsdname = nsdname
         self._service_class = service_class
         self._ttl = ttl
         self.api_args = {'rdata': {'nsdname': self._nsdname},
-                         'ttl': self._ttl, 'service_class': self._service_class}
+                         'ttl': self._ttl,
+                         'service_class': self._service_class}
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`NSRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.NSRecord`'s rdata as a JSON blob
+        """
         guts = super(NSRecord, self).rdata()
         shell = {'ns_rdata': guts}
         return shell
@@ -1736,6 +1874,7 @@ class NSRecord(DNSRecord):
     def nsdname(self):
         """Hostname of the authoritative Nameserver for the zone"""
         return self._nsdname
+
     @nsdname.setter
     def nsdname(self, value):
         self._nsdname = value
@@ -1746,6 +1885,7 @@ class NSRecord(DNSRecord):
     def service_class(self):
         """Hostname of the authoritative Nameserver for the zone"""
         return self._service_class
+
     @service_class.setter
     def service_class(self, value):
         self._service_class = value
@@ -1760,12 +1900,12 @@ class SOARecord(DNSRecord):
     time. NOTE: Dynect users do not have the permissions required to create or
     delete SOA records on the Dynect System.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`SOARecord` object
+        """Create an :class:`~dyn.tm.records.SOARecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
-        :param record_id: The unique system id for this :class:`SOARecord`
         """
         if 'create' in kwargs:
             super(SOARecord, self).__init__(zone, fqdn, kwargs['create'])
@@ -1786,7 +1926,9 @@ class SOARecord(DNSRecord):
             self.api_args = {'rdata': {'rname': self._rname}}
 
     def rdata(self):
-        """Return this :class:`SOARecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.SOARecord`'s rdata as a JSON
+        blob
+        """
         guts = super(SOARecord, self).rdata()
         shell = {'soa_rdata': guts}
         return shell
@@ -1797,6 +1939,7 @@ class SOARecord(DNSRecord):
         for this zone
         """
         return self._rname
+
     @rname.setter
     def rname(self, value):
         self._rname = value
@@ -1807,6 +1950,7 @@ class SOARecord(DNSRecord):
     def serial_style(self):
         """The style of the zone's serial"""
         return self._serial_style
+
     @serial_style.setter
     def serial_style(self, value):
         self._serial_style = value
@@ -1816,8 +1960,9 @@ class SOARecord(DNSRecord):
 
     @property
     def minimum(self):
-        """The minimum TTL for this :class:`SOARecord`"""
+        """The minimum TTL for this :class:`~dyn.tm.records.SOARecord`"""
         return self._minimum
+
     @minimum.setter
     def minimum(self, value):
         self._minimum = value
@@ -1828,6 +1973,7 @@ class SOARecord(DNSRecord):
     def ttl(self):
         """The TTL for this record"""
         return self._ttl
+
     @ttl.setter
     def ttl(self, value):
         """Set the value of this SOARecord's ttl property"""
@@ -1846,8 +1992,9 @@ class SPFRecord(DNSRecord):
     Transfer Agent (MTA) to verify that the originating IP of an email from a
     sender is authorized to send main for the sender's domain.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`SPFRecord` object
+        """Create an :class:`~dyn.tm.records.SPFRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1871,7 +2018,8 @@ class SPFRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, txtdata, ttl=0):
-        """Create a new :class:`SPFRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.SPFRecord` on the DynECT System
+        """
         self._txtdata = txtdata
         self._ttl = ttl
         self.api_args = {'rdata': {'txtdata': self._txtdata},
@@ -1879,7 +2027,9 @@ class SPFRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`SPFRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.SPFRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(SPFRecord, self).rdata()
         shell = {'spf_rdata': guts}
         return shell
@@ -1888,6 +2038,7 @@ class SPFRecord(DNSRecord):
     def txtdata(self):
         """Free text box containing SPF record information"""
         return self._txtdata
+
     @txtdata.setter
     def txtdata(self, value):
         self._txtdata = value
@@ -1900,8 +2051,9 @@ class SRVRecord(DNSRecord):
     name. A user or application that wishes to discover where a service is
     located can interrogate for the relevant SRV that describes the service.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create a :class:`SRVRecord` object
+        """Create a :class:`~dyn.tm.records.SRVRecord` object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
@@ -1934,7 +2086,8 @@ class SRVRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, port, priority, target, weight, ttl=0):
-        """Create a new :class:`SRVRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.SRVRecord` on the DynECT System
+        """
         self._port = port
         self._priority = priority
         self._target = target
@@ -1948,7 +2101,9 @@ class SRVRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`SRVRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.SRVRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(SRVRecord, self).rdata()
         shell = {'srv_rdata': guts}
         return shell
@@ -1957,6 +2112,7 @@ class SRVRecord(DNSRecord):
     def port(self):
         """Indicates the port where the service is running"""
         return self._port
+
     @port.setter
     def port(self, value):
         self._port = value
@@ -1969,6 +2125,7 @@ class SRVRecord(DNSRecord):
         higher value where two records of the same type exist on the zone/node
         """
         return self._priority
+
     @priority.setter
     def priority(self, value):
         self._priority = value
@@ -1981,6 +2138,7 @@ class SRVRecord(DNSRecord):
         specified `port`
         """
         return self._target
+
     @target.setter
     def target(self, value):
         self._target = value
@@ -1994,6 +2152,7 @@ class SRVRecord(DNSRecord):
         served more often
         """
         return self._weight
+
     @weight.setter
     def weight(self, value):
         self._weight = value
@@ -2006,12 +2165,14 @@ class TXTRecord(DNSRecord):
     with a name. For example, it can be used to provide a description of the
     host, service contacts, or any other required system information.
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create a new TXTRecord object
 
         :param zone: Name of zone where the record will be added
         :param fqdn: Name of node where the record will be added
-        :param txtdata: Free form text for this :class:`TXTRecord`
+        :param txtdata: Free form text for this
+            :class:`~dyn.tm.records.TXTRecord`
         :param ttl: TTL for the record. Set to 0 to use zone default
         """
         if 'create' in kwargs:
@@ -2031,7 +2192,8 @@ class TXTRecord(DNSRecord):
                 self._post(*args, **kwargs)
 
     def _post(self, txtdata, ttl=0):
-        """Create a new :class:`TXTRecord` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.records.TXTRecord` on the DynECT System
+        """
         self._ttl = ttl
         self._txtdata = txtdata
         self.api_args = {'rdata': {'txtdata': self._txtdata},
@@ -2039,7 +2201,9 @@ class TXTRecord(DNSRecord):
         self._create_record(self.api_args)
 
     def rdata(self):
-        """Return this :class:`TXTRecord`'s rdata as a JSON blob"""
+        """Return this :class:`~dyn.tm.records.TXTRecord`'s rdata as a JSON
+        blob
+        """
         guts = super(TXTRecord, self).rdata()
         shell = {'txt_rdata': guts}
         return shell
@@ -2048,6 +2212,7 @@ class TXTRecord(DNSRecord):
     def txtdata(self):
         """Free form text"""
         return self._txtdata
+
     @txtdata.setter
     def txtdata(self, value):
         self._txtdata = value

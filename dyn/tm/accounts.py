@@ -15,16 +15,16 @@ __all__ = ['get_updateusers', 'get_users', 'get_permissions_groups',
 
 
 def get_updateusers(search=None):
-    """Return a ``list`` of :class:`UpdateUser` objects. If *search* is
-    specified, then only :class:`UpdateUsers` who match those search criteria
-    will be returned in the list. Otherwise, all :class:`UpdateUsers`'s will be
-    returned.
+    """Return a ``list`` of :class:`~dyn.tm.accounts.UpdateUser` objects. If
+    *search* is specified, then only :class:`~dyn.tm.accounts.UpdateUsers` who
+    match those search criteria will be returned in the list. Otherwise, all
+    :class:`~dyn.tm.accounts.UpdateUsers`'s will be returned.
 
     :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`UpdateUsers` instance and the value mapped
-        to by that key will be used as the search criteria for that key when
-        searching.
-    :return: a ``list`` of :class:`UpdateUser` objects
+        map to an attribute a :class:`~dyn.tm.accounts.UpdateUsers` instance
+        and the value mapped to by that key will be used as the search criteria
+        for that key when searching.
+    :return: a ``list`` of :class:`~dyn.tm.accounts.UpdateUser` objects
     """
     uri = '/UpdateUser/'
     api_args = {'detail': 'Y'}
@@ -43,15 +43,16 @@ def get_updateusers(search=None):
 
 
 def get_users(search=None):
-    """Return a ``list`` of :class:`User` objects. If *search* is specified,
-    then only users who match those search parameters will be returned in the
-    list. Otherwise, all :class:`User`'s will be returned.
+    """Return a ``list`` of :class:`~dyn.tm.accounts.User` objects. If *search*
+    is specified, then only users who match those search parameters will be
+    returned in the list. Otherwise, all :class:`~dyn.tm.accounts.User`'s will
+    be returned.
 
     :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`User` instance and the value mapped to by
-        that key will be used as the search criteria for that key when
-        searching.
-    :return: a ``list`` of :class:`User` objects
+        map to an attribute a :class:`~dyn.tm.accounts.User` instance and the
+        value mapped to by that key will be used as the search criteria for
+        that key when searching.
+    :return: a ``list`` of :class:`~dyn.tm.accounts.User` objects
     """
     uri = '/User/'
     api_args = {'detail': 'Y'}
@@ -75,16 +76,17 @@ def get_users(search=None):
 
 
 def get_permissions_groups(search=None):
-    """Return a ``list`` of :class:`PermissionGroup` objects. If *search* is
-    specified, then only :class:`PermissionGroup`'s that match those search
+    """Return a ``list`` of :class:`~dyn.tm.accounts.PermissionGroup` objects.
+    If *search* is specified, then only
+    :class:`~dyn.tm.accounts.PermissionGroup`'s that match those search
     criteria will be returned in the list. Otherwise, all
-    :class:`PermissionGroup`'s will be returned.
+    :class:`~dyn.tm.accounts.PermissionGroup`'s will be returned.
 
     :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`PermissionGroup` instance and the value
-        mapped to by that key will be used as the search criteria for that key
-        when searching.
-    :return: a ``list`` of :class:`PermissionGroup` objects"""
+        map to an attribute a :class:`~dyn.tm.accounts.PermissionGroup`
+        instance and the value mapped to by that key will be used as the search
+        criteria for that key when searching.
+    :return: a ``list`` of :class:`~dyn.tm.accounts.PermissionGroup` objects"""
     uri = '/PermissionGroup/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -102,15 +104,16 @@ def get_permissions_groups(search=None):
 
 
 def get_contacts(search=None):
-    """Return a ``list`` of :class:`Contact` objects. If *search* is specified,
-    then only :class:`Contact`'s who match those search criteria will be
-    returned in the list. Otherwise, all :class:`Contact`'s will be returned.
+    """Return a ``list`` of :class:`~dyn.tm.accounts.Contact` objects. If
+    *search* is specified, then only :class:`~dyn.tm.accounts.Contact`'s who
+    match those search criteria will be returned in the list. Otherwise, all
+    :class:`~dyn.tm.accounts.Contact`'s will be returned.
 
     :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`Contact` instance and the value mapped to
-        by that key will be used as the search criteria for that key when
-        searching.
-    :return: a ``list`` of :class:`Contact` objects"""
+        map to an attribute a :class:`~dyn.tm.accounts.Contact` instance and
+        the value mapped to by that key will be used as the search criteria
+        for that key when searching.
+    :return: a ``list`` of :class:`~dyn.tm.accounts.Contact` objects"""
     uri = '/Contact/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -131,15 +134,16 @@ def get_contacts(search=None):
 
 
 def get_notifiers(search=None):
-    """Return a ``list`` of :class:`Notifier` objects. If *search* is specified,
-    then only :class:`Notifier`'s who match those search criteria will be
-    returned in the list. Otherwise, all :class:`Notifier`'s will be returned.
+    """Return a ``list`` of :class:`~dyn.tm.accounts.Notifier` objects. If
+    *search* is specified, then only :class:`~dyn.tm.accounts.Notifier`'s who
+    match those search criteria will be returned in the list. Otherwise, all
+    :class:`~dyn.tm.accounts.Notifier`'s will be returned.
 
     :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`Notifier` instance and the value mapped to
-        by that key will be used as the search criteria for that key when
-        searching.
-    :return: a ``list`` of :class:`Notifier` objects"""
+        map to an attribute a :class:`~dyn.tm.accounts.Notifier` instance and
+        the value mapped to by that key will be used as the search criteria for
+        that key when searching.
+    :return: a ``list`` of :class:`~dyn.tm.accounts.Notifier` objects"""
     uri = '/Notifier/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -157,22 +161,26 @@ def get_notifiers(search=None):
 
 
 class UpdateUser(object):
-    """:class:`UpdateUser` type objects are a special form of a :class:`User` 
-    which are tied to a specific Dynamic DNS services.
+    """:class:`~dyn.tm.accounts.UpdateUser` type objects are a special form of
+    a :class:`~dyn.tm.accounts.User` which are tied to a specific Dynamic DNS
+    services.
     """
     def __init__(self, *args, **kwargs):
-        """Create an :class:`UpdateUser` object
+        """Create an :class:`~dyn.tm.accounts.UpdateUser` object
 
-        :param user_name: the Username this :class:`UpdateUser` uses or will
-            use to log in to the DynECT System. A :class:`UpdateUser`'s
+        :param user_name: the Username this
+            :class:`~dyn.tm.accounts.UpdateUser` uses or will use to log in to
+            the DynECT System. A :class:`~dyn.tm.accounts.UpdateUser`'s
             `user_name` is required for both creating and getting
-            :class:`UpdateUser`'s.
-        :param nickname: When creating a new :class:`UpdateUser` on the DynECT
-            System, this `nickname` will be the System nickname for this
-            :class:`UpdateUser`
-        :param password: When creating a new :class:`UpdateUser` on the DynECT
-            System, this `password` will be the password this
-            :class:`UpdateUser` uses to log into the System
+            :class:`~dyn.tm.accounts.UpdateUser`'s.
+        :param nickname: When creating a new
+            :class:`~dyn.tm.accounts.UpdateUser` on the DynECT System, this
+            `nickname` will be the System nickname for this
+            :class:`~dyn.tm.accounts.UpdateUser`
+        :param password: When creating a new
+            :class:`~dyn.tm.accounts.UpdateUser` on the DynECT System, this
+            `password` will be the password this
+            :class:`~dyn.tm.accounts.UpdateUser` uses to log into the System
         """
         super(UpdateUser, self).__init__()
         self.uri = '/UpdateUser/'
@@ -189,7 +197,9 @@ class UpdateUser(object):
             self._post(*args, **kwargs)
 
     def _post(self, nickname, password):
-        """Create a new :class:`UpdateUser` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.accounts.UpdateUser` on the DynECT
+        System
+        """
         self._nickname = nickname
         self._password = password
         uri = '/UpdateUser/'
@@ -200,7 +210,9 @@ class UpdateUser(object):
         self.uri = '/UpdateUser/{}/'.format(self._user_name)
 
     def _get(self, user_name):
-        """Get an existing :class:`UpdateUser` from the DynECT System"""
+        """Get an existing :class:`~dyn.tm.accounts.UpdateUser` from the
+        DynECT System
+        """
         self._user_name = user_name
         self.uri = '/UpdateUser/{}/'.format(self._user_name)
         response = DynectSession.get_session().execute(self.uri, 'GET')
@@ -217,9 +229,10 @@ class UpdateUser(object):
 
     @property
     def user_name(self):
-        """This :class:`UpdateUser`'s `user_name`. An :class:`UpdateUser`'s
-        user_name is a read-only property which can not be updated after the
-        :class:`UpdateUser` has been created.
+        """This :class:`~dyn.tm.accounts.UpdateUser`'s `user_name`. An
+        :class:`~dyn.tm.accounts.UpdateUser`'s user_name is a read-only
+        property which can not be updated after the :class:`UpdateUser` has
+        been created.
         """
         return self._user_name
     @user_name.setter
@@ -228,9 +241,10 @@ class UpdateUser(object):
 
     @property
     def nickname(self):
-        """This :class:`UpdateUser`s `nickname`. An :class:`UpdateUser`'s
-        `nickname` is a read-only property which can not be updated after the
-        :class:`UpdateUser` has been created.
+        """This :class:`~dyn.tm.accounts.UpdateUser`s `nickname`. An
+        :class:`~dyn.tm.accounts.UpdateUser`'s `nickname` is a read-only
+        property which can not be updated after the
+        :class:`~dyn.tm.accounts.UpdateUser` has been created.
         """
         return self._nickname
     @nickname.setter
@@ -239,9 +253,10 @@ class UpdateUser(object):
 
     @property
     def status(self):
-        """The current `status` of an :class:`UpdateUser` will be one of either
-        'active' or 'blocked'. Blocked :class:`UpdateUser`'s are unable to log
-        into the DynECT System, where active :class:`UpdateUser`'s are.
+        """The current `status` of an :class:`~dyn.tm.accounts.UpdateUser` will
+        be one of either 'active' or 'blocked'. Blocked
+        :class:`~dyn.tm.accounts.UpdateUser`'s are unable to log into the
+        DynECT System, where active :class:`~dyn.tm.accounts.UpdateUser`'s are.
         """
         return self._status
     @status.setter
@@ -250,15 +265,17 @@ class UpdateUser(object):
 
     @property
     def password(self):
-        """The current `password` for this :class:`UpdateUser`. An
-        :class:`UpdateUser`'s `password` may be reassigned."""
+        """The current `password` for this
+        :class:`~dyn.tm.accounts.UpdateUser`. An
+        :class:`~dyn.tm.accounts.UpdateUser`'s `password` may be reassigned.
+        """
         if self._password is None or self._password == u'':
             self._get(self._user_name)
         return self._password
     @password.setter
     def password(self, new_password):
-        """Update this :class:`UpdateUser`'s password to be the provided
-        password
+        """Update this :class:`~dyn.tm.accounts.UpdateUser`'s password to be
+        the provided password
 
         :param new_password: The new password to use
         """
@@ -266,32 +283,33 @@ class UpdateUser(object):
         self._update(api_args)
 
     def block(self):
-        """Set the status of this :class:`UpdateUser` to 'blocked'. This will
-        prevent this :class:`UpdateUser` from logging in until they are
-        explicitly unblocked.
+        """Set the status of this :class:`~dyn.tm.accounts.UpdateUser` to
+        'blocked'. This will prevent this :class:`~dyn.tm.accounts.UpdateUser`
+        from logging in until they are explicitly unblocked.
         """
         api_args = {'block': True}
         self._update(api_args)
 
     def unblock(self):
-        """Set the status of this :class:`UpdateUser` to 'active'. This will
-        re-enable this :class:`UpdateUser` to be able to login if they were
-        previously blocked.
+        """Set the status of this :class:`~dyn.tm.accounts.UpdateUser` to
+        'active'. This will re-enable this :class:`~dyn.tm.accounts.UpdateUser`
+        to be able to login if they were previously blocked.
         """
         api_args = {'unblock': True}
         self._update(api_args)
 
     def sync_password(self):
-        """Pull in this :class:`UpdateUser` current password from the DynECT
-        System, in the unlikely event that this :class:`UpdateUser` object's
-        password may have gotten out of sync
+        """Pull in this :class:`~dyn.tm.accounts.UpdateUser` current password
+        from the DynECT System, in the unlikely event that this
+        :class:`~dyn.tm.accounts.UpdateUser` object's password may have gotten
+        out of sync
         """
         api_args = {'user_name': self._user_name}
         self._update(api_args)
 
     def delete(self):
-        """Delete this :class:`UpdateUser` from the DynECT System. It is
-        important to note that this operation may not be undone.
+        """Delete this :class:`~dyn.tm.accounts.UpdateUser` from the DynECT
+        System. It is important to note that this operation may not be undone.
         """
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
@@ -308,40 +326,47 @@ class UpdateUser(object):
 class User(object):
     """DynECT System User object"""
     def __init__(self, user_name, *args, **kwargs):
-        """Create a new :class:`User` object
+        """Create a new :class:`~dyn.tm.accounts.User` object
 
-        :param user_name: This :class:`User`'s system username; used for logging
-            into the system
-        :param password: Password for this :class:`User` account
-        :param email: This :class:`User`'s Email address
-        :param first_name: This :class:`User`'s first name
-        :param last_name: This :class:`User`'s last name
+        :param user_name: This :class:`~dyn.tm.accounts.User`'s system
+            username; used for logging into the system
+        :param password: Password for this :class:`~dyn.tm.accounts.User`
+            account
+        :param email: This :class:`~dyn.tm.accounts.User`'s Email address
+        :param first_name: This :class:`~dyn.tm.accounts.User`'s first name
+        :param last_name: This :class:`~dyn.tm.accounts.User`'s last name
         :param nickname: The nickname for the `Contact` associated with this
-            :class:`User`
-        :param organization: This :class:`User`'s organization
-        :param phone: This :class:`User`'s phone number. Can be of the form: (0)
-            ( country-code ) ( local number ) ( extension ) Only the
-            country-code (1-3 digits) and local number (at least 7 digits) are
-            required. The extension can be up to 4 digits. Any non-digits are
-            ignored.
-        :param address: This :class:`User`'s street address
-        :param address2: This :class:`User`'s street address, line 2
-        :param city: This :class:`User`'s city, part of the user's address
-        :param country: This :class:`User`'s country, part of the user's address
-        :param fax: This :class:`User`'s fax number
-        :param notify_email: Email address where this :class:`User` should
-            receive notifications
-        :param pager_email: Email address where this :class:`User` should
-            receive messages destined for a pager
+            :class:`~dyn.tm.accounts.User`
+        :param organization: This :class:`~dyn.tm.accounts.User`'s organization
+        :param phone: This :class:`~dyn.tm.accounts.User`'s phone number. Can
+            be of the form: (0) ( country-code ) ( local number ) ( extension )
+            Only the country-code (1-3 digits) and local number (at least 7
+            digits) are required. The extension can be up to 4 digits. Any
+            non-digits are ignored.
+        :param address: This :class:`~dyn.tm.accounts.User`'s street address
+        :param address2: This :class:`~dyn.tm.accounts.User`'s street address,
+            line 2
+        :param city: This :class:`~dyn.tm.accounts.User`'s city, part of the
+            user's address
+        :param country: This :class:`~dyn.tm.accounts.User`'s country, part of
+            the user's address
+        :param fax: This :class:`~dyn.tm.accounts.User`'s fax number
+        :param notify_email: Email address where this
+            :class:`~dyn.tm.accounts.User` should receive notifications
+        :param pager_email: Email address where this
+            :class:`~dyn.tm.accounts.User` should receive messages destined
+            for a pager
         :param post_code: Zip code or Postal code
-        :param group_name: A list of permission groups this :class:`User`
-            belongs to
-        :param permission: A list of permissions assigned to this :class:`User`
-        :param zone: A list of zones where this :class:`User`'s permissions
-            apply
-        :param forbid: A list of forbidden permissions for this :class:`User`
-        :param status: Current status of this :class:`User`
-        :param website: This :class:`User`'s website
+        :param group_name: A list of permission groups this
+            :class:`~dyn.tm.accounts.User` belongs to
+        :param permission: A list of permissions assigned to this
+            :class:`~dyn.tm.accounts.User`
+        :param zone: A list of zones where this
+            :class:`~dyn.tm.accounts.User`'s permissions apply
+        :param forbid: A list of forbidden permissions for this
+            :class:`~dyn.tm.accounts.User`
+        :param status: Current status of this :class:`~dyn.tm.accounts.User`
+        :param website: This :class:`~dyn.tm.accounts.User`'s website
         """
         super(User, self).__init__()
         self._user_name = user_name
@@ -372,7 +397,9 @@ class User(object):
               country=None, fax=None, notify_email=None, pager_email=None,
               post_code=None, group_name=None, permission=None, zone=None,
               forbid=None, status=None, website=None):
-        """Create a new :class:`User` object on the DynECT System"""
+        """Create a new :class:`~dyn.tm.accounts.User` object on the DynECT
+        System
+        """
         self._password = password
         self._email = email
         self._first_name = first_name
@@ -399,7 +426,9 @@ class User(object):
             setattr(self, '_' + key, val)
 
     def _get(self):
-        """Get an existing :class:`User` object from the DynECT System"""
+        """Get an existing :class:`~dyn.tm.accounts.User` object from the
+        DynECT System
+        """
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
@@ -414,7 +443,8 @@ class User(object):
 
     @property
     def user_name(self):
-        """A :class:`User`'s user_name is a read-only property"""
+        """A :class:`~dyn.tm.accounts.User`'s user_name is a read-only property
+        """
         return self._user_name
     @user_name.setter
     def user_name(self, value):
@@ -422,8 +452,8 @@ class User(object):
 
     @property
     def status(self):
-        """A :class:`User`'s status is a read-only property. To change you must
-        use the :meth:`block`/:meth:`unblock` methods
+        """A :class:`~dyn.tm.accounts.User`'s status is a read-only property.
+        To change you must use the :meth:`block`/:meth:`unblock` methods
         """
         return self._status
     @status.setter
@@ -432,7 +462,7 @@ class User(object):
 
     @property
     def email(self):
-        """This :class:`User`'s Email address"""
+        """This :class:`~dyn.tm.accounts.User`'s Email address"""
         return self._email
     @email.setter
     def email(self, value):
@@ -441,7 +471,7 @@ class User(object):
 
     @property
     def first_name(self):
-        """This :class:`User`'s first name"""
+        """This :class:`~dyn.tm.accounts.User`'s first name"""
         return self._first_name
     @first_name.setter
     def first_name(self, value):
@@ -450,7 +480,7 @@ class User(object):
 
     @property
     def last_name(self):
-        """This :class:`User`'s last name"""
+        """This :class:`~dyn.tm.accounts.User`'s last name"""
         return self._last_name
     @last_name.setter
     def last_name(self, value):
@@ -459,7 +489,8 @@ class User(object):
 
     @property
     def nickname(self):
-        """The nickname for the `Contact` associated with this :class:`User`"""
+        """The nickname for the `Contact` associated with this
+        :class:`~dyn.tm.accounts.User`"""
         return self._nickname
     @nickname.setter
     def nickname(self, value):
@@ -468,7 +499,7 @@ class User(object):
 
     @property
     def organization(self):
-        """This :class:`User`'s organization"""
+        """This :class:`~dyn.tm.accounts.User`'s organization"""
         return self._organization
     @organization.setter
     def organization(self, value):
@@ -477,10 +508,11 @@ class User(object):
 
     @property
     def phone(self):
-        """This :class:`User`'s phone number. Can be of the form: (0)
-        ( country-code ) ( local number ) ( extension ) Only the country-code
-        (1-3 digits) and local number (at least 7 digits) are required. The
-        extension can be up to 4 digits. Any non-digits are ignored.
+        """This :class:`~dyn.tm.accounts.User`'s phone number. Can be of the
+        form: (0) ( country-code ) ( local number ) ( extension ) Only the
+        country-code (1-3 digits) and local number (at least 7 digits) are
+        required. The extension can be up to 4 digits. Any non-digits are
+        ignored.
         """
         return self._phone
     @phone.setter
@@ -490,7 +522,7 @@ class User(object):
 
     @property
     def address(self):
-        """This :class:`User`'s street address"""
+        """This :class:`~dyn.tm.accounts.User`'s street address"""
         return self._address
     @address.setter
     def address(self, value):
@@ -499,7 +531,7 @@ class User(object):
 
     @property
     def address_2(self):
-        """This :class:`User`'s street address, line 2"""
+        """This :class:`~dyn.tm.accounts.User`'s street address, line 2"""
         return self._address_2
     @address_2.setter
     def address_2(self, value):
@@ -508,7 +540,9 @@ class User(object):
 
     @property
     def city(self):
-        """This :class:`User`'s city, part of the user's address"""
+        """This :class:`~dyn.tm.accounts.User`'s city, part of the user's
+        address
+        """
         return self._city
     @city.setter
     def city(self, value):
@@ -517,7 +551,9 @@ class User(object):
 
     @property
     def country(self):
-        """This :class:`User`'s country, part of the user's address"""
+        """This :class:`~dyn.tm.accounts.User`'s country, part of the user's
+        address
+        """
         return self._country
     @country.setter
     def country(self, value):
@@ -526,7 +562,7 @@ class User(object):
 
     @property
     def fax(self):
-        """This :class:`User`'s fax number"""
+        """This :class:`~dyn.tm.accounts.User`'s fax number"""
         return self._fax
     @fax.setter
     def fax(self, value):
@@ -535,7 +571,8 @@ class User(object):
 
     @property
     def notify_email(self):
-        """Email address where this :class:`User` should receive notifications
+        """Email address where this :class:`~dyn.tm.accounts.User` should
+        receive notifications
         """
         return self._notify_email
     @notify_email.setter
@@ -545,8 +582,8 @@ class User(object):
 
     @property
     def pager_email(self):
-        """Email address where this :class:`User` should receive messages
-        destined for a pager
+        """Email address where this :class:`~dyn.tm.accounts.User` should
+        receive messages destined for a pager
         """
         return self._pager_email
     @pager_email.setter
@@ -556,7 +593,9 @@ class User(object):
 
     @property
     def post_code(self):
-        """This :class:`User`'s postal code, part of the user's address"""
+        """This :class:`~dyn.tm.accounts.User`'s postal code, part of the
+        user's address
+        """
         return self._post_code
     @post_code.setter
     def post_code(self, value):
@@ -565,7 +604,9 @@ class User(object):
 
     @property
     def group_name(self):
-        """A list of permission groups this :class:`User` belongs to"""
+        """A list of permission groups this :class:`~dyn.tm.accounts.User`
+        belongs to
+        """
         return self._group_name
     @group_name.setter
     def group_name(self, value):
@@ -574,7 +615,9 @@ class User(object):
 
     @property
     def permission(self):
-        """A list of permissions assigned to this :class:`User`"""
+        """A list of permissions assigned to this
+        :class:`~dyn.tm.accounts.User`
+        """
         return self._permission
     @permission.setter
     def permission(self, value):
@@ -583,7 +626,9 @@ class User(object):
 
     @property
     def zone(self):
-        """A list of zones where this :class:`User`'s permissions apply"""
+        """A list of zones where this :class:`~dyn.tm.accounts.User`'s
+        permissions apply
+        """
         return self._zone
     @zone.setter
     def zone(self, value):
@@ -592,17 +637,21 @@ class User(object):
 
     @property
     def forbid(self):
-        """A list of forbidden permissions for this :class:`User`"""
+        """A list of forbidden permissions for this
+        :class:`~dyn.tm.accounts.User`
+        """
         return self._forbid
     @forbid.setter
     def forbid(self, value):
-        """Apply a new list of forbidden permissions for the :class:`User`"""
+        """Apply a new list of forbidden permissions for the
+        :class:`~dyn.tm.accounts.User`
+        """
         api_args = {'forbid': value}
         self._update(api_args)
 
     @property
     def website(self):
-        """This :class:`User`'s website"""
+        """This :class:`~dyn.tm.accounts.User`'s website"""
         return self._website
     @website.setter
     def website(self, value):
@@ -610,15 +659,15 @@ class User(object):
         self._update(api_args)
 
     def block(self):
-        """Blocks this :class:`User` from logging in"""
+        """Blocks this :class:`~dyn.tm.accounts.User` from logging in"""
         api_args = {'block': 'True'}
         uri = '/User/{}/'.format(self._user_name)
         response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._status = response['data']['status']
 
     def unblock(self):
-        """Restores this :class:`User` to an active status and re-enables their
-        log-in
+        """Restores this :class:`~dyn.tm.accounts.User` to an active status and
+        re-enables their log-in
         """
         api_args = {'unblock': 'True'}
         uri = '/User/{}/'.format(self._user_name)
@@ -626,7 +675,7 @@ class User(object):
         self._status = response['data']['status']
 
     def add_permission(self, permission):
-        """Add individual permissions to this :class:`User`
+        """Add individual permissions to this :class:`~dyn.tm.accounts.User`
 
         :param permission: the permission to add
         """
@@ -635,10 +684,12 @@ class User(object):
         DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions(self, permissions=None):
-        """Replaces the list of permissions for this :class:`User`
+        """Replaces the list of permissions for this
+        :class:`~dyn.tm.accounts.User`
 
         :param permissions: A list of permissions. Pass an empty list or omit
-            the argument to clear the list of permissions of the :class:`User`
+            the argument to clear the list of permissions of the
+            :class:`~dyn.tm.accounts.User`
         """
         api_args = {}
         if permissions is not None:
@@ -650,7 +701,8 @@ class User(object):
         DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     def delete_permission(self, permission):
-        """Remove this specific permission from the :class:`User`
+        """Remove this specific permission from the
+        :class:`~dyn.tm.accounts.User`
 
         :param permission: the permission to remove
         """
@@ -660,20 +712,22 @@ class User(object):
         DynectSession.get_session().execute(uri, 'DELETE')
 
     def add_permissions_group(self, group):
-        """Assigns the permissions group to this :class:`User`
+        """Assigns the permissions group to this :class:`~dyn.tm.accounts.User`
 
-        :param group: the permissions group to add to this :class:`User`
+        :param group: the permissions group to add to this
+            :class:`~dyn.tm.accounts.User`
         """
         self.permission_groups.append(group)
         uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
         DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions_group(self, groups=None):
-        """Replaces the list of permissions for this :class:`User`
+        """Replaces the list of permissions for this
+        :class:`~dyn.tm.accounts.User`
 
         :param groups: A list of permissions groups. Pass an empty list or omit
             the argument to clear the list of permissions groups of the
-            :class:`User`
+            :class:`~dyn.tm.accounts.User`
         """
         api_args = {}
         if groups is not None:
@@ -685,9 +739,11 @@ class User(object):
         DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     def delete_permissions_group(self, group):
-        """Removes the permissions group from the :class:`User`
+        """Removes the permissions group from the
+        :class:`~dyn.tm.accounts.User`
 
-        :param group: the permissions group to remove from this :class:`User`
+        :param group: the permissions group to remove from this
+            :class:`~dyn.tm.accounts.User`
         """
         if group in self.permissions:
             self.permission_groups.remove(group)
@@ -695,9 +751,11 @@ class User(object):
         DynectSession.get_session().execute(uri, 'DELETE')
 
     def add_forbid_rule(self, permission, zone=None):
-        """Adds the forbid rule to the :class:`User`'s permission group
+        """Adds the forbid rule to the :class:`~dyn.tm.accounts.User`'s
+        permission group
 
-        :param permission: the permission to forbid from this :class:`User`
+        :param permission: the permission to forbid from this
+            :class:`~dyn.tm.accounts.User`
         :param zone: A list of zones where the forbid rule applies
         """
         api_args = {}
@@ -707,12 +765,13 @@ class User(object):
         DynectSession.get_session().execute(uri, 'POST', api_args)
 
     def replace_forbid_rules(self, forbid=None):
-        """Replaces the list of forbidden permissions in the :class:`User`'s
-        permissions group with a new list.
+        """Replaces the list of forbidden permissions in the
+        :class:`~dyn.tm.accounts.User`'s permissions group with a new list.
 
         :param forbid: A list of rules to replace the forbidden rules on the
-            :class:`User`'s permission group. If empty or not passed in, the
-            :class:`User`'s forbid list will be cleared
+            :class:`~dyn.tm.accounts.User`'s permission group. If empty or not
+            passed in, the :class:`~dyn.tm.accounts.User`'s forbid list will be
+            cleared
         """
         api_args = {}
         if forbid is not None:
@@ -721,8 +780,8 @@ class User(object):
         DynectSession.get_session().execute(uri, 'PUT', api_args)
 
     def delete_forbid_rule(self, permission, zone=None):
-        """Removes a forbid permissions rule from the :class:`User`'s
-        permission group
+        """Removes a forbid permissions rule from the
+        :class:`~dyn.tm.accounts.User`'s permission group
 
         :param permission: permission
         :param zone: A list of zones where the forbid rule applies
@@ -734,7 +793,7 @@ class User(object):
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
     def delete(self):
-        """Delete this :class:`User` from the system"""
+        """Delete this :class:`~dyn.tm.accounts.User` from the system"""
         uri = '/User/{}/'.format(self._user_name)
         DynectSession.get_session().execute(uri, 'DELETE')
 
@@ -780,7 +839,9 @@ class PermissionsGroup(object):
 
     def _post(self, description, group_type=None, all_users=None,
               permission=None, user_name=None, subgroup=None, zone=None):
-        """Create a new :class:`PermissionsGroup` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.accounts.PermissionsGroup` on the
+        DynECT System
+        """
         self._description = description
         self._group_type = group_type
         self._all_users = all_users
@@ -810,7 +871,9 @@ class PermissionsGroup(object):
                 setattr(self, '_' + key, val)
 
     def _get(self):
-        """Get an existing :class:`PermissionsGroup` from the DynECT System"""
+        """Get an existing :class:`~dyn.tm.accounts.PermissionsGroup` from the
+        DynECT System
+        """
         response = DynectSession.get_session().execute(self.uri, 'GET')
         for key, val in response['data'].items():
             if key == 'type':
@@ -969,12 +1032,12 @@ class PermissionsGroup(object):
         self._permission.remove(permission)
 
     def add_zone(self, zone, recurse='Y'):
-        """Add a new Zone to this :class:`PermissionsGroup`
+        """Add a new Zone to this :class:`~dyn.tm.accounts.PermissionsGroup`
 
         :param zone: The name of the Zone to be added to this
-            :class:`PermissionsGroup`
+            :class:`~dyn.tm.accounts.PermissionsGroup`
         :param recurse: A flag determining whether or not to add all sub-nodes
-            of a Zone to this :class:`PermissionsGroup`
+            of a Zone to this :class:`~dyn.tm.accounts.PermissionsGroup`
         """
         api_args = {'recurse': recurse}
         uri = '/PermissionGroupZoneEntry/{}/{}/'.format(self._group_name, zone)
@@ -982,10 +1045,12 @@ class PermissionsGroup(object):
         self._zone.append(zone)
 
     def add_subgroup(self, name):
-        """Add a new Sub group to this :class:`PermissionsGroup`
+        """Add a new Sub group to this
+        :class:`~dyn.tm.accounts.PermissionsGroup`
 
-        :param name: The name of the :class:`PermissionsGroup` to be added to
-            this :class:`PermissionsGroup`'s subgroups
+        :param name: The name of the :class:`~dyn.tm.accounts.PermissionsGroup`
+            to be added to this :class:`~dyn.tm.accounts.PermissionsGroup`'s
+            subgroups
         """
         uri = '/PermissionGroupSubgroupEntry/{}/{}/'.format(self._group_name, 
                                                             name)
@@ -993,7 +1058,8 @@ class PermissionsGroup(object):
         self._subgroup.append(name)
 
     def update_subgroup(self, subgroups):
-        """Update the subgroups under this :class:`PermissionsGroup`
+        """Update the subgroups under this
+        :class:`~dyn.tm.accounts.PermissionsGroup`
 
         :param subgroups: The subgroups with updated information
         """
@@ -1003,10 +1069,12 @@ class PermissionsGroup(object):
         self._subgroup = subgroups
 
     def delete_subgroup(self, name):
-        """Remove a Subgroup from this :class:`PermissionsGroup`
+        """Remove a Subgroup from this
+        :class:`~dyn.tm.accounts.PermissionsGroup`
 
-        :param name: The name of the :class:`PermissionsGroup` to be remoevd
-            from this :class:`PermissionsGroup`'s subgroups
+        :param name: The name of the :class:`~dyn.tm.accounts.PermissionsGroup`
+            to be remoevd from this
+            :class:`~dyn.tm.accounts.PermissionsGroup`'s subgroups
         """
         uri = '/PermissionGroupSubgroupEntry/{}/{}/'.format(self._group_name, 
                                                             name)
@@ -1038,7 +1106,9 @@ class UserZone(object):
 
     @property
     def user_name(self):
-        """User_name property of :class:`UserZone` object is read only"""
+        """User_name property of :class:`~dyn.tm.accounts.UserZone` object is
+        read only
+        """
         return self._user_name
     @user_name.setter
     def user_name(self, value):
@@ -1076,7 +1146,9 @@ class UserZone(object):
             setattr(self, '_' + key, val)
 
     def delete(self):
-        """Delete this :class:`UserZone` object from the DynECT System"""
+        """Delete this :class:`~dyn.tm.accounts.UserZone` object from the
+        DynECT System
+        """
         api_args = {'recurse': self.recurse}
         uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, self._zone_name)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
@@ -1094,12 +1166,16 @@ class UserZone(object):
 class Notifier(object):
     """DynECT System Notifier"""
     def __init__(self, *args, **kwargs):
-        """Create a new :class:`Notifier` object
+        """Create a new :class:`~dyn.tm.accounts.Notifier` object
 
-        :param label: The label used to identify this :class:`Notifier`
-        :param recipients: List of Recipients attached to this :class:`Notifier`
-        :param services: List of services attached to this :class:`Notifier`
-        :param notifier_id: The system id of this :class:`Notifier`
+        :param label: The label used to identify this
+            :class:`~dyn.tm.accounts.Notifier`
+        :param recipients: List of Recipients attached to this
+            :class:`~dyn.tm.accounts.Notifier`
+        :param services: List of services attached to this
+            :class:`~dyn.tm.accounts.Notifier`
+        :param notifier_id: The system id of this
+            :class:`~dyn.tm.accounts.Notifier`
         """
         super(Notifier, self).__init__()
         self._label = self._recipients = self._services = None
@@ -1117,7 +1193,9 @@ class Notifier(object):
             self._get(*args, **kwargs)
 
     def _post(self, label=None, recipients=None, services=None):
-        """Create a new :class:`Notifier` object on the DynECT System"""
+        """Create a new :class:`~dyn.tm.accounts.Notifier` object on the
+        DynECT System
+        """
         if label is None:
             raise DynectInvalidArgumentError
         uri = '/Notifier/'
@@ -1129,7 +1207,9 @@ class Notifier(object):
         self.uri = '/Notifier/{}/'.format(self._notifier_id)
 
     def _get(self, notifier_id):
-        """Get an existing :class:`Notifier` object from the DynECT System"""
+        """Get an existing :class:`~dyn.tm.accounts.Notifier` object from the
+        DynECT System
+        """
         self._notifier_id = notifier_id
         self.uri = '/Notifier/{}/'.format(self._notifier_id)
         response = DynectSession.get_session().execute(self.uri, 'GET')
@@ -1154,7 +1234,8 @@ class Notifier(object):
 
     @property
     def label(self):
-        """The label used to identify this :class:`Notifier`"""
+        """The label used to identify this :class:`~dyn.tm.accounts.Notifier`
+        """
         return self._label
     @label.setter
     def label(self, value):
@@ -1164,7 +1245,9 @@ class Notifier(object):
 
     @property
     def recipients(self):
-        """List of Recipients attached to this :class:`Notifier`"""
+        """List of Recipients attached to this
+        :class:`~dyn.tm.accounts.Notifier`
+        """
         return self._recipients
     @recipients.setter
     def recipients(self, value):
@@ -1174,7 +1257,9 @@ class Notifier(object):
 
     @property
     def services(self):
-        """List of services attached to this :class:`Notifier`"""
+        """List of services attached to this
+        :class:`~dyn.tm.accounts.Notifier`
+        """
         return self._services
     @services.setter
     def services(self, value):
@@ -1183,7 +1268,9 @@ class Notifier(object):
         self._update(api_args)
 
     def delete(self):
-        """Delete this :class:`Notifier` from the Dynect System"""
+        """Delete this :class:`~dyn.tm.accounts.Notifier` from the Dynect
+        System
+        """
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
     def __str__(self):
@@ -1199,32 +1286,37 @@ class Notifier(object):
 class Contact(object):
     """A DynECT System Contact"""
     def __init__(self, nickname, *args, **kwargs):
-        """Create a :class:`Contact` object
+        """Create a :class:`~dyn.tm.accounts.Contact` object
 
-        :param nickname: The nickname for this :class:`Contact`
-        :param email: The :class:`Contact`'s email address
-        :param first_name: The :class:`Contact`'s first name
-        :param last_name: The :class:`Contact`'s last name
-        :param organization: The :class:`Contact`'s organization
-        :param phone: The :class:`Contact`'s phone number. Can be of the form:
-            ( 0 ) ( country-code ) ( local number ) ( extension ) Only the
-            country-code (1-3 digits) and local number (at least 7 digits) are
-            required. The extension can be up to 4 digits. Any non-digits are
-            ignored.
-        :param address: The :class:`Contact`'s street address
-        :param address2: The :class:`Contact`'s street address, line 2
-        :param city: The :class:`Contact`'s city, part of the user's address
-        :param country: The :class:`Contact`'s country, part of the
-            :class:`Contact`'s address
-        :param fax: The :class:`Contact`'s fax number
-        :param notify_email: Email address where the :class:`Contact` should
-            receive notifications
-        :param pager_email: Email address where the :class:`Contact` should
-            receive messages destined for a pager
+        :param nickname: The nickname for this
+            :class:`~dyn.tm.accounts.Contact`
+        :param email: The :class:`~dyn.tm.accounts.Contact`'s email address
+        :param first_name: The :class:`~dyn.tm.accounts.Contact`'s first name
+        :param last_name: The :class:`~dyn.tm.accounts.Contact`'s last name
+        :param organization: The :class:`~dyn.tm.accounts.Contact`'s
+            organization
+        :param phone: The :class:`~dyn.tm.accounts.Contact`'s phone number. Can
+            be of the form: ( 0 ) ( country-code ) ( local number )
+            ( extension ) Only the country-code (1-3 digits) and local number
+            (at least 7 digits) are required. The extension can be up to 4
+            digits. Any non-digits are ignored.
+        :param address: The :class:`~dyn.tm.accounts.Contact`'s street address
+        :param address2: The :class:`~dyn.tm.accounts.Contact`'s street
+            address, line 2
+        :param city: The :class:`~dyn.tm.accounts.Contact`'s city, part of the
+            user's address
+        :param country: The :class:`~dyn.tm.accounts.Contact`'s country, part
+            of the :class:`~dyn.tm.accounts.Contact`'s address
+        :param fax: The :class:`~dyn.tm.accounts.Contact`'s fax number
+        :param notify_email: Email address where the
+            :class:`~dyn.tm.accounts.Contact` should receive notifications
+        :param pager_email: Email address where the
+            :class:`~dyn.tm.accounts.Contact` should receive messages destined
+            for a pager
         :param post_code: Zip code or Postal code
-        :param state: The :class:`Contact`'s state, part of the
-            :class:`Contact`'s address
-        :param website: The :class:`Contact`'s website
+        :param state: The :class:`~dyn.tm.accounts.Contact`'s state, part of
+            the :class:`~dyn.tm.accounts.Contact`'s address
+        :param website: The :class:`~dyn.tm.accounts.Contact`'s website
         """
         super(Contact, self).__init__()
         self._nickname = nickname
@@ -1251,7 +1343,8 @@ class Contact(object):
               address_2=None, city=None, country=None, fax=None,
               notify_email=None, pager_email=None, phone=None, post_code=None,
               state=None, website=None):
-        """Create a new :class:`Contact` on the DynECT System"""
+        """Create a new :class:`~dyn.tm.accounts.Contact` on the DynECT System
+        """
         self._email = email
         self._first_name = first_name
         self._last_name = last_name
@@ -1271,7 +1364,9 @@ class Contact(object):
         self._build(response['data'])
 
     def _get(self):
-        """Get an existing :class:`Contact` from the DynECT System"""
+        """Get an existing :class:`~dyn.tm.accounts.Contact` from the DynECT
+        System
+        """
         response = DynectSession.get_session().execute(self.uri, 'GET')
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
@@ -1281,8 +1376,8 @@ class Contact(object):
             setattr(self, '_' + key, val)
 
     def _update(self, api_args=None):
-        """Private update method which handles building this :class:`Contact`
-        object from the API JSON respnose
+        """Private update method which handles building this
+        :class:`~dyn.tm.accounts.Contact` object from the API JSON respnose
         """
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
@@ -1290,7 +1385,7 @@ class Contact(object):
 
     @property
     def nickname(self):
-        """This :class:`Contact`'s DynECT System Nickname"""
+        """This :class:`~dyn.tm.accounts.Contact`'s DynECT System Nickname"""
         return self._nickname
     @nickname.setter
     def nickname(self, value):
@@ -1300,7 +1395,8 @@ class Contact(object):
 
     @property
     def email(self):
-        """This :class:`Contact`'s DynECT System Email address"""
+        """This :class:`~dyn.tm.accounts.Contact`'s DynECT System Email address
+        """
         return self._email
     @email.setter
     def email(self, value):
@@ -1310,7 +1406,7 @@ class Contact(object):
 
     @property
     def first_name(self):
-        """The first name of this :class:`Contact`"""
+        """The first name of this :class:`~dyn.tm.accounts.Contact`"""
         return self._first_name
     @first_name.setter
     def first_name(self, value):
@@ -1320,7 +1416,7 @@ class Contact(object):
     
     @property
     def last_name(self):
-        """The last name of this :class:`Contact`"""
+        """The last name of this :class:`~dyn.tm.accounts.Contact`"""
         return self._last_name
     @last_name.setter
     def last_name(self, value):
@@ -1330,8 +1426,8 @@ class Contact(object):
     
     @property
     def organization(self):
-        """The organization this :class:`Contact` belongs to within the DynECT
-        System
+        """The organization this :class:`~dyn.tm.accounts.Contact` belongs to
+        within the DynECT System
         """
         return self._organization
     @organization.setter
@@ -1342,7 +1438,9 @@ class Contact(object):
     
     @property
     def phone(self):
-        """The phone number associated with this :class:`Contact`"""
+        """The phone number associated with this
+        :class:`~dyn.tm.accounts.Contact`
+        """
         return self._phone
     @phone.setter
     def phone(self, value):
@@ -1352,7 +1450,7 @@ class Contact(object):
     
     @property
     def address(self):
-        """This :class:`Contact`'s street address"""
+        """This :class:`~dyn.tm.accounts.Contact`'s street address"""
         return self._address
     @address.setter
     def address(self, value):
@@ -1362,7 +1460,7 @@ class Contact(object):
     
     @property
     def address_2(self):
-        """This :class:`Contact`'s street address, line 2"""
+        """This :class:`~dyn.tm.accounts.Contact`'s street address, line 2"""
         return self._address_2
     @address_2.setter
     def address_2(self, value):
@@ -1372,7 +1470,7 @@ class Contact(object):
     
     @property
     def city(self):
-        """This :class:`Contact`'s city"""
+        """This :class:`~dyn.tm.accounts.Contact`'s city"""
         return self._city
     @city.setter
     def city(self, value):
@@ -1382,7 +1480,7 @@ class Contact(object):
 
     @property
     def country(self):
-        """This :class:`Contact`'s Country"""
+        """This :class:`~dyn.tm.accounts.Contact`'s Country"""
         return self._country
     @country.setter
     def country(self, value):
@@ -1392,7 +1490,9 @@ class Contact(object):
 
     @property
     def fax(self):
-        """The fax number associated with this :class:`Contact`"""
+        """The fax number associated with this
+        :class:`~dyn.tm.accounts.Contact`
+        """
         return self._fax
     @fax.setter
     def fax(self, value):
@@ -1402,8 +1502,8 @@ class Contact(object):
 
     @property
     def notify_email(self):
-        """Email address where this :class:`Contact` should receive
-        notifications
+        """Email address where this :class:`~dyn.tm.accounts.Contact` should
+        receive notifications
         """
         return self._notify_email
     @notify_email.setter
@@ -1414,8 +1514,8 @@ class Contact(object):
     
     @property
     def pager_email(self):
-        """Email address where this :class:`Contact` should receive messages
-        destined for a pager
+        """Email address where this :class:`~dyn.tm.accounts.Contact` should
+        receive messages destined for a pager
         """
         return self._pager_email
     @pager_email.setter
@@ -1426,7 +1526,8 @@ class Contact(object):
     
     @property
     def post_code(self):
-        """This :class:`Contacts`'s postal code, part of the contacts's address
+        """This :class:`~dyn.tm.accounts.Contacts`'s postal code, part of the
+        contacts's address
         """
         return self._post_code
     @post_code.setter
@@ -1437,7 +1538,7 @@ class Contact(object):
 
     @property
     def state(self):
-        """This :class:`Contact`'s state"""
+        """This :class:`~dyn.tm.accounts.Contact`'s state"""
         return self._state
     @state.setter
     def state(self, value):
@@ -1447,7 +1548,7 @@ class Contact(object):
 
     @property
     def website(self):
-        """This :class:`Contact`'s website"""
+        """This :class:`~dyn.tm.accounts.Contact`'s website"""
         return self._website
     @website.setter
     def website(self, value):
@@ -1456,7 +1557,8 @@ class Contact(object):
         self._update(api_args)
 
     def delete(self):
-        """Delete this :class:`Contact` from the Dynect System"""
+        """Delete this :class:`~dyn.tm.accounts.Contact` from the Dynect System
+        """
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
     def __str__(self):

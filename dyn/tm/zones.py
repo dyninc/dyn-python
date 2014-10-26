@@ -25,10 +25,10 @@ RECS = {'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord,
 
 
 def get_all_zones():
-    """Accessor function to retrieve a :class:`List` of all :class:`Zone`'s
-    accessible to a user
+    """Accessor function to retrieve a *list* of all
+    :class:`~dyn.tm.zones.Zone`'s accessible to a user
 
-    :return: a :class:`List` of :class:`Zone`'s
+    :return: a *list* of :class:`~dyn.tm.zones.Zone`'s
     """
     uri = '/Zone/'
     api_args = {'detail': 'Y'}
@@ -42,6 +42,8 @@ def get_all_zones():
 def get_all_secondary_zones():
     """Accessor function to retrieve a *list* of all :class:`SecondaryZone`'s
     accessible to a user
+
+    :return: a *list* of :class:`~dyn.tm.zones.SecondaryZone`'s
     """
     uri = '/Secondary/'
     api_args = {'detail': 'Y'}

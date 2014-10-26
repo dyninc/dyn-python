@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """The message module allows for quickly and easily sending emails. For quickly
 sending messages consider using the send_message function, however, there is
-also the :class:`dyn.mm.message.EMail` class which will give you additional
+also the :class:`~dyn.mm.message.EMail` class which will give you additional
 control over the messages you're sending.
 """
 from .errors import DynInvalidArgumentError
@@ -28,12 +28,12 @@ class EMail(object):
 
     def __init__(self, from_field, to, subject, cc=None, body=None, html=None,
                  replyto=None, xheaders=None):
-        """Create a new :class:`EMail` object
+        """Create a new :class:`~dyn.mm.message.EMail` object
 
         :param from_field: Sender email address - This can either be an email
             address or a properly formatted from header (example: "From Name"
-            <example@email.com>). NOTE: The sender must be one of your account's
-            Approved Senders
+            <example@email.com>). NOTE: The sender must be one of your
+            account's Approved Senders
         :param to: A `list` of Address(es) or a single Address that the email
             will be sent to — This/These can either be an email address or a
             properly formatted from header (example: "To Name"
@@ -66,13 +66,13 @@ class EMail(object):
         self.xheaders = xheaders
 
     def send(self, content=None):
-        """Send the content of this :class:`Email` object to the provided list
-        of recipients.
+        """Send the content of this :class:`~dyn.mm.message.Email` object to
+        the provided list of recipients.
 
-        :param content: The optional content field can be used to overrwrite, or
-            to specify the actual content of the body of the message. Note: If
-            *content*, this instance's body, and this instance's html fields are
-            all *None*, then a
+        :param content: The optional content field can be used to overrwrite,
+            or to specify the actual content of the body of the message. Note:
+            If *content*, this instance's body, and this instance's html fields
+            are all *None*, then a
             :class:`~dyn.mm.errors.DynInvalidArgumentError` will be raised.
         """
         if content is None and self.bodytext is None and self.bodyhtml is None:
@@ -116,8 +116,8 @@ class TemplateEMail(EMail):
     the formatting content at send time.
     """
     def send(self, formatters=None):
-        """Send the content of this :class:`Email` object to the provided list
-        of recipients.
+        """Send the content of this :class:`~dyn.mm.message.Email` object to
+        the provided list of recipients.
 
         :param formatters: Any iterable containing the data you wish inserted
             into your template. Unlike in the :class:`~dyn.mm.message.EMail`
@@ -144,8 +144,8 @@ class HTMLTemplateEMail(HTMLEMail):
     with the formatting content at send time.
     """
     def send(self, formatters=None):
-        """Send the content of this :class:`Email` object to the provided list
-        of recipients.
+        """Send the content of this :class:`~dyn.mm.message.Email` object to
+        the provided list of recipients.
 
         :param formatters: Any iterable containing the data you wish inserted
             into your html template. Unlike in the

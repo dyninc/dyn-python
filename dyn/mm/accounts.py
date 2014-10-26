@@ -14,8 +14,8 @@ __author__ = 'jnappi'
 
 
 def get_all_accounts():
-    """Return a list of all :class:`Account`'s accessible to the currently
-    authenticated user
+    """Return a list of all :class:`~dyn.mm.accounts.Account`'s accessible to
+    the currently authenticated user
     """
     uri = '/accounts'
     response = MMSession.get_session().execute(uri, 'GET')
@@ -28,8 +28,8 @@ def get_all_accounts():
 
 
 def get_all_senders(start_index=0):
-    """Return a list of all :class:`ApprovedSenders`'s accessible to the
-    currently authenticated user
+    """Return a list of all :class:`~dyn.mm.accounts.ApprovedSenders`'s
+    accessible to the currently authenticated user
     """
     uri = '/senders'
     args = {'start_index': start_index}
@@ -42,7 +42,7 @@ def get_all_senders(start_index=0):
 
 
 def get_all_suppressions(startdate=None, enddate=None, startindex=0):
-    """Return a list of all :class:`Suppression`'s"""
+    """Return a list of all :class:`~dyn.mm.accounts.Suppression`'s"""
     uri = '/suppressions'
     args = {'start_index': startindex}
     if startdate:
@@ -67,21 +67,26 @@ class Account(object):
     uri = '/accounts'
 
     def __init__(self, username, *args, **kwargs):
-        """Create a new :class:`Account` object
+        """Create a new :class:`~dyn.mm.accounts.Account` object
 
-        :param username: The username for this :class:`Account` - must be a
-            valid email address, and must be unique among all other
-            sub-accounts.
-        :param password: :class:`Account` password to be assigned. May be passed
-            as clear text or MD5-encrypted with "md5-" as a prefix
+        :param username: The username for this
+            :class:`~dyn.mm.accounts.Account` - must be a valid email address,
+            and must be unique among all other sub-accounts.
+        :param password: :class:`~dyn.mm.accounts.Account` password to be
+            assigned. May be passed as clear text or MD5-encrypted with "md5-"
+            as a prefix
         :param companyname: Name of the company assigned to this
-            :class:`Account`
-        :param phone: Contact Phone number for this :class:`Account`
+            :class:`~dyn.mm.accounts.Account`
+        :param phone: Contact Phone number for this
+            :class:`~dyn.mm.accounts.Account`
         :param address: The primary address associated with this
-            :class:`Account`
-        :param city: The City associated with this :class:`Account`
-        :param state: The State associated with this :class:`Account`
-        :param zipcode: The Zipcode associated with this :class:`Account`
+            :class:`~dyn.mm.accounts.Account`
+        :param city: The City associated with this
+            :class:`~dyn.mm.accounts.Account`
+        :param state: The State associated with this
+            :class:`~dyn.mm.accounts.Account`
+        :param zipcode: The Zipcode associated with this
+            :class:`~dyn.mm.accounts.Account`
         :param country: Two-letter English ISO 3166 country code
         :param timezone: The timezone of the account, in [+/-]h.mm format
         :param bounceurl: Bounce postback URL
@@ -115,7 +120,9 @@ class Account(object):
               state=None, zipcode=None, country=None, timezone=None,
               bounceurl=None, spamurl=None, unsubscribeurl=None, trackopens=0,
               tracklinks=0, trackunsubscribes=0, generatenewapikey=0):
-        """Create a new :class:`Account` on the Dyn Email System"""
+        """Create a new :class:`~dyn.mm.accounts.Account` on the Dyn Email
+        System
+        """
         self._password = password
         self._companyname = companyname
         self._phone = phone
@@ -145,7 +152,9 @@ class Account(object):
             setattr(self, '_' + key, val)
 
     def _get(self):
-        """Retrieve an existing :class:`Account` from the Dyn Email System"""
+        """Retrieve an existing :class:`~dyn.mm.accounts.Account` from the Dyn
+        Email System
+        """
         accounts = get_all_accounts()
         found = False
         for account in accounts:
@@ -164,7 +173,7 @@ class Account(object):
     @property
     def xheaders(self):
         """A list of the configured custom x-header field names associated
-        with this :class:`Account`.
+        with this :class:`~dyn.mm.accounts.Account`.
         """
         if self._xheaders is None:
             self._get_xheaders()
@@ -183,7 +192,7 @@ class Account(object):
     @property
     def username(self):
         """A list of the configured custom x-header field names associated
-        with this :class:`Account`.
+        with this :class:`~dyn.mm.accounts.Account`.
         """
         return self._username
     @username.setter
@@ -199,7 +208,9 @@ class Account(object):
 
     @property
     def address(self):
-        """The primary address associated with this :class:`Account`"""
+        """The primary address associated with this
+        :class:`~dyn.mm.accounts.Account`
+        """
         return self._address
     @address.setter
     def address(self, value):
@@ -215,7 +226,7 @@ class Account(object):
 
     @property
     def city(self):
-        """The City associated with this :class:`Account`"""
+        """The City associated with this :class:`~dyn.mm.accounts.Account`"""
         return self._city
     @city.setter
     def city(self, value):
@@ -223,7 +234,9 @@ class Account(object):
 
     @property
     def company_name(self):
-        """The name of the company this :class:`Account` is registered under`"""
+        """The name of the company this :class:`~dyn.mm.accounts.Account` is
+        registered under
+        """
         return self._companyname
     @company_name.setter
     def company_name(self, value):
@@ -231,7 +244,9 @@ class Account(object):
 
     @property
     def contact_name(self):
-        """The name of the contact associated with this :class:`Account`"""
+        """The name of the contact associated with this
+        :class:`~dyn.mm.accounts.Account`
+        """
         return self._contactname
     @contact_name.setter
     def contact_name(self, value):
@@ -239,7 +254,9 @@ class Account(object):
 
     @property
     def country(self):
-        """The Two letter country code associated with this :class:`Account`"""
+        """The Two letter country code associated with this
+        :class:`~dyn.mm.accounts.Account`
+        """
         return self._country
     @country.setter
     def country(self, value):
@@ -269,7 +286,7 @@ class Account(object):
     @property
     def phone(self):
         """The primary telephone number of the contact associated with this
-        :class:`Account`"""
+        :class:`~dyn.mm.accounts.Account`"""
         return self._phone
     @phone.setter
     def phone(self, value):
@@ -277,7 +294,7 @@ class Account(object):
 
     @property
     def state(self):
-        """The state associated with this :class:`Account`"""
+        """The state associated with this :class:`~dyn.mm.accounts.Account`"""
         return self._state
     @state.setter
     def state(self, value):
@@ -285,7 +302,9 @@ class Account(object):
 
     @property
     def timezone(self):
-        """The current timezone of the primary user of this :class:`Account`"""
+        """The current timezone of the primary user of this
+        :class:`~dyn.mm.accounts.Account`
+        """
         return self._timezone
     @timezone.setter
     def timezone(self, value):
@@ -294,7 +313,7 @@ class Account(object):
     @property
     def track_links(self):
         """A settings flag determining whether or not emails sent from this
-        :class:`Account` will be monitored for followed links
+        :class:`~dyn.mm.accounts.Account` will be monitored for followed links
         """
         return self._tracklinks == 1
     @track_links.setter
@@ -304,7 +323,7 @@ class Account(object):
     @property
     def track_opens(self):
         """A settings flag determining whether or not emails sent from this
-        :class:`Account` will be monitored for opens
+        :class:`~dyn.mm.accounts.Account` will be monitored for opens
         """
         return self._trackopens == 1
     @track_opens.setter
@@ -314,7 +333,7 @@ class Account(object):
     @property
     def track_unsubscribes(self):
         """A settings flag determining whether or not emails sent from this
-        :class:`Account` will be monitored for unsubscribes
+        :class:`~dyn.mm.accounts.Account` will be monitored for unsubscribes
         """
         return self._trackunsubscribes == 1
     @track_unsubscribes.setter
@@ -330,7 +349,7 @@ class Account(object):
 
     @property
     def zipcode(self):
-        """The zipcode of this :class:`Account`
+        """The zipcode of this :class:`~dyn.mm.accounts.Account`
         """
         return self._zipcode
     @zipcode.setter
@@ -339,8 +358,9 @@ class Account(object):
 
     @property
     def password(self):
-        """The password for this :class:`Account`. Note: Unless you've just
-        created this :class:`Account`, this field will be None.
+        """The password for this :class:`~dyn.mm.accounts.Account`. Note:
+        Unless you've just created this :class:`~dyn.mm.accounts.Account`,
+        this field will be *None*.
         """
         return self._password
     @password.setter
@@ -356,7 +376,7 @@ class Account(object):
 
     def _get_xheaders(self):
         """Build the list of the configured custom x-header field names
-        associated with this :class:`Account`.
+        associated with this :class:`~dyn.mm.accounts.Account`.
         """
         uri = '/accounts/xheaders'
         api_args = {}
@@ -368,7 +388,9 @@ class Account(object):
                                  xheaders)
 
     def delete(self):
-        """Delete this :class:`Account` from the Dyn Email System"""
+        """Delete this :class:`~dyn.mm.accounts.Account` from the Dyn Email
+        System
+        """
         uri = '/accounts/delete'
         api_args = {'username': self._username}
         MMSession.get_session().execute(uri, 'POST', api_args)
@@ -385,9 +407,10 @@ class ApprovedSender(object):
     uri = '/senders'
 
     def __init__(self, emailaddress, *args, **kwargs):
-        """Create an :class:`ApprovedSender` object
+        """Create an :class:`~dyn.mm.accounts.ApprovedSender` object
 
-        :param emailaddress: The email address of this :class:`ApprovedSender`
+        :param emailaddress: The email address of this
+            :class:`~dyn.mm.accounts.ApprovedSender`
         :param seeding: 1 to opt this approved sender in for seeding; 0
             (default)to opt them out. Seeding is used to provide insight into
             inbox placement. See the `Approved Senders
@@ -407,8 +430,8 @@ class ApprovedSender(object):
             self._get()
 
     def _post(self, seeding=0):
-        """Create or update a :class:`ApprovedSender` on the Dyn Message
-        Management System.
+        """Create or update a :class:`~dyn.mm.accounts.ApprovedSender` on the
+        Dyn Message Management System.
 
         :param seeding:
         """
@@ -420,8 +443,8 @@ class ApprovedSender(object):
             setattr(self, '_' + key, val)
 
     def _get(self):
-        """Get an existing :class:`ApprovedSender` from the Dyn Message
-        Management System.
+        """Get an existing :class:`~dyn.mm.accounts.ApprovedSender` from the
+        Dyn Message Management System.
         """
         uri = '/senders/details'
         api_args = {'emailaddress': self._emailaddress}
@@ -430,7 +453,7 @@ class ApprovedSender(object):
             setattr(self, '_' + key, val)
 
     def _update(self, api_args):
-        """Update this :class:`ApprovedSender` object."""
+        """Update this :class:`~dyn.mm.accounts.ApprovedSender` object."""
         if 'emailaddress' not in api_args:
             api_args['emailaddress'] = self._emailaddress
         response = MMSession.get_session().execute(self.uri, 'POST', api_args)
@@ -485,7 +508,7 @@ class ApprovedSender(object):
 
     @property
     def spf(self):
-        """SPF for this :class:`ApprovedSender`"""
+        """SPF for this :class:`~dyn.mm.accounts.ApprovedSender`"""
         return self._spf
     @spf.setter
     def spf(self, value):
@@ -493,14 +516,14 @@ class ApprovedSender(object):
 
     @property
     def dkimval(self):
-        """DKIM val for this :class:`ApprovedSender`"""
+        """DKIM val for this :class:`~dyn.mm.accounts.ApprovedSender`"""
         return self._dkimval
     @dkimval.setter
     def dkimval(self, value):
         pass
 
     def delete(self):
-        """Delete this :class:`ApprovedSender`"""
+        """Delete this :class:`~dyn.mm.accounts.ApprovedSender`"""
         uri = '/senders/delete'
         api_args = {'emailaddress': self._emailaddress}
         MMSession.get_session().execute(uri, 'POST', api_args)
@@ -512,18 +535,19 @@ class ApprovedSender(object):
 
 
 class Recipient(object):
-    """A :class:`Recipient` is an email address that is capable of recieving
-    email.
+    """A :class:`~dyn.mm.accounts.Recipient` is an email address that is
+    capable of recieving email.
     """
     def __init__(self, emailaddress, method='GET'):
-        """Create a :class:`Recipient` object
+        """Create a :class:`~dyn.mm.accounts.Recipient` object
 
-        :param emailaddress: This :class:`Recipient`'s email adress.
+        :param emailaddress: This :class:`~dyn.mm.accounts.Recipient`'s email
+            address.
         :param method: A Flag specifying whether you're looking for an existing
-            :class:`Recipient` or if you want to create a new one. Because both
-            GET and POST calls accept the same requirements there's no way to
-            automatically deduce what the user is trying to do so you must
-            specify either GET or POST in the constructor
+            :class:`~dyn.mm.accounts.Recipient` or if you want to create a new
+            one. Because both GET and POST calls accept the same requirements
+            there's no way to automatically deduce what the user is trying to
+            do so you must specify either GET or POST in the constructor
         """
         self.emailaddress = emailaddress
         self.status = self.unsuppressed = self.pending_addition = None
@@ -558,14 +582,15 @@ class Recipient(object):
 
 
 class Suppression(object):
-    """A :class:`Supression` representing a suppressed email"""
+    """A :class:`~dyn.mm.accounts.Supression` representing a suppressed email
+    """
     uri = '/suppressions'
 
     def __init__(self, emailaddress, *args, **kwargs):
-        """Create a :class:`Suppression` object.
+        """Create a :class:`~dyn.mm.accounts.Suppression` object.
 
         :param emailaddress: This email address of for the
-            :class:`Suppression`'s to apply to.
+            :class:`~dyn.mm.accounts.Suppression`'s to apply to.
         """
         self.emailaddress = emailaddress
         self._count = self._suppresstime = None
@@ -586,7 +611,8 @@ class Suppression(object):
         MMSession.get_session().execute(self.uri, 'POST', api_args)
 
     def get_count(self, startdate=None, enddate=None):
-        """Get the count attribute of this suppression for the provided range"""
+        """Get the count attribute of this suppression for the provided range
+        """
         if startdate:
             startdate = date_to_str(startdate)
             enddate = enddate or datetime.now()
@@ -611,9 +637,10 @@ class Suppression(object):
         pass
 
     def activate(self):
-        """Removes a :class:`Recipient` from the user's suppression list.
-        This will not unbounce/uncomplain the :class:`Recipient`, but you will
-        be permitted to send to them again.
+        """Removes a :class:`~dyn.mm.accounts.Recipient` from the user's
+        suppression list. This will not unbounce/uncomplain the
+        :class:`~dyn.mm.accounts.Recipient`, but you will be permitted to send
+        to them again.
         """
         uri = self.uri + '/activate'
         api_args = {'emailaddress': self.emailaddress}

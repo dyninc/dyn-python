@@ -30,8 +30,8 @@ class _Retrieval(object):
     uri = ''
     def __init__(self, starttime, endtime=None, startindex=0, sender=None,
                  xheaders=None):
-        """Create a :class:`Sent` object to perform the specified analytics
-        searches against the Dyn Message Management API
+        """Create a :class:`~dyn.mm.reports.Sent` object to perform the
+        specified analytics searches against the Dyn Message Management API
 
         :param starttime: Start as a datetime.datetime object
         :param endtime: End as a datetime.datetime object. Defaults to

@@ -18,14 +18,16 @@ class APIList(list):
     _json property, ensuring that they are JSON serializable
     """
     def __init__(self, session_func, name, uri=None, *args, **kwargs):
-        """Create an :class:`APIList` object
+        """Create an :class:`~dyn.tm.utils.APIList` object
 
         :param session_func: The singleton generator to get the current API
             Session
-        :param name: The kwarg key that this :class:`APIList` represents
-        :param uri: The uri this :class:`APIList` will make calls to
-        :param *args: non-kwargs to pass to the super :class:`list` constructor
-        :param **kwargs: kwargs to pass to the super :class:`list` constructor
+        :param name: The kwarg key that this :class:`~dyn.tm.utils.APIList`
+            represents
+        :param uri: The uri this :class:`~dyn.tm.utils.APIList` will make calls
+            to
+        :param *args: non-kwargs to pass to the super *list* constructor
+        :param **kwargs: kwargs to pass to the super *list* constructor
         """
         super(APIList, self).__init__(*args, **kwargs)
         self.session_func = session_func
@@ -113,9 +115,10 @@ class Active(object):
             self.value = inp
 
     def __nonzero__(self):
-        """Returns the value of this :class:`Active` object. In Python 2.x this
-        is the magic method called at boolean expression checking time. ie,
-        ``if Active('Y')`` will call this method and return True
+        """Returns the value of this :class:`~dyn.tm.utils.Active` object. In
+        Python 2.x this is the magic method called at boolean expression
+        checking time. ie, ``if Active('Y')`` will call this method and return
+        *True*
         """
         return self.value
 
@@ -124,8 +127,8 @@ class Active(object):
     __bool__ = __nonzero__
 
     def __str__(self):
-        """The string representation of this :class:`Active` will return 'Y' or
-        'N' depending on the value of ``self.value``
+        """The string representation of this :class:`~dyn.tm.utils.Active` will
+        return 'Y' or 'N' depending on the value of ``self.value``
         """
         if self.value:
             return force_unicode('Y')

@@ -479,7 +479,6 @@ class GeoRegionGroup(object):
             objects
         """
         super(GeoRegionGroup, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.uri = None
         self._service_name = self._group_name = self._countries = None
         self._countries = countries
@@ -527,7 +526,6 @@ class Geo(object):
         :param ttl: Time to Live for each record in the service
         """
         super(Geo, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._service_name = service_name
         self.uri = '/Geo/{}/'.format(self._service_name)
         self._groups = self._nodes = self._ttl = None

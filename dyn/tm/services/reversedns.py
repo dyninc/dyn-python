@@ -27,7 +27,6 @@ class ReverseDNS(object):
             service
         """
         super(ReverseDNS, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._zone = zone
         self._fqdn = fqdn
         self.valid_record_types = ('A', 'AAAA', 'DynA', 'DynAAAA')

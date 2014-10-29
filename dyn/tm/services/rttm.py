@@ -264,7 +264,6 @@ class RegionPoolEntry(object):
             one of 'always', 'obey', 'remove', or 'no'
         """
         super(RegionPoolEntry, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_modes = ('always', 'obey', 'remove', 'no')
         self._address = address
         self._label = label
@@ -410,7 +409,6 @@ class RTTMRegion(object):
             'cname', 'region', or 'global'
         """
         super(RTTMRegion, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_region_codes = ('US West', 'US Central', 'US East', 'Asia',
                                    'EU West', 'EU Central', 'EU East', 'global')
         self.valid_modes = ('ip', 'cname', 'region', 'global')
@@ -665,7 +663,6 @@ class RTTM(object):
         :param contact_nickname: Name of contact to receive notifications
         """
         super(RTTM, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_ttls = (30, 60, 150, 300, 450)
         self.valid_notify_events = ('ip', 'svc', 'nosrv')
         self.valid_syslog_facilities = ('kern', 'user', 'mail', 'daemon',

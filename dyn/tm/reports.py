@@ -18,7 +18,7 @@ def get_check_permission(permission, zone_name=None):
 
     :param permission: A list of permissions to check for the current user.
     :param zone_name: The zone to check for specific permissions.
-    :return: A :class:`dict` containing permission information.
+    :return: A *dict* containing permission information.
     """
     api_args = {'permission': permission}
     if zone_name is not None:
@@ -29,16 +29,16 @@ def get_check_permission(permission, zone_name=None):
 
 
 def get_dnssec_timeline(zone_name, start_ts=None, end_ts=None):
-    """Generates a report of events for the :class:`DNSSEC` service
-    attached to the specified zone has performed and has scheduled
-    to perform.
+    """Generates a report of events for the
+    :class:`~dyn.tm.services.dnssec.DNSSEC` service attached to the specified
+    zone has performed and has scheduled to perform.
 
     :param zone_name: The name of the zone with DNSSEC service
     :param start_ts: datetime.datetime instance identifying point in time for
         the start of the timeline report
     :param end_ts: datetime.datetime instance identifying point in time
         for the end of the timeline report. Defaults to datetime.datetime.now()
-    :return: A :class:`dict` containing log report data
+    :return: A *dict* containing log report data
     """
     api_args = {'zone': zone_name}
     if start_ts is not None:
@@ -62,7 +62,7 @@ def get_rttm_log(zone_name, fqdn, start_ts, end_ts=None):
         the log report to start
     :param end_ts: datetime.datetime instance indicating the end of the data
         range for the report. Defaults to datetime.datetime.now()
-    :return: A :class:`dict` containing log report data
+    :return: A *dict* containing log report data
     """
     end_ts = end_ts or datetime.now()
     api_args = {'zone': zone_name,
@@ -82,7 +82,7 @@ def get_rttm_rrset(zone_name, fqdn, ts):
     :param fqdn: The FQDN where RTTM is attached
     :param ts: datetime.datetime instance identifying point in time for the
         report
-    :return: A :class:`dict` containing rrset report data
+    :return: A *dict* containing rrset report data
     """
     api_args = {'zone': zone_name,
                 'fqdn': fqdn,
@@ -105,7 +105,7 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     :param hosts: List of hosts to include in the report.
     :param rrecs: List of record types to include in report.
     :param zones: List of zones to include in report.
-    :return: A :class:`str` with CSV data
+    :return: A *str* with CSV data
     """
     end_ts = end_ts or datetime.now()
     api_args = {'start_ts': unix_date(start_ts),
@@ -130,7 +130,7 @@ def get_zone_notes(zone_name, offset=None, limit=None):
     :param offset: UNIX timestamp of the starting point at which to
         retrieve the notes
     :param limit: The maximum number of notes to be retrieved
-    :return: A :class:`list` of :class:`dict` containing Zone Notes
+    :return: A *list* of *dict* containing Zone Notes
     """
     api_args = {'zone': zone_name}
     if offset:

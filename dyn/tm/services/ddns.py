@@ -28,7 +28,6 @@ class DynamicDNS(object):
             update user to allow access to this service
         """
         super(DynamicDNS, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._zone = zone
         self._fqdn = fqdn
         self._record_type = self._address = self.uri = self._user = None

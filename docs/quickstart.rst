@@ -10,11 +10,11 @@ the dyn module installed. If  you do not, head over to the
 
 First, make sure that dyn is :ref:`installed <install>`
 
-Second, it's important to understand that this library handles interacting with 
+Second, it's important to understand that this library handles interacting with
 both your Traffic Management (TM) and Message Management (MM) services. For both
 TM and MM you will need to create Session objects which handle interacting with
 the API, processing API responses, and creating the various objects described
-in the :ref:`API <dyn-module>` section.
+in the :ref:`TM <dyn-tm>` and :ref:`MM <dyn-mm>` API documentation sections.
 
 So, with that in mind, let's get started with some simple examples.
 
@@ -162,6 +162,7 @@ All MM exceptions inherit from :class:`~dyn.mm.errors.EmailError`
 
 -----------------------
 
-Ready for more? Check out the :ref:`API Documentation <dyn-module>` section, the
-full `TM API Documentation <https://help.dynect.net/rest-resources/>`_ or the
+Ready for more? Check out the :ref:`TM <dyn-tm>` and :ref:`MM <dyn-mm>`
+module documentation sections, the full
+`TM API Documentation <https://help.dynect.net/rest-resources/>`_ or the
 `MM API Documentation <https://help.dynect.net/api/>`_.

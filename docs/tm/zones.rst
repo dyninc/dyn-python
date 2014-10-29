@@ -11,6 +11,7 @@ The following function is primarily a helper function which performs an API
 "Get All" call. This function returns a single ``list`` of :class:`Zone` objects.
 
 .. autofunction:: dyn.tm.zones.get_all_zones
+.. autofunction:: dyn.tm.zones.get_all_secondary_zones
 
 Classes
 -------

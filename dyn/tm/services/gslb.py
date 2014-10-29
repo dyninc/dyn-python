@@ -225,7 +225,6 @@ class GSLBRegionPoolEntry(object):
             one of 'always', 'obey', 'remove', 'no'
         """
         super(GSLBRegionPoolEntry, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_serve_modes = ('always', 'obey', 'remove', 'no')
         self.valid_weight = range(1, 15)
         self._zone = zone
@@ -411,7 +410,6 @@ class GSLBRegion(object):
             'cname', 'region', 'global'
         """
         super(GSLBRegion, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self._zone = zone
         self._fqdn = fqdn
         self._region_code = region_code
@@ -640,7 +638,6 @@ class GSLB(object):
         :param contact_nickname: Name of contact to receive notifications
         """
         super(GSLB, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_auto_recover = ('Y', 'N')
         self.valid_ttls = (30, 60, 150, 300, 450)
         self.valid_notify_events = ('ip', 'svc', 'nosrv')

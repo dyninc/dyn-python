@@ -22,7 +22,7 @@ def change_ip(zone, from_ip, to, v6=False, publish=False):
     :param publish: A boolean flag denoting whether or not to publish changes
         after making them. You can optionally leave this as *False* and process
         the returned changeset prior to publishing your changes.
-    :returns: A *list* of *tuple*s of the form (fqdn, old, new) where fqdn is
+    :returns: A list of tuples of the form (fqdn, old, new) where fqdn is
         the fqdn of the record that was updated, old was the old ip address, and
         new is the new ip address.
     """
@@ -65,7 +65,7 @@ def map_ips(zone, mapping, v6=False, publish=False):
     :param publish: A boolean flag denoting whether or not to publish changes
         after making them. You can optionally leave this as *False* and process
         the returned changeset prior to publishing your changes.
-    :returns: A *list* of *tuple*s of the form (fqdn, old, new) where fqdn is
+    :returns: A list of tuples of the form (fqdn, old, new) where fqdn is
         the fqdn of the record that was updated, old was the old ip address, and
         new is the new ip address.
     """

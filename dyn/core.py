@@ -37,9 +37,6 @@ def clean_args(dict_obj):
 
 
 class _Singleton(type):
-    """A :class:`Singleton` type for implementing a true Singleton design
-    pattern, cleanly, using metaclasses
-    """
     _instances = {}
     def __call__(cls, *args, **kwargs):
         cur_thread = threading.current_thread()
@@ -58,8 +55,8 @@ class _Singleton(type):
 
 # This class is a workaround for supporting metaclasses in both Python2 and 3
 class Singleton(_Singleton('SingletonMeta', (object,), {})):
-    """A :class:`Singleton` type for implementing a true Singleton design
-    pattern, cleanly, using metaclasses
+    """A :class:`~dyn.core.Singleton` type for implementing a true Singleton
+    design pattern, cleanly, using metaclasses
     """
     pass
 

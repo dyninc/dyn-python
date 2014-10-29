@@ -1,5 +1,11 @@
 Release History
 ---------------
+1.3.3 (2014-10-26)
+++++++++++++++++++
+
+* Fixed the majority of warnings when building docs, per issue #18
+* Added `dyn.tm.zones.get_all_secondary_zones` function for retrieving all secondary zones for an account
+
 1.3.2 (2014-10-21)
 ++++++++++++++++++
 

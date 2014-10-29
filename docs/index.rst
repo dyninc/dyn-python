@@ -38,6 +38,7 @@ Contents:
    tm
    mm
    advanced
+   core
 
 
 Indices and tables

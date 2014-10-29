@@ -11,9 +11,6 @@ modules described below to access the API and make their associated calls.
 
 .. _mm-api-documentation:
 
-Dyn Message Managment Documentation
------------------------------------
-
 If you are looking for information on a specific function, class or method,
 this part of the documentation is for you.
 
@@ -25,5 +22,5 @@ this part of the documentation is for you.
    mm/message
    mm/reports
    mm/session
-   mmerrors
+   mm/errors
 

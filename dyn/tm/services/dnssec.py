@@ -104,7 +104,6 @@ class DNSSEC(object):
             warnings (2 weeks, 1 week, 1 day) of events)
         """
         super(DNSSEC, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_notify_events = ('create', 'expire', 'warning')
         self._zone = zone
         self._contact_nickname = self._notify_events = None

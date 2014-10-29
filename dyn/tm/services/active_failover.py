@@ -240,7 +240,6 @@ class ActiveFailover(object):
             less than 1/2 of the Health Probe's monitoring interval
         """
         super(ActiveFailover, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_notify_events = ('ip', 'svc', 'nosrv')
         self._zone = zone
         self._fqdn = fqdn

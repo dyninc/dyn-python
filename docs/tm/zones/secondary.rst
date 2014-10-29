@@ -45,3 +45,15 @@ the dyn.tm System.
     >>> my_zone.active
     'N'
 
+Using lists of Secondary Zones
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example shows how to use the results of a call to the
+:func:`get_all_secondary_zones` functions
+::
+
+    >>> from dyn.tm.zones import get_all_secondary_zones
+    >>> my_sec_zones = get_all_secondary_zones()
+    >>> for zone in my_sec_zones:
+    ...     zone.activate()
+
+

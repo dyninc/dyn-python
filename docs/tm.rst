@@ -11,9 +11,6 @@ modules described below to access the API and make their associated calls.
 
 .. _tm-api-documentation:
 
-Dyn Traffic Managment Documentation
------------------------------------
-
 If you are looking for information on a specific function, class or method,
 this part of the documentation is for you.
 

@@ -25,10 +25,10 @@ RECS = {'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord,
 
 
 def get_all_zones():
-    """Accessor function to retrieve a :class:`List` of all :class:`Zone`'s
-    accessible to a user
+    """Accessor function to retrieve a *list* of all
+    :class:`~dyn.tm.zones.Zone`'s accessible to a user
 
-    :return: a :class:`List` of :class:`Zone`'s
+    :return: a *list* of :class:`~dyn.tm.zones.Zone`'s
     """
     uri = '/Zone/'
     api_args = {'detail': 'Y'}
@@ -36,6 +36,21 @@ def get_all_zones():
     zones = []
     for zone in response['data']:
         zones.append(Zone(zone['zone'], api=False, **zone))
+    return zones
+
+
+def get_all_secondary_zones():
+    """Accessor function to retrieve a *list* of all :class:`SecondaryZone`'s
+    accessible to a user
+
+    :return: a *list* of :class:`~dyn.tm.zones.SecondaryZone`'s
+    """
+    uri = '/Secondary/'
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    zones = []
+    for zone in response['data']:
+        zones.append(SecondaryZone(zone.pop('zone'), api=False, **zone))
     return zones
 
 
@@ -60,7 +75,6 @@ class Zone(object):
             complete
         """
         super(Zone, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.valid_serials = ('increment', 'epoch', 'day', 'minute')
         self._name = name
         self._fqdn = self._name
@@ -634,10 +648,14 @@ class SecondaryZone(object):
             transfer requests to this zone's master
         """
         super(SecondaryZone, self).__init__()
-        self._zone = zone
+        self._zone = self._name = zone
         self.uri = '/Secondary/{}/'.format(self._zone)
         self._masters = self._contact_nickname = self._tsig_key_name = None
-        if len(args) == 0 and len(kwargs) == 0:
+        if 'api' in kwargs:
+            del kwargs['api']
+            for key, val in kwargs.items():
+                setattr(self, '_' + key, val)
+        elif len(args) == 0 and len(kwargs) == 0:
             self._get()
         else:
             self._post(*args, **kwargs)
@@ -774,7 +792,6 @@ class Node(object):
         :param fqdn: the fully qualified domain name of this zone
         """
         super(Node, self).__init__()
-        self.logger = logging.getLogger(str(self.__class__))
         self.zone = zone
         self.fqdn = fqdn or self.zone + '.'
         self.records = self.my_records = {}

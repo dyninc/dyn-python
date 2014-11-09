@@ -13,4 +13,4 @@ __version__    = '.'.join([str(x) for x in version_info])
 __maintainer__ = 'Jonathan Nappi'
 __email__      = 'jnappi@dyn.com'
 __status__     = 'Stable'
-__title__      = '{} version {}'.format(__name__, __version__)
+__title__      = '{0} version {1}'.format(__name__, __version__)

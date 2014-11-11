@@ -49,7 +49,7 @@ class MMSession(SessionEngine):
             if '%' not in uri:
                 uri = pathname2url(uri)
             uri = '?'.join([uri, urlencode(args)])
-            return {}, '', uri
+            return {}, '{}', uri
         return args, urlencode(args), uri
 
     def _handle_response(self, response, uri, method, raw_args, final):

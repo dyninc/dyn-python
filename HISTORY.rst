@@ -1,5 +1,11 @@
 Release History
 ---------------
+1.3.4 (2014-11-11)
+++++++++++++++++++
+
+* Bugfix for MMSesion JSON Error caused by arg filtering
+* Bugfix for DSFRecord Creation on DSF GET calls
+
 1.3.3 (2014-10-26)
 ++++++++++++++++++
 

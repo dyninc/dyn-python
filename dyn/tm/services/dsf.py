@@ -2,7 +2,6 @@
 """This module contains wrappers for interfacing with every element of a Traffic
 Director (DSF) service.
 """
-import logging
 from ..utils import APIList, Active
 from ..errors import DynectInvalidArgumentError
 from ..records import *
@@ -59,7 +58,6 @@ class _DSFRecord(object):
             Record status to be 'up'
         :param eligible: Indicates whether or not the Record can be served
         """
-        super(_DSFRecord, self).__init__()
         self.valid_automation = ('auto', 'auto_down', 'manual')
         self._label = label
         self._weight = weight
@@ -998,6 +996,8 @@ class DSFRecordSet(object):
                     record_data = data['data'][rdata_key]
                     for kw in kws:
                         record_data[kw] = record[kw]
+                    if constructor is DSFSRVRecord:
+                        record_data['rr_weight'] = record_data.pop('weight')
                     self._records.append(constructor(**record_data))
         else:
             self._records = records or []

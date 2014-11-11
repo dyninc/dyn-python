@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """dyn.core is a utilities module for use internally within the dyn library
 itself. Although it's possible to use this functionality outside of the dyn
-library, it is not recommened and could possible result in some strange
+library, it is not recommened and could possibly result in some strange
 behavior.
 """
 import copy
@@ -10,10 +10,11 @@ import locale
 import logging
 import threading
 from datetime import datetime
+from collections import OrderedDict
 
 from . import __version__
 from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
-                     prepare_to_send, force_unicode)
+                     prepare_to_send, force_unicode, string_types)
 
 
 def cleared_class_dict(dict_obj):
@@ -38,6 +39,7 @@ def clean_args(dict_obj):
 
 class _Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         cur_thread = threading.current_thread()
         key = getattr(cls, '__metakey__')
@@ -61,10 +63,155 @@ class Singleton(_Singleton('SingletonMeta', (object,), {})):
     pass
 
 
+class APIDescriptor(object):
+    def __init__(self, name='', doc=None):
+        super(APIDescriptor, self).__init__()
+        self.name = name
+        self.private_name = '_' + self.name
+        self.__doc__ = doc
+
+    def __get__(self, instance, cls):
+        print('GET', instance, cls)
+        return getattr(instance, self.private_name, None)
+
+    def __set__(self, instance, value):
+        print('SET', instance, value)
+        setattr(instance, self.private_name, value)
+        if hasattr(instance, '_update'):
+            args = {self.name: value}
+            getattr(instance, '_update')(args)
+
+
+class Typed(APIDescriptor):
+    """Type enforced descriptor"""
+    ty = object
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.ty):
+            raise TypeError('Expected %s' % self.ty)
+        super(Typed, self).__set__(instance, value)
+
+
+class IntegerField(Typed):
+    """API Field that may only be an integer type"""
+    ty = int
+
+
+class StringField(Typed):
+    """API Field that may only be a string type"""
+    ty = string_types
+
+
+class ImmutableField(APIDescriptor):
+    """An API field that can not be overridden"""
+
+    def __set__(self, instance, cls):
+        pass
+
+
+class ValidatedField(APIDescriptor):
+    """An API field whose value can be forced to a specific subset of values"""
+    def __init__(self, name='', doc=None, validator=None):
+        """An API field that must be one of a specific set of values
+
+        :param name: The name of this field
+        :param validator: An optional list of valid values for this field
+        """
+        super(ValidatedField, self).__init__(name, doc)
+        self.validator = validator
+
+    def __set__(self, instance, value):
+        if self.validator is not None:
+            if value in self.validator:
+                super(ValidatedField, self).__set__(instance, value)
+        else:  # If we have no validator, then assume it's safe to overwrite
+            super(ValidatedField, self).__set__(instance, value)
+
+
+# class Junk(object):
+#     data = APIDescriptor('data')
+#     odds = ValidatedField('odds', validator=[1, 3, 5, 7])
+#     read_only = ImmutableField('read_only')
+#     my_int = IntegerField('my_int')
+#     my_str = StringField('my_str')
+#
+#     def __init__(self):
+#         self._data = {'serial': 121312, 'ts': 12321111233}
+#         self._odds = 5
+#         self._read_only = 'passw0rd'
+#         self._my_int = 0
+#         self._my_str = 'lulz'
+
+
+# noinspection PyUnusedLocal
+class APIObject(object):
+    """Base API Object type responsible for handling shared functionality
+    between various objects constructed from what comes out of the API. This
+    base object has some safe default behavior such as a _build method that
+    simply takes in api data and appends a '_' to the name before assigning it
+    as a variable for the instance. A _get method that passes no arguments to
+    the API. And a delete that passes no arguments to the API.
+
+    This class also provides a __json__ attribute that attempts to generify
+    the conversion of these Python objects into JSON blobs. By default this
+    property creates a cleared_class_dict and further filters out any instance
+    attributes that start with '_' but not '__'.
+    """
+    uri = ''
+    session_type = None
+
+    def __init__(self, *args, **kwargs):
+        super(APIObject, self).__init__()
+        if 'api' in kwargs:
+            del kwargs['api']
+            self._build(kwargs)
+        elif len(args) == 0 and len(kwargs) == 0:  # Safe default behaviour
+            self._get()
+        else:
+            self._post(*args, **kwargs)
+
+    def _build(self, data):
+        """Build the variables in this object by pulling out the data from the
+        provided data dict
+        """
+        for key, val in data.items():
+            setattr(self, '_' + key, val)
+
+    def _post(self, *args, **kwargs):
+        """POST method, to be inherited by all child classes on a case-by-case
+        basis
+        """
+        raise NotImplementedError('_post must be overriden by child classes')
+
+    def _get(self, *args, **kwargs):
+        """Retrieve this object from the DynECT System"""
+        response = self.session_type.get_session().execute(self.uri, 'GET')
+        self._build(response['data'])
+
+    def _update(self, **api_args):
+        """Update this object on the DynECT System"""
+        response = self.session_type.get_session().execute(self.uri, 'PUT',
+                                                           api_args)
+        self._build(response['data'])
+
+    def delete(self, *args, **kwargs):
+        """Delete this object from the DynECT system"""
+        if self.session_type is not None:
+            self.session_type.get_session().execute(self.uri, 'DELETE')
+
+    @property
+    def __json__(self):
+        """Generic JSON reprsentation of this object"""
+        dict_obj = cleared_class_dict(self.__dict__)
+        return {x: dict_obj[x] for x in dict_obj if x.startswith('_') and
+                not x.startswith('__')}
+
+
 class _History(list):
     """A *list* subclass specifically targeted at being able to store the
     history of calls made via a SessionEngine
     """
+
     def append(self, p_object):
         """Override builtin list append operators to allow for the automatic
         appendation of a timestamp for cleaner record keeping
@@ -73,6 +220,7 @@ class _History(list):
         super(_History, self).append(tuple([now_ts] + list(p_object)))
 
 
+# noinspection PyMethodParameters
 class SessionEngine(Singleton):
     """Base object representing a DynectSession Session"""
     _valid_methods = tuple()
@@ -164,9 +312,8 @@ class SessionEngine(Singleton):
             self.logger.info(msg)
             self._conn = HTTPSConnection(self.host, self.port, timeout=300)
         else:
-            msg = \
-                'Establishing unencrypted connection to {}:{}'.format(self.host,
-                                                                      self.port)
+            msg = 'Establishing unencrypted connection to {}:{}'
+            msg = msg.format(self.host, self.port)
             self.logger.info(msg)
             self._conn = HTTPConnection(self.host, self.port, timeout=300)
 
@@ -182,8 +329,8 @@ class SessionEngine(Singleton):
         return response
 
     def _handle_error(self, uri, method, raw_args):
-        """Handle the processing of a connection error with the api. Note, to be
-        implemented as needed in subclasses.
+        """Handle the processing of a connection error with the api. Note, to
+        be implemented as needed in subclasses.
         """
         return None
 
@@ -267,7 +414,8 @@ class SessionEngine(Singleton):
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
 
         msg = 'uri: {}, method: {}, args: {}'
-        self.logger.debug(msg.format(uri, method, clean_args(json.loads(args))))
+        self.logger.debug(msg.format(uri, method,
+                                     clean_args(json.loads(args))))
 
         # Send the command and deal with results
         self.send_command(uri, method, args)
@@ -383,9 +531,9 @@ class SessionEngine(Singleton):
         return d
 
     def __setstate__(cls, state):
-        """Because the HTTP/HTTPS connection was stripped out in __getstate__ we
-        must manually re-enter it as None and let the sessions execute method
-        handle rebuilding it later
+        """Because the HTTP/HTTPS connection was stripped out in __getstate__
+        we must manually re-enter it as None and let the sessions execute
+        method handle rebuilding it later
         """
         cls.__dict__ = state
         cls.__dict__['_conn'] = None
@@ -393,6 +541,7 @@ class SessionEngine(Singleton):
     def __str__(self):
         """str override"""
         return force_unicode('<{}>').format(self.name)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

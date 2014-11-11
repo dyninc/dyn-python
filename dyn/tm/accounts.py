@@ -2,10 +2,9 @@
 """This module contains interfaces for all Account management features of the
 REST API
 """
-import logging
-
 from .errors import DynectInvalidArgumentError
 from .session import DynectSession
+from ..core import APIObject, ImmutableField, StringField, APIDescriptor
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
@@ -160,52 +159,25 @@ def get_notifiers(search=None):
     return notifiers
 
 
-class UpdateUser(object):
+class UpdateUser(APIObject):
     """:class:`~dyn.tm.accounts.UpdateUser` type objects are a special form of
     a :class:`~dyn.tm.accounts.User` which are tied to a specific Dynamic DNS
     services.
     """
-    def __init__(self, *args, **kwargs):
-        """Create an :class:`~dyn.tm.accounts.UpdateUser` object
-
-        :param user_name: the Username this
-            :class:`~dyn.tm.accounts.UpdateUser` uses or will use to log in to
-            the DynECT System. A :class:`~dyn.tm.accounts.UpdateUser`'s
-            `user_name` is required for both creating and getting
-            :class:`~dyn.tm.accounts.UpdateUser`'s.
-        :param nickname: When creating a new
-            :class:`~dyn.tm.accounts.UpdateUser` on the DynECT System, this
-            `nickname` will be the System nickname for this
-            :class:`~dyn.tm.accounts.UpdateUser`
-        :param password: When creating a new
-            :class:`~dyn.tm.accounts.UpdateUser` on the DynECT System, this
-            `password` will be the password this
-            :class:`~dyn.tm.accounts.UpdateUser` uses to log into the System
-        """
-        super(UpdateUser, self).__init__()
-        self.uri = '/UpdateUser/'
-        self._password = self._status = self._user_name = self._nickname = None
-        if 'api' in kwargs:
-            good_args = ('user_name', 'status', 'password')
-            for key, val in kwargs.items():
-                if key in good_args:
-                    setattr(self, '_' + key, val)
-            self.uri = '/UpdateUser/{}/'.format(self._user_name)
-        elif len(args) + len(kwargs) == 1:
-            self._get(*args, **kwargs)
-        else:
-            self._post(*args, **kwargs)
+    uri = '/UpdateUser/'
+    session_type = DynectSession
+    user_name = ImmutableField('user_name')
+    password = StringField('password')
+    nickname = StringField('nickname')
+    status = ImmutableField('status')
 
     def _post(self, nickname, password):
         """Create a new :class:`~dyn.tm.accounts.UpdateUser` on the DynECT
         System
         """
-        self._nickname = nickname
-        self._password = password
-        uri = '/UpdateUser/'
-        api_args = {'nickname': self._nickname,
-                    'password': self._password}
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        api_args = {'nickname': nickname, 'password': password}
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
         self.uri = '/UpdateUser/{}/'.format(self._user_name)
 
@@ -218,85 +190,19 @@ class UpdateUser(object):
         response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
 
-    def _build(self, data):
-        for key, val in data.items():
-            setattr(self, '_' + key, val)
-
-    def _update(self, api_args=None):
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def user_name(self):
-        """This :class:`~dyn.tm.accounts.UpdateUser`'s `user_name`. An
-        :class:`~dyn.tm.accounts.UpdateUser`'s user_name is a read-only
-        property which can not be updated after the :class:`UpdateUser` has
-        been created.
-        """
-        return self._user_name
-    @user_name.setter
-    def user_name(self, value):
-        pass
-
-    @property
-    def nickname(self):
-        """This :class:`~dyn.tm.accounts.UpdateUser`s `nickname`. An
-        :class:`~dyn.tm.accounts.UpdateUser`'s `nickname` is a read-only
-        property which can not be updated after the
-        :class:`~dyn.tm.accounts.UpdateUser` has been created.
-        """
-        return self._nickname
-    @nickname.setter
-    def nickname(self, value):
-        pass
-
-    @property
-    def status(self):
-        """The current `status` of an :class:`~dyn.tm.accounts.UpdateUser` will
-        be one of either 'active' or 'blocked'. Blocked
-        :class:`~dyn.tm.accounts.UpdateUser`'s are unable to log into the
-        DynECT System, where active :class:`~dyn.tm.accounts.UpdateUser`'s are.
-        """
-        return self._status
-    @status.setter
-    def status(self, value):
-        pass
-
-    @property
-    def password(self):
-        """The current `password` for this
-        :class:`~dyn.tm.accounts.UpdateUser`. An
-        :class:`~dyn.tm.accounts.UpdateUser`'s `password` may be reassigned.
-        """
-        if self._password is None or self._password == u'':
-            self._get(self._user_name)
-        return self._password
-    @password.setter
-    def password(self, new_password):
-        """Update this :class:`~dyn.tm.accounts.UpdateUser`'s password to be
-        the provided password
-
-        :param new_password: The new password to use
-        """
-        api_args = {'password': new_password}
-        self._update(api_args)
-
     def block(self):
         """Set the status of this :class:`~dyn.tm.accounts.UpdateUser` to
         'blocked'. This will prevent this :class:`~dyn.tm.accounts.UpdateUser`
         from logging in until they are explicitly unblocked.
         """
-        api_args = {'block': True}
-        self._update(api_args)
+        self._update(block=True)
 
     def unblock(self):
         """Set the status of this :class:`~dyn.tm.accounts.UpdateUser` to
         'active'. This will re-enable this :class:`~dyn.tm.accounts.UpdateUser`
         to be able to login if they were previously blocked.
         """
-        api_args = {'unblock': True}
-        self._update(api_args)
+        self._update(unblock=True)
 
     def sync_password(self):
         """Pull in this :class:`~dyn.tm.accounts.UpdateUser` current password
@@ -304,12 +210,11 @@ class UpdateUser(object):
         :class:`~dyn.tm.accounts.UpdateUser` object's password may have gotten
         out of sync
         """
-        api_args = {'user_name': self._user_name}
-        self._update(api_args)
+        self._update(user_name=self._user_name)
 
     def delete(self):
         """Delete this :class:`~dyn.tm.accounts.UpdateUser` from the DynECT
-        System. It is important to note that this operation may not be undone.
+        System. It is important to note that this operation can not be undone.
         """
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
@@ -323,8 +228,33 @@ class UpdateUser(object):
         return bytes(self.__str__())
 
 
-class User(object):
+# noinspection PyAttributeOutsideInit,PyUnresolvedReferences
+class User(APIObject):
     """DynECT System User object"""
+    uri = '/UpdateUser/{user_name}/'
+    session_type = DynectSession
+    user_name = ImmutableField('user_name')
+    first_name = StringField('first_name')
+    last_name = StringField('last_name')
+    nickname = StringField('nickname')
+    password = StringField('password')
+    organization = StringField('organization')
+    phone = StringField('phone')
+    address = StringField('address')
+    address_2 = StringField('address_2')
+    city = StringField('city')
+    country = StringField('country')
+    fax = StringField('fax')
+    notify_email = StringField('notify_email')
+    pager_email = StringField('pager_email')
+    post_code = StringField('post_code')
+    group_name = StringField('group_name')
+    permision = StringField('permission')
+    zone = StringField('zone')
+    forbid = StringField('forbid')
+    website = StringField('website')
+    status = ImmutableField('status')
+
     def __init__(self, user_name, *args, **kwargs):
         """Create a new :class:`~dyn.tm.accounts.User` object
 
@@ -368,29 +298,11 @@ class User(object):
         :param status: Current status of this :class:`~dyn.tm.accounts.User`
         :param website: This :class:`~dyn.tm.accounts.User`'s website
         """
-        super(User, self).__init__()
-        self._user_name = user_name
-        self.uri = '/User/{}/'.format(self._user_name)
-        self._password = self._email = self._first_name = self._last_name = None
-        self._nickname = self._organization = self._phone = self._address = None
-        self._address_2 = self._city = self._country = self._fax = None
-        self._notify_email = self._pager_email = self._post_code = None
-        self._group_name = self._permission = self._zone = self._forbid = None
-        self._status = self._website = None
+        self.uri = self.uri.format(user_name=user_name)
         self.permissions = []
         self.permission_groups = []
         self.groups = []
-        if 'api' in kwargs:
-            del kwargs['api']
-            for key, val in kwargs.items():
-                if key != '_user_name':
-                    setattr(self, '_' + key, val)
-                else:
-                    setattr(self, key, val)
-        elif len(args) == 0 and len(kwargs) == 0:
-            self._get()
-        else:
-            self._post(*args, **kwargs)
+        super(User, self).__init__(*args, **kwargs)
 
     def _post(self, password, email, first_name, last_name, nickname,
               organization, phone, address=None, address_2=None, city=None,
@@ -422,257 +334,17 @@ class User(object):
         self._status = status
         self._website = website
         response = DynectSession.get_session().execute(self.uri, 'POST', self)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    def _get(self):
-        """Get an existing :class:`~dyn.tm.accounts.User` object from the
-        DynECT System
-        """
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    def _update(self, api_args=None):
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    @property
-    def user_name(self):
-        """A :class:`~dyn.tm.accounts.User`'s user_name is a read-only property
-        """
-        return self._user_name
-    @user_name.setter
-    def user_name(self, value):
-        pass
-
-    @property
-    def status(self):
-        """A :class:`~dyn.tm.accounts.User`'s status is a read-only property.
-        To change you must use the :meth:`block`/:meth:`unblock` methods
-        """
-        return self._status
-    @status.setter
-    def status(self, value):
-        pass
-
-    @property
-    def email(self):
-        """This :class:`~dyn.tm.accounts.User`'s Email address"""
-        return self._email
-    @email.setter
-    def email(self, value):
-        api_args = {'email': value}
-        self._update(api_args)
-
-    @property
-    def first_name(self):
-        """This :class:`~dyn.tm.accounts.User`'s first name"""
-        return self._first_name
-    @first_name.setter
-    def first_name(self, value):
-        api_args = {'first_name': value}
-        self._update(api_args)
-
-    @property
-    def last_name(self):
-        """This :class:`~dyn.tm.accounts.User`'s last name"""
-        return self._last_name
-    @last_name.setter
-    def last_name(self, value):
-        api_args = {'last_name': value}
-        self._update(api_args)
-
-    @property
-    def nickname(self):
-        """The nickname for the `Contact` associated with this
-        :class:`~dyn.tm.accounts.User`"""
-        return self._nickname
-    @nickname.setter
-    def nickname(self, value):
-        api_args = {'nickname': value}
-        self._update(api_args)
-
-    @property
-    def organization(self):
-        """This :class:`~dyn.tm.accounts.User`'s organization"""
-        return self._organization
-    @organization.setter
-    def organization(self, value):
-        api_args = {'organization': value}
-        self._update(api_args)
-
-    @property
-    def phone(self):
-        """This :class:`~dyn.tm.accounts.User`'s phone number. Can be of the
-        form: (0) ( country-code ) ( local number ) ( extension ) Only the
-        country-code (1-3 digits) and local number (at least 7 digits) are
-        required. The extension can be up to 4 digits. Any non-digits are
-        ignored.
-        """
-        return self._phone
-    @phone.setter
-    def phone(self, value):
-        api_args = {'phone': value}
-        self._update(api_args)
-
-    @property
-    def address(self):
-        """This :class:`~dyn.tm.accounts.User`'s street address"""
-        return self._address
-    @address.setter
-    def address(self, value):
-        api_args = {'address': value}
-        self._update(api_args)
-
-    @property
-    def address_2(self):
-        """This :class:`~dyn.tm.accounts.User`'s street address, line 2"""
-        return self._address_2
-    @address_2.setter
-    def address_2(self, value):
-        api_args = {'address_2': value}
-        self._update(api_args)
-
-    @property
-    def city(self):
-        """This :class:`~dyn.tm.accounts.User`'s city, part of the user's
-        address
-        """
-        return self._city
-    @city.setter
-    def city(self, value):
-        api_args = {'city': value}
-        self._update(api_args)
-
-    @property
-    def country(self):
-        """This :class:`~dyn.tm.accounts.User`'s country, part of the user's
-        address
-        """
-        return self._country
-    @country.setter
-    def country(self, value):
-        api_args = {'country': value}
-        self._update(api_args)
-
-    @property
-    def fax(self):
-        """This :class:`~dyn.tm.accounts.User`'s fax number"""
-        return self._fax
-    @fax.setter
-    def fax(self, value):
-        api_args = {'fax': value}
-        self._update(api_args)
-
-    @property
-    def notify_email(self):
-        """Email address where this :class:`~dyn.tm.accounts.User` should
-        receive notifications
-        """
-        return self._notify_email
-    @notify_email.setter
-    def notify_email(self, value):
-        api_args = {'notify_email': value}
-        self._update(api_args)
-
-    @property
-    def pager_email(self):
-        """Email address where this :class:`~dyn.tm.accounts.User` should
-        receive messages destined for a pager
-        """
-        return self._pager_email
-    @pager_email.setter
-    def pager_email(self, value):
-        api_args = {'pager_email': value}
-        self._update(api_args)
-
-    @property
-    def post_code(self):
-        """This :class:`~dyn.tm.accounts.User`'s postal code, part of the
-        user's address
-        """
-        return self._post_code
-    @post_code.setter
-    def post_code(self, value):
-        api_args = {'post_code': value}
-        self._update(api_args)
-
-    @property
-    def group_name(self):
-        """A list of permission groups this :class:`~dyn.tm.accounts.User`
-        belongs to
-        """
-        return self._group_name
-    @group_name.setter
-    def group_name(self, value):
-        api_args = {'group_name': value}
-        self._update(api_args)
-
-    @property
-    def permission(self):
-        """A list of permissions assigned to this
-        :class:`~dyn.tm.accounts.User`
-        """
-        return self._permission
-    @permission.setter
-    def permission(self, value):
-        api_args = {'permission': value}
-        self._update(api_args)
-
-    @property
-    def zone(self):
-        """A list of zones where this :class:`~dyn.tm.accounts.User`'s
-        permissions apply
-        """
-        return self._zone
-    @zone.setter
-    def zone(self, value):
-        api_args = {'zone': value}
-        self._update(api_args)
-
-    @property
-    def forbid(self):
-        """A list of forbidden permissions for this
-        :class:`~dyn.tm.accounts.User`
-        """
-        return self._forbid
-    @forbid.setter
-    def forbid(self, value):
-        """Apply a new list of forbidden permissions for the
-        :class:`~dyn.tm.accounts.User`
-        """
-        api_args = {'forbid': value}
-        self._update(api_args)
-
-    @property
-    def website(self):
-        """This :class:`~dyn.tm.accounts.User`'s website"""
-        return self._website
-    @website.setter
-    def website(self, value):
-        api_args = {'website': value}
-        self._update(api_args)
+        self._build(response['data'])
 
     def block(self):
         """Blocks this :class:`~dyn.tm.accounts.User` from logging in"""
-        api_args = {'block': 'True'}
-        uri = '/User/{}/'.format(self._user_name)
-        response = DynectSession.get_session().execute(uri, 'PUT', api_args)
-        self._status = response['data']['status']
+        self._update(block=True)
 
     def unblock(self):
         """Restores this :class:`~dyn.tm.accounts.User` to an active status and
         re-enables their log-in
         """
-        api_args = {'unblock': 'True'}
-        uri = '/User/{}/'.format(self._user_name)
-        response = DynectSession.get_session().execute(uri, 'PUT', api_args)
-        self._status = response['data']['status']
+        self._update(unblock=True)
 
     def add_permission(self, permission):
         """Add individual permissions to this :class:`~dyn.tm.accounts.User`
@@ -680,7 +352,8 @@ class User(object):
         :param permission: the permission to add
         """
         self.permissions.append(permission)
-        uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
+        uri = '/UserPermissionEntry/{0}/{1}/'.format(self._user_name,
+                                                     permission)
         DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions(self, permissions=None):
@@ -792,11 +465,6 @@ class User(object):
         uri = '/UserForbidEntry/{}/{}/'.format(self._user_name, permission)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
-    def delete(self):
-        """Delete this :class:`~dyn.tm.accounts.User` from the system"""
-        uri = '/User/{}/'.format(self._user_name)
-        DynectSession.get_session().execute(uri, 'DELETE')
-
     def __str__(self):
         """Custom str method"""
         return force_unicode('<User>: {}').format(self.user_name)
@@ -809,6 +477,10 @@ class User(object):
 
 class PermissionsGroup(object):
     """A DynECT System Permissions Group object"""
+    uri = '/UpdateUser/{user_name}/'
+    session_type = DynectSession
+    group_name = ImmutableField('group_name')
+
     def __init__(self, group_name, *args, **kwargs):
         """Create a new permissions Group
 
@@ -824,6 +496,7 @@ class PermissionsGroup(object):
         :param zone: A list of zones where the group's permissions apply
         """
         super(PermissionsGroup, self).__init__()
+        self.uri = '/PermissionGroup/{}/'.format(group_name)
         self._group_name = group_name
         self._description = self._group_type = self._all_users = None
         self._permission = self._user_name = self._subgroup = self._zone = None
@@ -1091,28 +764,21 @@ class PermissionsGroup(object):
         return bytes(self.__str__())
 
 
-class UserZone(object):
+class UserZone(APIObject):
     """A DynECT system UserZoneEntry"""
+    user_name = ImmutableField('user_name')
+    zone_name = ImmutableField('zone_name')
+
     def __init__(self, user_name, zone_name, recurse='Y'):
-        super(UserZone, self).__init__()
         self._user_name = user_name
         self._zone_name = zone_name
         self._recurse = recurse
         api_args = {'recurse': self._recurse}
-        uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, self._zone_name)
-        respnose = DynectSession.get_session().execute(uri, 'POST', api_args)
-        for key, val in respnose['data'].items():
-            setattr(self, '_' + key, val)
-
-    @property
-    def user_name(self):
-        """User_name property of :class:`~dyn.tm.accounts.UserZone` object is
-        read only
-        """
-        return self._user_name
-    @user_name.setter
-    def user_name(self, value):
-        pass
+        self.uri = '/UserZoneEntry/{}/{}/'.format(self._user_name,
+                                                  self._zone_name)
+        respnose = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
+        self._build(respnose['data'])
 
     @property
     def recurse(self):
@@ -1140,18 +806,16 @@ class UserZone(object):
         api_args = {'zone': []}
         for zone_data in zone:
             api_args['zone'].append({'zone_name': zone_data})
-        uri = '/UserZoneEntry/{}/'.format(self._user_name)
-        respnose = DynectSession.get_session().execute(uri, 'PUT', api_args)
-        for key, val in respnose['data'].items():
-            setattr(self, '_' + key, val)
+        respnose = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(respnose['data'])
 
     def delete(self):
         """Delete this :class:`~dyn.tm.accounts.UserZone` object from the
         DynECT System
         """
         api_args = {'recurse': self.recurse}
-        uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, self._zone_name)
-        DynectSession.get_session().execute(uri, 'DELETE', api_args)
+        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
     def __str__(self):
         """Custom str method"""
@@ -1163,8 +827,16 @@ class UserZone(object):
         return bytes(self.__str__())
 
 
-class Notifier(object):
+# noinspection PyUnresolvedReferences,PyMissingConstructor
+class Notifier(APIObject):
     """DynECT System Notifier"""
+    uri = '/Notifier/'
+    session_type = DynectSession
+    notifier_id = ImmutableField('notifier_id')
+    label = StringField('label')
+    recipients = None
+    services = None
+
     def __init__(self, *args, **kwargs):
         """Create a new :class:`~dyn.tm.accounts.Notifier` object
 
@@ -1177,20 +849,16 @@ class Notifier(object):
         :param notifier_id: The system id of this
             :class:`~dyn.tm.accounts.Notifier`
         """
-        super(Notifier, self).__init__()
-        self._label = self._recipients = self._services = None
-        self._notifier_id = self.uri = None
         if 'api' in kwargs:
             del kwargs['api']
-            for key, val in kwargs.items():
-                setattr(self, '_' + key, val)
-            self.uri = '/Notifier/{}/'.format(self._notifier_id)
+            self._build(kwargs)
         elif len(args) + len(kwargs) > 1:
             self._post(*args, **kwargs)
         elif len(kwargs) > 0 or 'label' in kwargs:
             self._post(**kwargs)
         else:
             self._get(*args, **kwargs)
+        self.uri = '/Notifier/{}/'.format(self._notifier_id)
 
     def _post(self, label=None, recipients=None, services=None):
         """Create a new :class:`~dyn.tm.accounts.Notifier` object on the
@@ -1204,74 +872,14 @@ class Notifier(object):
         self._services = services
         response = DynectSession.get_session().execute(uri, 'POST', self)
         self._build(response['data'])
-        self.uri = '/Notifier/{}/'.format(self._notifier_id)
 
     def _get(self, notifier_id):
         """Get an existing :class:`~dyn.tm.accounts.Notifier` object from the
         DynECT System
         """
-        self._notifier_id = notifier_id
         self.uri = '/Notifier/{}/'.format(self._notifier_id)
         response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
-
-    def _build(self, data):
-        for key, val in data.items():
-            setattr(self, '_' + key, val)
-
-    def _update(self, api_args=None):
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def notifier_id(self):
-        """The unique System id for this Notifier"""
-        return self._notifier_id
-    @notifier_id.setter
-    def notifier_id(self, value):
-        pass
-
-    @property
-    def label(self):
-        """The label used to identify this :class:`~dyn.tm.accounts.Notifier`
-        """
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        self._update(api_args)
-
-    @property
-    def recipients(self):
-        """List of Recipients attached to this
-        :class:`~dyn.tm.accounts.Notifier`
-        """
-        return self._recipients
-    @recipients.setter
-    def recipients(self, value):
-        self._recipients = value
-        api_args = {'recipients': self._recipients}
-        self._update(api_args)
-
-    @property
-    def services(self):
-        """List of services attached to this
-        :class:`~dyn.tm.accounts.Notifier`
-        """
-        return self._services
-    @services.setter
-    def services(self, value):
-        self._services = value
-        api_args = {'services': self._services}
-        self._update(api_args)
-
-    def delete(self):
-        """Delete this :class:`~dyn.tm.accounts.Notifier` from the Dynect
-        System
-        """
-        DynectSession.get_session().execute(self.uri, 'DELETE')
 
     def __str__(self):
         """Custom str method"""
@@ -1555,11 +1163,6 @@ class Contact(object):
         self._website = value
         api_args = {'website': self._website}
         self._update(api_args)
-
-    def delete(self):
-        """Delete this :class:`~dyn.tm.accounts.Contact` from the Dynect System
-        """
-        DynectSession.get_session().execute(self.uri, 'DELETE')
 
     def __str__(self):
         """Custom str method"""

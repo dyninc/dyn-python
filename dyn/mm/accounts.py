@@ -51,9 +51,9 @@ def get_all_suppressions(startdate=None, enddate=None, startindex=0):
         args['enddate'] = date_to_str(enddate)
     response = MMSession.get_session().execute(uri, 'GET', args)
     suppressions = []
-    for sender in response['senders']:
-        email = sender.pop('emailaddress')
-        suppress_time = sender.pop('suppresstime')
+    for suppression in response['suppressions']:
+        email = suppression.pop('emailaddress')
+        suppress_time = suppression.pop('suppresstime')
         suppressions.append(Suppression(email, api=False,
                                         suppresstime=suppress_time))
     return suppressions

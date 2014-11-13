@@ -10,7 +10,6 @@ import locale
 import logging
 import threading
 from datetime import datetime
-from collections import OrderedDict
 
 from . import __version__
 from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
@@ -64,11 +63,10 @@ class Singleton(_Singleton('SingletonMeta', (object,), {})):
 
 
 class APIDescriptor(object):
-    def __init__(self, name='', doc=None):
+    def __init__(self, name=''):
         super(APIDescriptor, self).__init__()
         self.name = name
         self.private_name = '_' + self.name
-        self.__doc__ = doc
 
     def __get__(self, instance, cls):
         return getattr(instance, self.private_name, None)
@@ -78,6 +76,13 @@ class APIDescriptor(object):
         if hasattr(instance, '_update'):
             args = {self.name: value}
             getattr(instance, '_update')(**args)
+
+
+class ImmutableAttribute(APIDescriptor):
+    """An API Attribute that can not be overridden"""
+
+    def __set__(self, instance, cls):
+        pass
 
 
 class TypedAttribute(APIDescriptor):
@@ -91,39 +96,62 @@ class TypedAttribute(APIDescriptor):
 
 
 class IntegerAttribute(TypedAttribute):
-    """API Field that may only be an integer type"""
+    """API Attribute that may only be an integer type"""
     ty = int
 
 
 class StringAttribute(TypedAttribute):
-    """API Field that may only be a string type"""
+    """API Attribute that may only be a string type"""
     ty = string_types
 
 
-class ImmutableAttribute(APIDescriptor):
-    """An API field that can not be overridden"""
+class ListAttribute(TypedAttribute):
+    """API Attribute that may only be a list"""
+    ty = list
 
-    def __set__(self, instance, cls):
-        pass
+
+class ClassAttribute(TypedAttribute):
+    """API Attribute that can force type checking on an arbitrary type. Useful
+    for API attributes that are wrapped in something else to make them more
+    easy to use
+    """
+    def __init__(self, name='', class_type=object):
+        self.ty = class_type
+        super(ClassAttribute, self).__init__(name)
 
 
 class ValidatedAttribute(APIDescriptor):
-    """An API field whose value can be forced to a specific subset of values"""
-    def __init__(self, name='', doc=None, validator=None):
+    """An API Attribute whose value can be forced to a specific subset of
+    values
+    """
+    def __init__(self, name='', validator=None):
         """An API field that must be one of a specific set of values
 
         :param name: The name of this field
         :param validator: An optional list of valid values for this field
         """
-        super(ValidatedAttribute, self).__init__(name, doc)
+        super(ValidatedAttribute, self).__init__(name)
         self.validator = validator
 
     def __set__(self, instance, value):
+        # Get around circular imports by importing here
+        from dyn.tm.errors import DynectInvalidArgumentError
+
         if self.validator is not None:
             if value in self.validator:
                 super(ValidatedAttribute, self).__set__(instance, value)
+            else:
+                raise DynectInvalidArgumentError(value, self.validator)
         else:  # If we have no validator, then assume it's safe to overwrite
             super(ValidatedAttribute, self).__set__(instance, value)
+
+
+class ValidatedListAttribute(ValidatedAttribute, ListAttribute):
+    def __set__(self, instance, value):
+        l = getattr(instance, self.private_name, [])
+        for item in l:
+            super(ValidatedListAttribute, self).__set__(instance, item)
+        setattr(instance, self.private_name, value)
 
 
 # class Junk(object):
@@ -132,6 +160,7 @@ class ValidatedAttribute(APIDescriptor):
 #     read_only = ImmutableAttribute('read_only')
 #     my_int = IntegerAttribute('my_int')
 #     my_str = StringAttribute('my_str')
+#     my_list = ListAttribute('my_list')
 #
 #     def __init__(self):
 #         self._data = {'serial': 121312, 'ts': 12321111233}
@@ -139,6 +168,7 @@ class ValidatedAttribute(APIDescriptor):
 #         self._read_only = 'passw0rd'
 #         self._my_int = 0
 #         self._my_str = 'lulz'
+#         self._my_list = [0, 1, 2]
 
 
 # noinspection PyUnusedLocal
@@ -156,6 +186,7 @@ class APIObject(object):
     attributes that start with '_' but not '__'.
     """
     uri = ''
+    _get_length = 0
     session_type = None
 
     def __init__(self, *args, **kwargs):
@@ -163,8 +194,8 @@ class APIObject(object):
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
-        elif len(args) == 0 and len(kwargs) == 0:  # Safe default behaviour
-            self._get()
+        elif len(args) == 0 and len(kwargs) == self._get_length:
+            self._get(*args, **kwargs)
         else:
             self._post(*args, **kwargs)
 

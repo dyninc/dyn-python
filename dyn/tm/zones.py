@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """This module contains all Zone related API objects."""
 import os
-import logging
 from time import sleep
 from datetime import datetime
 
 from .utils import unix_date
-from ..compat import force_unicode
 from .errors import *
 from .records import *
 from .session import DynectSession
 from .services import *
+from ..core import (APIObject, IntegerAttribute, StringAttribute,
+                    ListAttribute, ImmutableAttribute, ValidatedAttribute)
+from ..compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
@@ -54,8 +55,19 @@ def get_all_secondary_zones():
     return zones
 
 
-class Zone(object):
+# noinspection PyUnresolvedReferences
+class Zone(APIObject):
     """A class representing a DynECT Zone"""
+    uri = '/Zone/{zone_name}/'
+    session_type = DynectSession
+    zone = ImmutableAttribute('zone')
+    name = ImmutableAttribute('zone')
+    fqdn = ImmutableAttribute('fqdn')
+    serial_style = ValidatedAttribute('serial_style',
+                                      validator=('increment', 'epoch', 'day',
+                                                 'minute'))
+    serial = IntegerAttribute('serial')
+    status = StringAttribute('status')
 
     def __init__(self, name, *args, **kwargs):
         """Create a :class:`Zone` object. Note: When creating a new
@@ -75,28 +87,12 @@ class Zone(object):
         :param timeout: The time, in minutes, to wait for a zone xfer to
             complete
         """
-        super(Zone, self).__init__()
-        self.valid_serials = ('increment', 'epoch', 'day', 'minute')
-        self._name = name
-        self._fqdn = self._name
-        if self._fqdn and not self._fqdn.endswith('.'):
-            self._fqdn += '.'
-        self._contact = self._ttl = self._serial_style = self._serial = None
-        self._zone = self._status = None
+        self.uri = self.uri.format(zone_name=name)
         self.records = {}
         self.services = {}
-        self.uri = '/Zone/{}/'.format(self._name)
-        if 'api' in kwargs:
-            del kwargs['api']
-            for key, val in kwargs.items():
-                setattr(self, '_' + key, val)
-                self._name = self._zone
-                self.uri = '/Zone/{}/'.format(self._name)
-        elif len(args) == 0 and len(kwargs) == 0:
-            self._get()
-        else:
-            self._post(*args, **kwargs)
-            self._status = 'active'
+        self._contact = self._ttl = None
+        super(Zone, self).__init__(*args, **kwargs)
+        self._fqdn = name if name.endswith('.') else '{0}.'.format(name)
 
     def _post(self, contact=None, ttl=60, serial_style='increment',
               file_name=None, master_ip=None, timeout=None):
@@ -108,19 +104,15 @@ class Zone(object):
         elif master_ip is not None:
             self._xfer(master_ip, timeout)
         else:
-            self._contact = contact
-            self._ttl = ttl
-            if serial_style not in self.valid_serials:
-                raise DynectInvalidArgumentError(serial_style,
-                                                 self.valid_serials)
-            self._serial_style = serial_style
-            api_args = {'zone': self._name,
-                        'rname': self._contact,
-                        'ttl': self._ttl,
-                        'serial_style': self._serial_style}
+            # Assign serial style here to force pre-api validation
+            self.serial_style = serial_style
+
+            api_args = {'zone': self.name, 'rname': contact, 'ttl': ttl,
+                        'serial_style': serial_style}
             response = DynectSession.get_session().execute(self.uri, 'POST',
                                                            api_args)
             self._build(response['data'])
+        self._status = 'active'
 
     def _post_with_file(self, file_name):
         """Create a :class:`Zone` from a RFC1035 style Master file. A ZoneFile
@@ -134,7 +126,7 @@ class Zone(object):
             raise DynectInvalidArgumentError('Zone File Size', file_size,
                                              'Under 1MB')
         else:
-            uri = '/ZoneFile/{}/'.format(self.name)
+            uri = '/ZoneFile/{0}/'.format(self.name)
             f = open(full_path, 'r')
             content = f.read()
             f.close()
@@ -146,13 +138,13 @@ class Zone(object):
         """Create a :class:`Zone` by ZoneTransfer by providing an optional
         master_ip argument.
         """
-        uri = '/ZoneTransfer/{}/'.format(self.name)
+        uri = '/ZoneTransfer/{0}/'.format(self.name)
         api_args = {'master_ip': master_ip}
         DynectSession.get_session().execute(uri, 'POST', api_args)
         time_out = timeout or 10
         count = 0
         while count < time_out:
-            response = DynectSession.get_session().execute(uri, 'GET', {})
+            response = DynectSession.get_session().execute(uri, 'GET')
             if response['status'] == 'running' and response['message'] == '':
                 sleep(60)
                 count += 1
@@ -176,7 +168,7 @@ class Zone(object):
                 sleep(2)
                 count += 1
         if not got and xfer:
-            uri = '/ZoneTransfer/{}/'.format(self.name)
+            uri = '/ZoneTransfer/{0}/'.format(self.name)
             api_args = {}
             if xfer_master_ip is not None:
                 api_args['master_ip'] = xfer_master_ip
@@ -191,41 +183,10 @@ class Zone(object):
             else:
                 pass  # Should never get here
 
-    def _get(self):
-        """Get an existing :class:`Zone` object from the DynECT System"""
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        self._build(response['data'])
-
-    def _build(self, data):
-        """Build the variables in this object by pulling out the data from data
-        """
-        for key, val in data.items():
-            setattr(self, '_' + key, val)
-
     @property
     def __root_soa(self):
         """Return the SOA record associated with this Zone"""
         return self.get_all_records_by_type('SOA')[0]
-
-    @property
-    def name(self):
-        """The name of this :class:`Zone`"""
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        pass
-
-    @property
-    def fqdn(self):
-        """The name of this :class:`Zone`"""
-        return self._fqdn
-
-    @fqdn.setter
-    def fqdn(self, value):
-        pass
 
     @property
     def contact(self):
@@ -235,7 +196,6 @@ class Zone(object):
         if self._contact is None:
             self._contact = self.__root_soa.rname
         return self._contact
-
     @contact.setter
     def contact(self, value):
         self.__root_soa.rname = value
@@ -246,78 +206,30 @@ class Zone(object):
         if self._ttl is None:
             self._ttl = self.__root_soa.ttl
         return self._ttl
-
     @ttl.setter
     def ttl(self, value):
         self.__root_soa.ttl = value
-
-    @property
-    def serial(self):
-        """The current serial of this :class:`Zone`"""
-        return self._serial
-
-    @serial.setter
-    def serial(self, value):
-        pass
-
-    @property
-    def serial_style(self):
-        """The current serial style of this :class:`Zone`"""
-        return self._serial_style
-
-    @serial_style.setter
-    def serial_style(self, value):
-        if not value in self.valid_serials:
-            raise DynectInvalidArgumentError('serial_style', value,
-                                             self.valid_serials)
-        self.__root_soa.serial_style = value
-
-    @property
-    def status(self):
-        """Convenience property for :class:`Zones`. If a :class:`Zones` is
-        frozen the status will read as `'frozen'`, if the :class:`Zones` is not
-        frozen the status will read as `'active'`. Because the API does not
-        return information about whether or not a :class:`Zones` is frozen
-        there will be a few cases where this status will be `None` in order to
-        avoid guessing what the current status actually is.
-        """
-        return self._status
-
-    @status.setter
-    def status(self, value):
-        pass
 
     def freeze(self):
         """Causes the zone to become frozen. Freezing a zone prevents changes
         to the zone until it is thawed.
         """
-        api_args = {'freeze': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-        if response['status'] == 'success':
-            self._status = 'frozen'
+        self._update(freeze=True)
+        self._status = 'frozen'
 
     def thaw(self):
         """Causes the zone to become thawed. Thawing a frozen zone allows
         changes to again be made to the zone.
         """
-        api_args = {'thaw': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-        if response['status'] == 'success':
-            self._status = 'active'
+        self._update(thaw=True)
+        self._status = 'active'
 
     def publish(self):
         """Causes all pending changes to become part of the zone. The serial
         number increments based on its serial style and the data is pushed out 
         to the nameservers.
         """
-        api_args = {'publish': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
+        self._update(publish=True)
 
     def get_notes(self, offset=None, limit=None):
         """Generates a report containing the Zone Notes for this :class:`Zone`
@@ -415,9 +327,9 @@ class Zone(object):
             :class:`Zone`
         """
         self.records = {}
-        uri = '/AllRecord/{}/'.format(self._name)
+        uri = '/AllRecord/{0}/'.format(self.name)
         if self.fqdn is not None:
-            uri += '{}/'.format(self.fqdn)
+            uri += '{0}/'.format(self.fqdn)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
@@ -435,7 +347,7 @@ class Zone(object):
                 for r_key, r_val in record['rdata'].items():
                     record[r_key] = r_val
                 record['create'] = False
-                list_records.append(constructor(self._name, self.fqdn,
+                list_records.append(constructor(self.name, self.fqdn,
                                                 **record))
             records[key] = list_records
         return records
@@ -461,7 +373,7 @@ class Zone(object):
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TXT': 'TXTRecord'}
         constructor = RECS[record_type]
-        uri = '/{}/{}/{}/'.format(names[record_type], self._name, self.fqdn)
+        uri = '/{0}/{1}/{2}/'.format(names[record_type], self.name, self.fqdn)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         records = []
@@ -472,8 +384,8 @@ class Zone(object):
             for key, val in record['rdata'].items():
                 record[key] = val
             del record['rdata']
-            record['create'] = False
-            records.append(constructor(self._name, self.fqdn, **record))
+            records.append(constructor(self.name, self.fqdn, api=False,
+                                       **record))
         return records
 
     def get_any_records(self):
@@ -483,7 +395,7 @@ class Zone(object):
         if self.fqdn is None:
             return
         api_args = {'detail': 'Y'}
-        uri = '/ANYRecord/{}/{}/'.format(self._name, self.fqdn)
+        uri = '/ANYRecord/{0}/{1}/'.format(self.name, self.fqdn)
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
@@ -499,9 +411,8 @@ class Zone(object):
                 # Unpack rdata
                 for r_key, r_val in record['rdata'].items():
                     record[r_key] = r_val
-                record['create'] = False
-                list_records.append(constructor(self._name, self.fqdn,
-                                                **record))
+                list_records.append(constructor(self.name, self.fqdn,
+                                                api=False, **record))
             records[key] = list_records
         return records
 
@@ -511,14 +422,14 @@ class Zone(object):
 
         :return: A :class:`List` of :class:`ActiveFailover` Services
         """
-        uri = '/Failover/{}/'.format(self._name)
+        uri = '/Failover/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         afos = []
         for failover in response['data']:
             del failover['zone']
             del failover['fqdn']
-            afos.append(ActiveFailover(self._name, self._fqdn, api=False,
+            afos.append(ActiveFailover(self.name, self.fqdn, api=False,
                                        **failover))
         return afos
 
@@ -528,7 +439,7 @@ class Zone(object):
 
         :return: A :class:`List` of :class:`DDNS` Services
         """
-        uri = '/DDNS/{}/'.format(self._name)
+        uri = '/DDNS/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         ddnses = []
@@ -536,7 +447,7 @@ class Zone(object):
             del ddns['zone']
             del ddns['fqdn']
             ddnses.append(
-                DynamicDNS(self._name, self._fqdn, api=False, **ddns))
+                DynamicDNS(self.name, self._fqdn, api=False, **ddns))
         return ddnses
 
     def get_all_gslb(self):
@@ -545,14 +456,14 @@ class Zone(object):
 
         :return: A :class:`List` of :class:`GSLB` Services
         """
-        uri = '/GSLB/{}/'.format(self._name)
+        uri = '/GSLB/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         gslbs = []
         for gslb_svc in response['data']:
             del gslb_svc['zone']
             del gslb_svc['fqdn']
-            gslbs.append(GSLB(self._name, self._fqdn, api=False, **gslb_svc))
+            gslbs.append(GSLB(self.name, self._fqdn, api=False, **gslb_svc))
         return gslbs
 
     def get_all_rdns(self):
@@ -561,7 +472,7 @@ class Zone(object):
 
         :return: A :class:`List` of :class:`ReverseDNS` Services
         """
-        uri = '/IPTrack/{}/'.format(self._name)
+        uri = '/IPTrack/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         rdnses = []
@@ -569,7 +480,7 @@ class Zone(object):
             del rdns['zone']
             del rdns['fqdn']
             rdnses.append(
-                ReverseDNS(self._name, self._fqdn, api=False, **rdns))
+                ReverseDNS(self.name, self._fqdn, api=False, **rdns))
         return rdnses
 
     def get_all_rttm(self):
@@ -578,14 +489,14 @@ class Zone(object):
 
         :return: A :class:`List` of :class:`RTTM` Services
         """
-        uri = '/RTTM/{}/'.format(self._name)
+        uri = '/RTTM/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         rttms = []
         for rttm_svc in response['data']:
             del rttm_svc['zone']
             del rttm_svc['fqdn']
-            rttms.append(RTTM(self._name, self._fqdn, api=False, **rttm_svc))
+            rttms.append(RTTM(self.name, self.fqdn, api=False, **rttm_svc))
         return rttms
 
     def get_qps(self, start_ts, end_ts=None, breakdown=None, hosts=None,
@@ -617,28 +528,9 @@ class Zone(object):
                                                        'POST', api_args)
         return response['data']
 
-    def delete(self):
-        """Delete this :class:`Zone` and perform nessecary cleanups"""
-        api_args = {}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
-
-    def __eq__(self, other):
-        """Equivalence operations for easily pulling a :class:`Zone` out of a
-        list of :class:`Zone` objects
-        """
-        if isinstance(other, str):
-            return other == self._name
-        elif isinstance(other, Zone):
-            return other.name == self._name
-        return False
-
-    def __ne__(self, other):
-        """Non-Equivalence operator"""
-        return not self.__eq__(other)
-
     def __str__(self):
         """str override"""
-        return force_unicode('<Zone>: {}').format(self._name)
+        return force_unicode('<Zone>: {0}').format(self.name)
 
     __repr__ = __unicode__ = __str__
 
@@ -647,8 +539,15 @@ class Zone(object):
         return bytes(self.__str__())
 
 
-class SecondaryZone(object):
+class SecondaryZone(APIObject):
     """A class representing DynECT Secondary zones"""
+    uri = '/Secondary/{zone_name}/'
+    session_type = DynectSession
+    zone = StringAttribute('zone')
+    name = StringAttribute('zone')
+    masters = ListAttribute('masters')
+    contact_nickname = StringAttribute('contact_nickname')
+    tsig_key_name = StringAttribute('tsig_key_name')
 
     def __init__(self, zone, *args, **kwargs):
         """Create a :class:`SecondaryZone` object
@@ -661,26 +560,8 @@ class SecondaryZone(object):
         :param tsig_key_name: Name of the TSIG key that will be used to sign
             transfer requests to this zone's master
         """
-        super(SecondaryZone, self).__init__()
-        self._zone = self._name = zone
-        self.uri = '/Secondary/{}/'.format(self._zone)
-        self._masters = self._contact_nickname = self._tsig_key_name = None
-        if 'api' in kwargs:
-            del kwargs['api']
-            for key, val in kwargs.items():
-                setattr(self, '_' + key, val)
-        elif len(args) == 0 and len(kwargs) == 0:
-            self._get()
-        else:
-            self._post(*args, **kwargs)
-
-    def _get(self):
-        """Get a :class:`SecondaryZone` object from the DynECT System"""
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self.uri = self.uri.format(zone_name=zone)
+        super(SecondaryZone, self).__init__(*args, **kwargs)
 
     def _post(self, masters, contact_nickname=None, tsig_key_name=None):
         """Create a new :class:`SecondaryZone` object on the DynECT System"""
@@ -694,101 +575,25 @@ class SecondaryZone(object):
             api_args['tsig_key_name'] = self._tsig_key_name
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    @property
-    def zone(self):
-        """The name of this :class:`SecondaryZone`"""
-        return self._zone
-
-    @zone.setter
-    def zone(self, value):
-        pass
-
-    @property
-    def masters(self):
-        """A list of IPv4 or IPv6 addresses of the master nameserver(s) for
-        this zone.
-        """
-        return self._masters
-
-    @masters.setter
-    def masters(self, value):
-        self._masters = value
-        api_args = {'masters': self._masters}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    @property
-    def contact_nickname(self):
-        """Name of the :class:`Contact` that will receive notifications for
-        this zone
-        """
-        return self._contact_nickname
-
-    @contact_nickname.setter
-    def contact_nickname(self, value):
-        self._contact_nickname = value
-        api_args = {'contact_nickname': self._contact_nickname}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    @property
-    def tsig_key_name(self):
-        """Name of the TSIG key that will be used to sign transfer requests to
-        this zone's master
-        """
-        return self._tsig_key_name
-
-    @tsig_key_name.setter
-    def tsig_key_name(self, value):
-        self._tsig_key_name = value
-        api_args = {'tsig_key_name': self._tsig_key_name}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def activate(self):
         """Activates this secondary zone"""
-        api_args = {'activate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(activate=True)
 
     def deactivate(self):
         """Deactivates this secondary zone"""
-        api_args = {'deactivate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(deactivate=True)
 
     def retransfer(self):
         """Retransfers this secondary zone from its original provider into
         Dyn's Managed DNS
         """
-        api_args = {'retransfer': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
-    def delete(self):
-        """Delete this :class:`SecondaryZone`"""
-        api_args = {}
-        uri = '/Zone/{}/'.format(self._zone)
-        DynectSession.get_session().execute(uri, 'DELETE', api_args)
+        self._update(retransfer=True)
 
     def __str__(self):
         """str override"""
-        return force_unicode('<SecondaryZone>: {}').format(self._zone)
+        return force_unicode('<SecondaryZone>: {0}').format(self.zone)
 
     __repr__ = __unicode__ = __str__
 
@@ -800,7 +605,7 @@ class SecondaryZone(object):
 class Node(object):
     """Node object. Represents a valid fqdn node within a zone. It should be
     noted that simply creating a :class:`Node` object does not actually create
-    anything on the DynECT System. The only way to actively create a
+    anything on the DynECT System. The only way to really create a
     :class:`Node` on the DynECT System is by attaching either a record or a
     service to it.
     """
@@ -845,16 +650,11 @@ class Node(object):
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
-        constructors = {'ActiveFailover': ActiveFailover,
-                        'DDNS': DynamicDNS,
-                        'DNSSEC': DNSSEC,
-                        'DSF': TrafficDirector,
-                        'GSLB': GSLB,
-                        'RDNS': ReverseDNS,
-                        'RTTM': RTTM}
+        objects = {'ActiveFailover': ActiveFailover, 'DDNS': DynamicDNS,
+                   'DNSSEC': DNSSEC, 'DSF': TrafficDirector, 'GSLB': GSLB,
+                   'RDNS': ReverseDNS, 'RTTM': RTTM}
         # noinspection PyCallingNonCallable
-        service = constructors[service_type](self.zone, self.fqdn, *args,
-                                             **kwargs)
+        service = objects[service_type](self.zone, self.fqdn, *args, **kwargs)
         self.services.append(service)
         return service
 
@@ -864,9 +664,9 @@ class Node(object):
         point on the zone hierarchy
         """
         self.records = {}
-        uri = '/AllRecord/{}/'.format(self.zone)
+        uri = '/AllRecord/{0}/'.format(self.zone)
         if self.fqdn is not None:
-            uri += '{}/'.format(self.fqdn)
+            uri += '{0}/'.format(self.fqdn)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
@@ -883,9 +683,8 @@ class Node(object):
                 # Unpack rdata
                 for r_key, r_val in record['rdata'].items():
                     record[r_key] = r_val
-                record['create'] = False
                 list_records.append(
-                    constructor(self.zone, self.fqdn, **record))
+                    constructor(self.zone, self.fqdn, api=False, **record))
             records[key] = list_records
         return records
 
@@ -910,8 +709,7 @@ class Node(object):
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TXT': 'TXTRecord'}
         constructor = RECS[record_type]
-        uri = '/{}/{}/{}/'.format(names[record_type], self.zone,
-                                  self.fqdn)
+        uri = '/{0}/{1}/{2}/'.format(names[record_type], self.zone, self.fqdn)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         records = []
@@ -931,7 +729,7 @@ class Node(object):
         if self.fqdn is None:
             return
         api_args = {'detail': 'Y'}
-        uri = '/ANYRecord/{}/{}/'.format(self.zone, self.fqdn)
+        uri = '/ANYRecord/{0}/{1}/'.format(self.zone, self.fqdn)
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
@@ -957,12 +755,12 @@ class Node(object):
         """Delete this node, any records within this node, and any nodes
         underneath this node
         """
-        uri = '/Node/{}/{}'.format(self.zone, self.fqdn)
-        DynectSession.get_session().execute(uri, 'DELETE', {})
+        uri = '/Node/{0}/{1}'.format(self.zone, self.fqdn)
+        DynectSession.get_session().execute(uri, 'DELETE')
 
     def __str__(self):
         """str override"""
-        return force_unicode('<Node>: {}').format(self.fqdn)
+        return force_unicode('<Node>: {0}').format(self.fqdn)
 
     __repr__ = __unicode__ = __str__
 

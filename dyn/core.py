@@ -71,45 +71,43 @@ class APIDescriptor(object):
         self.__doc__ = doc
 
     def __get__(self, instance, cls):
-        print('GET', instance, cls)
         return getattr(instance, self.private_name, None)
 
     def __set__(self, instance, value):
-        print('SET', instance, value)
         setattr(instance, self.private_name, value)
         if hasattr(instance, '_update'):
             args = {self.name: value}
-            getattr(instance, '_update')(args)
+            getattr(instance, '_update')(**args)
 
 
-class Typed(APIDescriptor):
+class TypedAttribute(APIDescriptor):
     """Type enforced descriptor"""
     ty = object
 
     def __set__(self, instance, value):
         if not isinstance(value, self.ty):
             raise TypeError('Expected %s' % self.ty)
-        super(Typed, self).__set__(instance, value)
+        super(TypedAttribute, self).__set__(instance, value)
 
 
-class IntegerField(Typed):
+class IntegerAttribute(TypedAttribute):
     """API Field that may only be an integer type"""
     ty = int
 
 
-class StringField(Typed):
+class StringAttribute(TypedAttribute):
     """API Field that may only be a string type"""
     ty = string_types
 
 
-class ImmutableField(APIDescriptor):
+class ImmutableAttribute(APIDescriptor):
     """An API field that can not be overridden"""
 
     def __set__(self, instance, cls):
         pass
 
 
-class ValidatedField(APIDescriptor):
+class ValidatedAttribute(APIDescriptor):
     """An API field whose value can be forced to a specific subset of values"""
     def __init__(self, name='', doc=None, validator=None):
         """An API field that must be one of a specific set of values
@@ -117,23 +115,23 @@ class ValidatedField(APIDescriptor):
         :param name: The name of this field
         :param validator: An optional list of valid values for this field
         """
-        super(ValidatedField, self).__init__(name, doc)
+        super(ValidatedAttribute, self).__init__(name, doc)
         self.validator = validator
 
     def __set__(self, instance, value):
         if self.validator is not None:
             if value in self.validator:
-                super(ValidatedField, self).__set__(instance, value)
+                super(ValidatedAttribute, self).__set__(instance, value)
         else:  # If we have no validator, then assume it's safe to overwrite
-            super(ValidatedField, self).__set__(instance, value)
+            super(ValidatedAttribute, self).__set__(instance, value)
 
 
 # class Junk(object):
 #     data = APIDescriptor('data')
-#     odds = ValidatedField('odds', validator=[1, 3, 5, 7])
-#     read_only = ImmutableField('read_only')
-#     my_int = IntegerField('my_int')
-#     my_str = StringField('my_str')
+#     odds = ValidatedAttribute('odds', validator=[1, 3, 5, 7])
+#     read_only = ImmutableAttribute('read_only')
+#     my_int = IntegerAttribute('my_int')
+#     my_str = StringAttribute('my_str')
 #
 #     def __init__(self):
 #         self._data = {'serial': 121312, 'ts': 12321111233}

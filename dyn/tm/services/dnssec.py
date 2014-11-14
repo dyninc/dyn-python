@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging
 from datetime import datetime
 
 from ..utils import APIList, Active, unix_date
-from ..errors import DynectInvalidArgumentError
 from ..session import DynectSession
+from ...core import (APIObject, ImmutableAttribute, StringAttribute,
+                     ValidatedListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -82,7 +82,7 @@ class DNSSECKey(object):
 
     def __str__(self):
         """str override"""
-        return force_unicode('<DNSSECKey>: {}').format(self.algorithm)
+        return force_unicode('<DNSSECKey>: {0}').format(self.algorithm)
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -90,8 +90,16 @@ class DNSSECKey(object):
         return bytes(self.__str__())
 
 
-class DNSSEC(object):
+class DNSSEC(APIObject):
     """A DynECT System DNSSEC Service"""
+    uri = '/DNSSEC/{zone_name}/'
+    session_type = DynectSession
+    zone = ImmutableAttribute('zone')
+    contact_nickname = StringAttribute('contact_nickname')
+    notify_events = ValidatedListAttribute('notify_events',
+                                           validator=('create', 'expire',
+                                                      'warning'))
+
     def __init__(self, zone, *args, **kwargs):
         """Create a :class:`DNSSEC` object
 
@@ -103,20 +111,9 @@ class DNSSEC(object):
             "expire" (a key was automatically expired), or "warning" (early
             warnings (2 weeks, 1 week, 1 day) of events)
         """
-        super(DNSSEC, self).__init__()
-        self.valid_notify_events = ('create', 'expire', 'warning')
-        self._zone = zone
-        self._contact_nickname = self._notify_events = None
-        self._keys = APIList(DynectSession.get_session, 'keys')
         self._active = None
-        self.uri = '/DNSSEC/{}/'.format(self._zone)
-        if 'api' in kwargs:
-            del kwargs['api']
-            self._build(kwargs)
-        elif len(args) == 0 and len(kwargs) == 0:
-            self._get()
-        else:
-            self._post(*args, **kwargs)
+        self.uri = self.uri.format(zone_name=zone)
+        super(DNSSEC, self).__init__(*args, **kwargs)
         self._keys.uri = self.uri
 
     def _post(self, keys, contact_nickname, notify_events=None):
@@ -140,42 +137,25 @@ class DNSSEC(object):
                                                        api_args)
         self._build(response['data'])
 
-    def _get(self):
-        """Update this object from an existing :class:`DNSSEC` service from the
-        Dynect System.
-        """
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        self._build(response['data'])
-
     def _build(self, data):
         """Iterate over API data responses and update this object according to
         the data returned
         """
-        for key, val in data.items():
-            if key == 'keys':
-                self._keys = APIList(DynectSession.get_session, 'keys')
-                for key_data in val:
-                    key_data['key_type'] = key_data['type']
-                    del key_data['type']
-                    self._keys.append(DNSSECKey(**key_data))
-            elif key == 'active':
-                self._active = Active(val)
-            else:
-                setattr(self, '_' + key, val)
-        self.uri = '/DNSSEC/{}/'.format(self._zone)
-        self._keys.uri = self.uri
+        if 'keys' in data:
+            keys = data.pop('keys')
+            self._keys = APIList(DynectSession.get_session, 'keys')
+            for key in keys:
+                key['key_type'] = key.pop('type')
+                self._keys.append(DNSSECKey(**key))
+            self._keys.uri = self.uri
+        if 'active' in data:
+            self._active = Active(data.pop('active'))
+        super(DNSSEC, self)._build(data)
 
-    @property
-    def zone(self):
-        """The name of the zone where this service exists. This is a read-only
-        property
-        """
-        return self._zone
-    @zone.setter
-    def zone(self, value):
-        pass
+    def _update(self, **api_args):
+        if 'notify_events' in api_args:
+            api_args['notify_events'] = ', '.join(api_args['notify_events'])
+        super(DNSSEC, self)._update(**api_args)
 
     @property
     def active(self):
@@ -188,7 +168,7 @@ class DNSSEC(object):
         :returns: An :class:`Active` object representing the current state of
             this :class:`DNSSEC` Service
         """
-        self._get()  # Do a get to ensure the most up-to-date status is returned
+        self._get()  # Do a get to ensure we have the most up-to-date status
         return self._active
     @active.setter
     def active(self, value):
@@ -198,38 +178,6 @@ class DNSSEC(object):
             self.deactivate()
         elif value in activate and not self.active:
             self.activate()
-
-    @property
-    def contact_nickname(self):
-        """Name of contact to receive notifications"""
-        return self._contact_nickname
-    @contact_nickname.setter
-    def contact_nickname(self, value):
-        self._contact_nickname = value
-        api_args = {'contact_nickname': self._contact_nickname}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def notify_events(self):
-        """A list of events that trigger notifications. Valid values are:
-        create (a new version of a key was created), expire (a key was
-        automatically expired), warning (early warnings (2 weeks, 1 week, 1 day)
-        of events)
-        """
-        return self._notify_events
-    @notify_events.setter
-    def notify_events(self, value):
-        for val in value:
-            if val not in self.valid_notify_events:
-                raise DynectInvalidArgumentError('notify_events', val,
-                                                 self.valid_notify_events)
-        value = ', '.join(value)
-        api_args = {'notify_events': value}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
 
     @property
     def keys(self):
@@ -250,17 +198,11 @@ class DNSSEC(object):
 
     def activate(self):
         """Activate this :class:`DNSSEC` service"""
-        api_args = {'activate': 'Y'}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
+        self._update(activate='Y')
 
     def deactivate(self):
         """Deactivate this :class:`DNSSEC` service"""
-        api_args = {'deactivate': 'Y'}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
+        self._update(deactivate='Y')
 
     def timeline_report(self, start_ts=None, end_ts=None):
         """Generates a report of events this :class:`DNSSEC` service has
@@ -272,7 +214,7 @@ class DNSSEC(object):
             for the end of the timeline report. Defaults to
             datetime.datetime.now()
         """
-        api_args = {'zone': self._zone}
+        api_args = {'zone': self.zone}
         if start_ts is not None:
             api_args['start_ts'] = unix_date(start_ts)
         if end_ts is not None:
@@ -283,14 +225,9 @@ class DNSSEC(object):
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']
 
-    def delete(self):
-        """Delete this :class:`DNSSEC` Service from the DynECT System"""
-        api_args = {}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
-
     def __str__(self):
         """str override"""
-        return force_unicode('<DNSSEC>: {}').format(self._zone)
+        return force_unicode('<DNSSEC>: {0}').format(self.zone)
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

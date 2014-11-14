@@ -8,7 +8,7 @@ from ...core import (APIObject, ImmutableAttribute, StringAttribute,
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
-__all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
+__all__ = ['GSLBMonitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
 
 
 class GSLBMonitor(BaseMonitor):

@@ -12,6 +12,7 @@ __all__ = ['HealthMonitor', 'ActiveFailover']
 
 class HealthMonitor(APIObject):
     """A health monitor for an :class:`ActiveFailover` service"""
+    session_type = DynectSession
     protocol = ValidatedAttribute('protocol',
                                   validator=('HTTP', 'HTTPS', 'PING', 'SMTP',
                                              'TCP'))

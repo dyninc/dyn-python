@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from ._shared import BaseMonitor
 from ..utils import APIList
 from ..session import DynectSession
 from ...core import (APIObject, ImmutableAttribute, StringAttribute,
@@ -10,100 +11,14 @@ __author__ = 'jnappi'
 __all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
 
 
-class Monitor(APIObject):
-    """A :class:`Monitor` for a GSLB Service"""
-    session_type = DynectSession
-    protocol = ValidatedAttribute('protocol',
-                                  validator=('HTTP', 'HTTPS', 'PING', 'SMTP',
-                                             'TCP'))
-    interval = ValidatedAttribute('interval', validator=(1, 5, 10, 15))
-    retries = IntegerAttribute('retries')
-    timeout = ValidatedAttribute('timeout', validator=(10, 15, 25, 30))
-    port = IntegerAttribute('port')
-    path = StringAttribute('path')
-    host = StringAttribute('host')
-    header = StringAttribute('header')
-    expected = StringAttribute('expected')
-
-    def __init__(self, protocol, interval, retries=None, timeout=None,
-                 port=None, path=None, host=None, header=None, expected=None):
-        """Create a :class:`Monitor` object
-
-        :param protocol: The protocol to monitor. Must be either HTTP, HTTPS,
-            PING, SMTP, or TCP
-        :param interval: How often (in minutes) to run the monitor. Must be 1,
-            5, 10, or 15,
-        :param retries: The number of retries the monitor attempts on failure
-            before giving up
-        :param timeout: The amount of time in seconds before the connection
-            attempt times out
-        :param port: For HTTP(S)/SMTP/TCP probes, an alternate connection port
-        :param path: For HTTP(S) probes, a specific path to request
-        :param host: For HTTP(S) probes, a value to pass in to the Host
-        :param header: For HTTP(S) probes, additional header fields/values to
-            pass in, separated by a newline character.
-        :param expected: For HTTP(S) probes, a string to search for in the
-            response. For SMTP probes, a string to compare the banner against.
-            Failure to find this string means the monitor will report a down
-            status.
-        """
-        super(Monitor, self).__init__()
-        self._protocol = protocol
-        self._interval = interval
-        self._retries = retries
-        self._timeout = timeout
-        self._port = port
-        self._path = path
-        self._host = host
-        self._header = header
-        self._expected = expected
-        self.zone = None
-        self.fqdn = None
-
-    def _post(self, *args, **kwargs):
-        """You can't create a HealthMonitor on it's own, so force _post and
-        _get to be no-ops
-        """
-        pass
-    _get = _post
-
-    def _update(self, **api_args):
-        mon_args = {'monitor': api_args}
-        super(Monitor, self)._update(**mon_args)
-
-    def to_json(self):
-        """Convert this :class:`HealthMonitor` object to a JSON blob"""
-        json_blob = {'protocol': self.protocol,
-                     'interval': self.interval}
-        for key, val in self.__dict__.items():
-            if val is not None and not hasattr(val, '__call__') and \
-                    key.startswith('_'):
-                json_blob[key[1:]] = val
-        return json_blob
+class GSLBMonitor(BaseMonitor):
+    """A :class:`GSLBMonitor` for a GSLB Service"""
 
     @property
     def uri(self):
         if self.zone is not None and self.fqdn is not None:
             return '/GSLB/{0}/{1}/'.format(self.zone, self.fqdn)
         raise ValueError
-
-    @property
-    def status(self):
-        """Get the current status of this :class:`Monitor` from the
-        DynECT System
-        """
-        uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
-        respnose = DynectSession.get_session().execute(uri, 'GET')
-        return respnose['data']['status']
-
-    def __str__(self):
-        """str override"""
-        return force_unicode('<GSLBMonitor>: {0}').format(self.protocol)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class GSLBRegionPoolEntry(APIObject):
@@ -307,7 +222,7 @@ class GSLB(APIObject):
                                              'local3', 'local4', 'local5',
                                              'local6', 'local7'
                                          ))
-    monitor = ClassAttribute('monitor', class_type=Monitor)
+    monitor = ClassAttribute('monitor', class_type=GSLBMonitor)
     contact_nickname = StringAttribute('contact_nickname')
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -408,7 +323,7 @@ class GSLB(APIObject):
         if 'monitor' in api_args:
             monitor = api_args.pop('monitor')
                 # We're only going accept new monitors of type Monitor
-            if isinstance(monitor, Monitor):
+            if isinstance(monitor, GSLBMonitor):
                 api_args['monitor'] = monitor.to_json()
         super(GSLB, self)._update(**api_args)
 

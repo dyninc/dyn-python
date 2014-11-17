@@ -54,7 +54,9 @@ def get_all_suppressions(startdate=None, enddate=None, startindex=0):
     for suppression in response['suppressions']:
         email = suppression.pop('emailaddress')
         suppress_time = suppression.pop('suppresstime')
+        reason_type = suppression.pop('reasontype')
         suppressions.append(Suppression(email, api=False,
+                                        reasontype=reason_type,
                                         suppresstime=suppress_time))
     return suppressions
 

@@ -3,6 +3,7 @@
 kennethreitz's requests module
 """
 import sys
+from datetime import datetime
 
 # -------
 # Pythons

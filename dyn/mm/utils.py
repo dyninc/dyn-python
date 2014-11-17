@@ -1,27 +1,7 @@
 # -*- coding: utf-8 -*-
 """Utilities for use across the Message Manamgent module"""
 from datetime import datetime
-
-
-API_FMT = '%Y-%m-%dT%H:%M:%S'
-
-
-def str_to_date(date_string):
-    """Convert a Message Manamgent API formatted string into a standard python
-    ``datetime.datetime`` object.  Note that this object's tzinfo will
-    not be set, in other words time zone is ignored.
-    """
-    if date_string[-6:] == '+00:00':
-        date_string = date_string[:-6]
-    return datetime.strptime(date_string, API_FMT)
-
-
-def date_to_str(date_obj):
-    """Convert a standard python ``datetime.datetime`` object to a Dyn Message
-    Management API formatted string
-    """
-    date_string = date_obj.strftime(API_FMT)
-    return date_string
+from dyn.compat import (str_to_date, date_to_str)
 
 
 class APIDict(dict):

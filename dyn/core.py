@@ -154,23 +154,6 @@ class ValidatedListAttribute(ValidatedAttribute, ListAttribute):
         setattr(instance, self.private_name, value)
 
 
-# class Junk(object):
-#     data = APIDescriptor('data')
-#     odds = ValidatedAttribute('odds', validator=[1, 3, 5, 7])
-#     read_only = ImmutableAttribute('read_only')
-#     my_int = IntegerAttribute('my_int')
-#     my_str = StringAttribute('my_str')
-#     my_list = ListAttribute('my_list')
-#
-#     def __init__(self):
-#         self._data = {'serial': 121312, 'ts': 12321111233}
-#         self._odds = 5
-#         self._read_only = 'passw0rd'
-#         self._my_int = 0
-#         self._my_str = 'lulz'
-#         self._my_list = [0, 1, 2]
-
-
 # noinspection PyUnusedLocal
 class APIObject(object):
     """Base API Object type responsible for handling shared functionality

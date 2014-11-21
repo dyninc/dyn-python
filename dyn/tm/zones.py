@@ -105,7 +105,7 @@ class Zone(APIObject):
             self._xfer(master_ip, timeout)
         else:
             # Assign serial style here to force pre-api validation
-            self.serial_style = serial_style
+            self._serial_style = serial_style
 
             api_args = {'zone': self.name, 'rname': contact, 'ttl': ttl,
                         'serial_style': serial_style}
@@ -348,7 +348,7 @@ class Zone(APIObject):
                     record[r_key] = r_val
                 record['create'] = False
                 list_records.append(constructor(self.name, self.fqdn,
-                                                **record))
+                                                api=False, **record))
             records[key] = list_records
         return records
 
@@ -561,6 +561,7 @@ class SecondaryZone(APIObject):
             transfer requests to this zone's master
         """
         self.uri = self.uri.format(zone_name=zone)
+        self._zone = zone
         super(SecondaryZone, self).__init__(*args, **kwargs)
 
     def _post(self, masters, contact_nickname=None, tsig_key_name=None):

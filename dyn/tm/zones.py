@@ -346,7 +346,6 @@ class Zone(APIObject):
                 # Unpack rdata
                 for r_key, r_val in record['rdata'].items():
                     record[r_key] = r_val
-                record['create'] = False
                 list_records.append(constructor(self.name, self.fqdn,
                                                 api=False, **record))
             records[key] = list_records
@@ -721,7 +720,6 @@ class Node(object):
             for key, val in record['rdata'].items():
                 record[key] = val
             del record['rdata']
-            record['create'] = False
             records.append(constructor(self.zone, self.fqdn, **record))
         return records
 
@@ -746,7 +744,6 @@ class Node(object):
                 # Unpack rdata
                 for r_key, r_val in record['rdata'].items():
                     record[r_key] = r_val
-                record['create'] = False
                 list_records.append(
                     constructor(self.zone, self.fqdn, **record))
             records[key] = list_records
@@ -762,7 +759,6 @@ class Node(object):
     def __str__(self):
         """str override"""
         return force_unicode('<Node>: {0}').format(self.fqdn)
-
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

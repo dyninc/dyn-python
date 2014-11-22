@@ -59,7 +59,8 @@ class APIList(list):
         return response
 
     def pop(self, *args, **kwargs):
-        """Handle the removal via pop of an item in this list via an API Call"""
+        """Handle the removal via pop of an item in this list via an API Call
+        """
         response = super(APIList, self).pop(*args, **kwargs)
         self._update(self.__build_args())
         return response
@@ -100,8 +101,8 @@ class Active(object):
     """Object for intercepting the active attribute of most services which
     return a non-pythonic 'Y' or 'N' as the active status. This class aims to
     allow for more pythonic interactions with these attributes by allowing the
-    active field to be represented as either it's boolean representation or it's
-    string 'Y' or 'N' representation.
+    active field to be represented as either it's boolean representation or
+    it's string 'Y' or 'N' representation.
     """
     def __init__(self, inp):
         """Accept either a string 'Y' or 'N' or a bool as input

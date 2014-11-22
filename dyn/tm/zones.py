@@ -5,10 +5,15 @@ from time import sleep
 from datetime import datetime
 
 from .utils import unix_date
-from .errors import *
-from .records import *
+from .errors import DynectCreateError, DynectGetError
+from .records import (ARecord, AAAARecord, CERTRecord, CNAMERecord,
+                      DHCIDRecord, DNAMERecord, DNSKEYRecord, DSRecord,
+                      KEYRecord, KXRecord, LOCRecord, IPSECKEYRecord, MXRecord,
+                      NAPTRRecord, PTRRecord, PXRecord, NSAPRecord, RPRecord,
+                      NSRecord, SOARecord, SPFRecord, SRVRecord, TXTRecord)
 from .session import DynectSession
-from .services import *
+from .services import (ActiveFailover, DynamicDNS, DNSSEC, TrafficDirector,
+                       GSLB, ReverseDNS, RTTM)
 from ..core import (APIObject, IntegerAttribute, StringAttribute,
                     ListAttribute, ImmutableAttribute, ValidatedAttribute)
 from ..compat import force_unicode
@@ -58,15 +63,36 @@ def get_all_secondary_zones():
 # noinspection PyUnresolvedReferences
 class Zone(APIObject):
     """A class representing a DynECT Zone"""
+    #: Primary Zone URI
     uri = '/Zone/{zone_name}/'
+
     session_type = DynectSession
+
+    #: The name of this Zone
     zone = ImmutableAttribute('zone')
+
+    #: Alias to zone
     name = ImmutableAttribute('zone')
+
+    #: The fully qualified domain name of this Zone
     fqdn = ImmutableAttribute('fqdn')
+
+    #: The style of this zone's serial. Valid values are increment, epoch, day,
+    #: and minute
     serial_style = ValidatedAttribute('serial_style',
                                       validator=('increment', 'epoch', 'day',
                                                  'minute'))
+
+    #: The current serial of this zone, the format of the serial will be
+    #: dependent on the value of serial_style
     serial = IntegerAttribute('serial')
+
+    #: Convenience property for this :class:`Zone`. If a :class:`Zone` is
+    #: frozen, the status will read as `'frozen'`, if the :class:`Zones` is not
+    #: frozen the status will read as `'active'`. Because the API does not
+    #: return information about whether or not a :class:`Zones` is frozen there
+    #: will be a few cases where this status will be `None` in order to avoid
+    #: guessing what the current status actually is.
     status = StringAttribute('status')
 
     def __init__(self, name, *args, **kwargs):
@@ -540,12 +566,27 @@ class Zone(APIObject):
 
 class SecondaryZone(APIObject):
     """A class representing DynECT Secondary zones"""
+    # Secondary Zone URI
     uri = '/Secondary/{zone_name}/'
+
     session_type = DynectSession
+
+    #: The name of this secondary zone
     zone = StringAttribute('zone')
+
+    #: Alias to zone
     name = StringAttribute('zone')
+
+    #: A list of IPv4 or IPv6 addresses of the master nameserver(s) for this
+    #: zone
     masters = ListAttribute('masters')
+
+    #: Name of the :class:`~dyn.tm.accounts.Contact` that will receive
+    #: notifications for this :class:`~dyn.tm.zones.SecondaryZone`
     contact_nickname = StringAttribute('contact_nickname')
+
+    #: Name of the TSIG key that will be used to sign transfer requests to this
+    #: zone's master
     tsig_key_name = StringAttribute('tsig_key_name')
 
     def __init__(self, zone, *args, **kwargs):

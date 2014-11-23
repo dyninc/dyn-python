@@ -63,19 +63,28 @@ class Singleton(_Singleton('SingletonMeta', (object,), {})):
 
 
 class APIDescriptor(object):
+    """A Base descriptor type for attributes of objects being constructed by
+    API responses
+    """
+
     def __init__(self, name=''):
         super(APIDescriptor, self).__init__()
         self.name = name
         self.private_name = '_' + self.name
 
     def __get__(self, instance, cls):
+        """Return a handle on the private instance of this descriptor"""
         return getattr(instance, self.private_name, None)
 
     def __set__(self, instance, value):
+        """Update the value of the private attribute represented by this
+        descriptor and, if one is available, call the update method of the
+        instance whose attribute is being updated
+        """
         setattr(instance, self.private_name, value)
         if hasattr(instance, '_update'):
             args = {self.name: value}
-            getattr(instance, '_update')(**args)
+            instance._update(**args)
 
 
 class ImmutableAttribute(APIDescriptor):
@@ -105,6 +114,11 @@ class StringAttribute(TypedAttribute):
     ty = string_types
 
 
+class BooleanAttribute(TypedAttribute):
+    """API Attribute that may only be a string type"""
+    ty = bool
+
+
 class ListAttribute(TypedAttribute):
     """API Attribute that may only be a list"""
     ty = list
@@ -124,6 +138,7 @@ class ValidatedAttribute(APIDescriptor):
     """An API Attribute whose value can be forced to a specific subset of
     values
     """
+
     def __init__(self, name='', validator=None):
         """An API field that must be one of a specific set of values
 
@@ -147,6 +162,10 @@ class ValidatedAttribute(APIDescriptor):
 
 
 class ValidatedListAttribute(ValidatedAttribute, ListAttribute):
+    """An atribute type checked as a list, with validators for the individual
+    items the list contains
+    """
+
     def __set__(self, instance, value):
         l = getattr(instance, self.private_name, [])
         for item in l:
@@ -319,12 +338,12 @@ class SessionEngine(Singleton):
             self._token = None
         self._conn = None
         if self.ssl:
-            msg = 'Establishing SSL connection to {}:{}'.format(self.host,
-                                                                self.port)
+            msg = 'Establishing SSL connection to {0}:{1}'.format(self.host,
+                                                                  self.port)
             self.logger.info(msg)
             self._conn = HTTPSConnection(self.host, self.port, timeout=300)
         else:
-            msg = 'Establishing unencrypted connection to {}:{}'
+            msg = 'Establishing unencrypted connection to {0}:{1}'
             msg = msg.format(self.host, self.port)
             self.logger.info(msg)
             self._conn = HTTPConnection(self.host, self.port, timeout=300)
@@ -367,6 +386,7 @@ class SessionEngine(Singleton):
             time.sleep(8)
             return self.execute(uri, method, raw_args, final=True)
         else:
+            self.logger.debug('response: {0}'.format(ret_val))
             return self._process_response(ret_val, method)
 
     def _validate_uri(self, uri):
@@ -384,7 +404,7 @@ class SessionEngine(Singleton):
     def _validate_method(self, method):
         """Validate the provided HTTP method type"""
         if method.upper() not in self._valid_methods:
-            msg = '{} is not a valid HTTP method. Please use one of {}'
+            msg = '{0} is not a valid HTTP method. Please use one of {1}'
             msg = msg.format(method, ', '.join(self._valid_methods))
             raise ValueError(msg)
 
@@ -425,7 +445,7 @@ class SessionEngine(Singleton):
         # Prepare arguments to send to API
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
 
-        msg = 'uri: {}, method: {}, args: {}'
+        msg = 'uri: {0}, method: {1}, args: {2}'
         self.logger.debug(msg.format(uri, method,
                                      clean_args(json.loads(args))))
 
@@ -476,7 +496,7 @@ class SessionEngine(Singleton):
         while response.status == 307:
             time.sleep(1)
             uri = response.getheader('Location')
-            self.logger.info('Polling {}'.format(uri))
+            self.logger.info('Polling {0}'.format(uri))
 
             self.send_command(uri, 'GET', '')
             response = self._conn.getresponse()
@@ -494,7 +514,7 @@ class SessionEngine(Singleton):
         self._conn.putrequest(method, uri)
 
         # Build headers
-        user_agent = 'dyn-py v{}'.format(__version__)
+        user_agent = 'dyn-py v{0}'.format(__version__)
         headers = {'Content-Type': self.content_type, 'User-Agent': user_agent}
         for key, val in self.extra_headers.items():
             headers[key] = val
@@ -520,14 +540,14 @@ class SessionEngine(Singleton):
         :param timeout: how long (in seconds) we should wait for a valid
             response before giving up on this request
         """
-        self.logger.debug('Polling for job_id: {}'.format(job_id))
+        self.logger.debug('Polling for job_id: {0}'.format(job_id))
         start = datetime.now()
-        uri = '/Job/{}/'.format(job_id)
+        uri = '/Job/{0}/'.format(job_id)
         api_args = {}
         # response = self.execute(uri, 'GET', api_args)
         response = {'status': 'incomplete'}
         now = datetime.now()
-        self.logger.warn('Waiting for job {}'.format(job_id))
+        self.logger.warn('Waiting for job {0}'.format(job_id))
         too_long = (now - start).seconds < timeout
         while response['status'] is 'incomplete' and too_long:
             time.sleep(10)
@@ -552,7 +572,7 @@ class SessionEngine(Singleton):
 
     def __str__(self):
         """str override"""
-        return force_unicode('<{}>').format(self.name)
+        return force_unicode('<{0}>').format(self.name)
 
     __repr__ = __unicode__ = __str__
 

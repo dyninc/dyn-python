@@ -4,13 +4,14 @@ REST API
 """
 from .errors import DynectInvalidArgumentError
 from .session import DynectSession
-from ..core import APIObject, ImmutableAttribute, StringAttribute
+from ..core import (APIObject, ImmutableAttribute, StringAttribute,
+                    ListAttribute, ValidatedAttribute)
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_updateusers', 'get_users', 'get_permissions_groups',
            'get_contacts', 'get_notifiers', 'UpdateUser', 'User',
-           'PermissionsGroup', 'UserZone', 'Notifier', 'Contact']
+           'PermissionsGroup', 'Notifier', 'Contact']
 
 
 def get_updateusers(search=None):
@@ -164,11 +165,24 @@ class UpdateUser(APIObject):
     a :class:`~dyn.tm.accounts.User` which are tied to a specific Dynamic DNS
     services.
     """
+    #: UpdateUser URI
     uri = '/UpdateUser/'
     session_type = DynectSession
+
+    #: This UpdateUser's user_name. An UpdateUser's user_name is a read-only
+    #: property which can not be updated after the UpdateUser has been created.
     user_name = ImmutableAttribute('user_name')
+
+    #: The current password for this UpdateUser. This password may be updated.
     password = StringAttribute('password')
+
+    #: This UpdateUser's nickname. An UpdateUser's nickname is a read-only
+    #: property which can not be updated after the UpdateUser has been created.
     nickname = StringAttribute('nickname')
+
+    #: The current status of this UpdateUser will be one of either 'active' or
+    #: 'blocked'. Blocked UpdateUser's are unable to log into the DynECT
+    #: System, while active UpdateUser's are.
     status = ImmutableAttribute('status')
 
     def _post(self, nickname, password):
@@ -231,28 +245,74 @@ class UpdateUser(APIObject):
 # noinspection PyAttributeOutsideInit,PyUnresolvedReferences
 class User(APIObject):
     """DynECT System User object"""
-    uri = '/UpdateUser/{user_name}/'
+    #: DynECT User URI
+    uri = '/User/{user_name}/'
+
     session_type = DynectSession
+
+    #: This User's user_name. This is a read-only property.
     user_name = ImmutableAttribute('user_name')
+
+    #: The first name of this User
     first_name = StringAttribute('first_name')
+
+    #: The last name of this User
     last_name = StringAttribute('last_name')
+
+    #: The nickname asociated with this User
     nickname = StringAttribute('nickname')
+
+    #:
     password = StringAttribute('password')
+
+    #: The organization this User belongs to
     organization = StringAttribute('organization')
+
+    #: The primary phone number for this User
     phone = StringAttribute('phone')
+
+    #: The primary address of this User
     address = StringAttribute('address')
+
+    #: The primary address of this User, line 2
     address_2 = StringAttribute('address_2')
+
+    #: The city this User is from
     city = StringAttribute('city')
+
+    #: The country this User is from
     country = StringAttribute('country')
+
+    #: The fax number associated with this User
     fax = StringAttribute('fax')
+
+    #: The primary notification email for this User
     notify_email = StringAttribute('notify_email')
+
+    #: The primary pager email for this User
     pager_email = StringAttribute('pager_email')
+
+    #: This User's zip code
     post_code = StringAttribute('post_code')
+
+    #: The name of the Group that this User belongs to
     group_name = StringAttribute('group_name')
+
+    #: The permissions associated with this User
     permision = StringAttribute('permission')
+
+    #: The zones that this User has access to
     zone = StringAttribute('zone')
+
+    #: The zones that this User is explicitly forbidden from
     forbid = StringAttribute('forbid')
+
+    #: A website associated with this User
     website = StringAttribute('website')
+
+    #: The current status of this User. Note, although this is a read only
+    #: property, it may be indirectly set by using the :meth:`block` and
+    #: :meth:`unblock` methods
     status = ImmutableAttribute('status')
 
     def __init__(self, user_name, *args, **kwargs):
@@ -477,16 +537,35 @@ class User(APIObject):
 
 class PermissionsGroup(APIObject):
     """A DynECT System Permissions Group object"""
+    #: The DynECT Permissions Group URI
     uri = '/PermissionGroup/{group_name}/'
     session_type = DynectSession
+
+    #: The name of this Permissions Group
     group_name = StringAttribute('group_name')
+
+    #: A description of this Permissions Group
     description = StringAttribute('description')
-    group_type = StringAttribute('group_type')
+
+    #: The type of this Permissions Group. Valid values are plain and default
+    group_type = ValidatedAttribute('group_type',
+                                    validator=('plain', 'default'))
+
+    #: If 'Y', all current users will be added to the group. Cannot be used if
+    #: user_name is passed in
     all_users = StringAttribute('all_users')
+
+    #: A list of permissions to apply to this Permissions Group
     permission = StringAttribute('permission')
+
+    #: A list of users who belong to this Permissions Group
     user_name = StringAttribute('user_name')
+
+    #: A list of Permissions Group's that belong to this Permissions Group
     subgroup = StringAttribute('subgroup')
-    zone = StringAttribute('zone')
+
+    #: A list of zones where this Permissions Group's permissions apply
+    zone = ListAttribute('zone')
 
     def __init__(self, group_name, *args, **kwargs):
         """Create a new permissions Group
@@ -562,8 +641,8 @@ class PermissionsGroup(APIObject):
 
         :param permission: the permission to add to this user
         """
-        uri = '/PermissionGroupPermissionEntry/{}/{}/'.format(self._group_name, 
-                                                              permission)
+        uri = '/PermissionGroupPermissionEntry/{0}/{1}/'.format(
+            self._group_name, permission)
         DynectSession.get_session().execute(uri, 'POST')
         self._permission.append(permission)
 
@@ -654,67 +733,24 @@ class PermissionsGroup(APIObject):
         return bytes(self.__str__())
 
 
-# noinspection PyMissingConstructor
-class UserZone(APIObject):
-    """A DynECT system UserZoneEntry"""
-    user_name = ImmutableAttribute('user_name')
-    zone_name = ImmutableAttribute('zone_name')
-    recurse = StringAttribute('recurse')
-
-    def __init__(self, user_name, zone_name, recurse='Y'):
-        self._user_name = user_name
-        self._zone_name = zone_name
-        self._recurse = recurse
-        api_args = {'recurse': self._recurse}
-        self.uri = '/UserZoneEntry/{0}/{1}/'.format(self._user_name,
-                                                    self._zone_name)
-        respnose = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
-        self._build(respnose['data'])
-
-    def update_zones(self, zone=None):
-        """Replacement list zones where the user will now have permissions.
-        Pass an empty list or omit the argument to clear the user's zone
-        permissions
-
-        :param zone: a list of zone names where the user will now have
-            permissions
-        """
-        if zone is None:
-            zone = []
-        api_args = {'zone': []}
-        for zone_data in zone:
-            api_args['zone'].append({'zone_name': zone_data})
-        respnose = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(respnose['data'])
-
-    def delete(self):
-        """Delete this :class:`~dyn.tm.accounts.UserZone` object from the
-        DynECT System
-        """
-        api_args = {'recurse': self.recurse}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
-
-    def __str__(self):
-        """Custom str method"""
-        return force_unicode('<UserZone>: {0}').format(self.user_name)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
-
-
 # noinspection PyUnresolvedReferences,PyMissingConstructor
 class Notifier(APIObject):
     """DynECT System Notifier"""
+    #: The DynECT Notifier URI
     uri = '/Notifier/'
     session_type = DynectSession
+
+    #: The unique DynECT system id for this Notifier
     notifier_id = ImmutableAttribute('notifier_id')
+
+    #: A unique label for this Notifier
     label = StringAttribute('label')
-    recipients = None
-    services = None
+
+    #: A list of recipients attached to this Notifier
+    recipients = ListAttribute('recipients')
+
+    #: A list of services that this Notifier is attached to
+    services = ListAttribute('services')
 
     def __init__(self, *args, **kwargs):
         """Create a new :class:`~dyn.tm.accounts.Notifier` object
@@ -756,7 +792,7 @@ class Notifier(APIObject):
         """Get an existing :class:`~dyn.tm.accounts.Notifier` object from the
         DynECT System
         """
-        self.uri = '/Notifier/{}/'.format(self._notifier_id)
+        self.uri = '/Notifier/{0}/'.format(notifier_id)
         response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
 
@@ -772,23 +808,56 @@ class Notifier(APIObject):
 
 class Contact(APIObject):
     """A DynECT System Contact"""
+    #: The DynECT Contact URI
     uri = '/Contact/{nickname}/'
     session_type = DynectSession
+
+    #: The nickname for this Contact
     nickname = StringAttribute('nickname')
+
+    #: The primary email address associated with this Contact
     email = StringAttribute('email')
+
+    #: The first name of this Contact
     first_name = StringAttribute('first_name')
+
+    #: The last name of this Contact
     last_name = StringAttribute('last_name')
+
+    #: The organization that this Contact belongs to
     organization = StringAttribute('organization')
+
+    #: The primary phone number for this Contact
     phone = StringAttribute('phone')
+
+    #: The primary address associated with this Contact
     address = StringAttribute('address')
+
+    #: The address associated with this Contact, line 2
     address_2 = StringAttribute('address_2')
+
+    #: The city that this Contact is from
     city = StringAttribute('city')
+
+    #: The country that this Contact is from
     country = StringAttribute('country')
+
+    #: The primary fax number for this Contact
     fax = StringAttribute('fax')
+
+    #: The primary notification email address for this Contact
     notify_email = StringAttribute('notify_email')
+
+    #: The primary pager email address for this Contact
     pager_email = StringAttribute('pager_email')
+
+    #: The zip code for this Contact
     post_code = StringAttribute('post_code')
+
+    #: The state that this Contact is from
     state = StringAttribute('state')
+
+    #: A website associated with this Contact
     website = StringAttribute('website')
 
     def __init__(self, nickname, *args, **kwargs):
@@ -866,7 +935,7 @@ class Contact(APIObject):
     def _update(self, **api_args):
         if 'nickname' in api_args:
             api_args['new_nickname'] = api_args.pop('nickname')
-        super(Contact, self)._update(api_args)
+        super(Contact, self)._update(**api_args)
 
     def __str__(self):
         """Custom str method"""

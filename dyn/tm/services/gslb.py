@@ -2,9 +2,9 @@
 from ._shared import BaseMonitor
 from ..utils import APIList
 from ..session import DynectSession
-from ...core import (APIObject, ImmutableAttribute, StringAttribute,
-                     ValidatedAttribute, IntegerAttribute, ClassAttribute,
-                     ListAttribute)
+from ...core import (APIObject, APIService, ImmutableAttribute,
+                     StringAttribute, ValidatedAttribute, IntegerAttribute,
+                     ClassAttribute, ListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -22,7 +22,6 @@ class GSLBMonitor(BaseMonitor):
 
 
 class GSLBRegionPoolEntry(APIObject):
-    """:class:`GSLBRegionPoolEntry`"""
     uri = '/GSLBRegionPoolEntry/{zone}/{fqdn}/{region}/{address}/'
     session_type = DynectSession
     zone = ImmutableAttribute('zone')
@@ -59,13 +58,9 @@ class GSLBRegionPoolEntry(APIObject):
         """Create a new :class:`GSLBRegionPoolEntry` on the DynECT System"""
         uri = '/GSLBRegionPoolEntry/{0}/{1}/{2}/'.format(self.zone, self.fqdn,
                                                          self.region_code)
-        api_args = {'address': self.address}
-        if label:
-            api_args['label'] = label
-        if weight:
-            api_args['weight'] = weight
-        if serve_mode:
-            api_args['serve_mode'] = serve_mode
+        api_args = {'address': self.address, 'label': label, 'weight': weight,
+                    'serve_mode': serve_mode}
+        api_args = {api_args[k] for k in api_args if api_args[k] is not None}
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
 
@@ -73,11 +68,6 @@ class GSLBRegionPoolEntry(APIObject):
         if 'address' in api_args:
             api_args['new_address'] = api_args.pop('address')
         super(GSLBRegionPoolEntry, self)._update(**api_args)
-
-    def sync(self):
-        """Sync this :class:`GSLBRegionPoolEntry` object with the DynECT System
-        """
-        self._get()
 
     def to_json(self):
         """Convert this object into a json blob"""
@@ -103,7 +93,6 @@ class GSLBRegionPoolEntry(APIObject):
 
 
 class GSLBRegion(APIObject):
-    """docstring for GSLBRegion"""
     uri = '/GSLBRegion/{zone}/{fqdn}/{region}/'
     session_type = DynectSession
     zone = ImmutableAttribute('zone')
@@ -137,21 +126,31 @@ class GSLBRegion(APIObject):
         self.uri = self.uri.format(zone=zone, fqdn=fqdn, region=region_code)
         super(GSLBRegion, self).__init__(*args, **kwargs)
 
+    def add_entry(self, address, label=None, weight=None, serve_mode=None):
+        """Create a new :class:`GSLBRegionPoolEntry` with the provided
+        parameters and add it to this :class:`GSLBRegion`
+
+        :param address: The IP address or FQDN of this Node IP
+        :param label: Identifying descriptive information for this
+        :param weight: A number in the range of 1-14 controlling the order in
+            which this :class:`GSLBRegionPoolEntry` will be served
+        :param serve_mode: Sets the behavior of this particular record. Must be
+            one of 'always', 'obey', 'remove', 'no'
+        :return: The newly created :class:`GSLBRegionPoolEntry`
+        """
+        new_entry = GSLBRegionPoolEntry(self.zone, self.fqdn, self.region_code,
+                                        address, label, weight, serve_mode)
+        self._pool.append(new_entry)
+        return new_entry
+
     def _post(self, pool, serve_count=None, failover_mode=None,
               failover_data=None):
         """Create a new :class:`GSLBRegion` on the DynECT System"""
-        self._pool = pool
-        self._serve_count = serve_count
-        self._failover_mode = failover_mode
-        self._failover_data = failover_data
         uri = '/GSLBRegion/{0}/{1}/'.format(self.zone, self.fqdn)
-        api_args = {'pool': self._pool.to_json()}
-        if serve_count:
-            api_args['serve_count'] = self._serve_count
-        if failover_mode:
-            api_args['failover_mode'] = self._failover_mode
-        if failover_data:
-            api_args['failover_data'] = self._failover_data
+        api_args = {'pool': pool.to_json(), 'serve_count': serve_count,
+                    'failover_mode': failover_mode,
+                    'failover_data': failover_data}
+        api_args = {api_args[k] for k in api_args if api_args[k] is not None}
         response = DynectSession.get_session()(uri, 'POST', api_args)
         self._build(response['data'])
 
@@ -172,21 +171,17 @@ class GSLBRegion(APIObject):
             api_args['pool'] = api_args['pool'].to_json()
         super(GSLBRegion, self)._update(**api_args)
 
-    def sync(self):
-        """Sync this :class:`GSLBRegion` object with the DynECT System"""
-        self._get()
-
     @property
-    def _json(self):
+    def to_json(self):
         """Convert this :class:`GSLBRegion` to a json blob"""
         output = {'region_code': self.region_code,
                   'pool': [pool.to_json() for pool in self._pool]}
-        if self._serve_count:
-            output['serve_count'] = self._serve_count
-        if self._failover_mode:
-            output['failover_mode'] = self._failover_mode
-        if self._failover_data:
-            output['failover_data'] = self._failover_data
+        if self.serve_count:
+            output['serve_count'] = self.serve_count
+        if self.failover_mode:
+            output['failover_mode'] = self.failover_mode
+        if self.failover_data:
+            output['failover_data'] = self.failover_data
         return output
 
     def __str__(self):
@@ -199,7 +194,7 @@ class GSLBRegion(APIObject):
         return bytes(self.__str__())
 
 
-class GSLB(APIObject):
+class GSLB(APIService):
     """A Global Server Load Balancing (GSLB) service"""
     uri = '/GSLB/{zone}/{fqdn}/'
     session_type = DynectSession
@@ -233,10 +228,10 @@ class GSLB(APIObject):
             active status or if the service should remain in failover until
             manually reset. Must be 'Y' or 'N'
         :param ttl: Time To Live in seconds of records in the service. Must be
-            less than 1/2 of the Health Probe's monitoring interval. Must be one
-            of 30, 60, 150, 300, or 450
-        :param notify_events: A comma separated list of the events which trigger
-            notifications. Must be one of 'ip', 'svc', or 'nosrv'
+            less than 1/2 of the Health Probe's monitoring interval. Must be
+            one of 30, 60, 150, 300, or 450
+        :param notify_events: A comma separated list of the events which
+            trigger notifications. Must be one of 'ip', 'svc', or 'nosrv'
         :param syslog_server: The Hostname or IP address of a server to receive
             syslog notifications on monitoring events
         :param syslog_port: The port where the remote syslog server listens for
@@ -265,23 +260,14 @@ class GSLB(APIObject):
               syslog_ident='dynect', syslog_facility='daemon', monitor=None):
         """Create a new :class:`GSLB` service object on the DynECT System"""
         api_args = {'contact_nickname': contact_nickname,
-                    'region': [r._json for r in region]}
-        if auto_recover:
-            api_args['auto_recover'] = auto_recover
-        if ttl:
-            api_args['ttl'] = ttl
-        if notify_events:
-            api_args['notify_events'] = notify_events
-        if syslog_server:
-            api_args['syslog_server'] = syslog_server
-        if syslog_port:
-            api_args['syslog_port'] = syslog_port
-        if syslog_ident:
-            api_args['syslog_ident'] = syslog_ident
-        if syslog_facility:
-            api_args['syslog_facility'] = syslog_facility
-        if monitor:
-            api_args['monitor'] = monitor.to_json()
+                    'region': [r.to_json() for r in region],
+                    'auto_recover': auto_recover, 'ttl': ttl,
+                    'notify_events': notify_events,
+                    'syslog_server': syslog_server, 'syslog_port': syslog_port,
+                    'syslog_ident': syslog_ident,
+                    'syslog_facility': syslog_facility,
+                    'monitor': monitor.to_json()}
+        api_args = {api_args[k] for k in api_args if api_args[k] is not None}
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -291,8 +277,6 @@ class GSLB(APIObject):
         returned by an API call
 
         :param data: the data from the JSON respnose
-        :param region: Boolean flag specifying whether to rebuild the region
-            objects or not
         """
         if 'region' in data:
             self._region = APIList(DynectSession.get_session, 'region')
@@ -327,52 +311,36 @@ class GSLB(APIObject):
                 api_args['monitor'] = monitor.to_json()
         super(GSLB, self)._update(**api_args)
 
-    def sync(self):
-        """Sync this :class:`GSLB` object with the DynECT System"""
-        self._get()
-
-    def activate(self):
-        """Activate this :class:`GSLB` service on the DynECT System"""
-        self._update(activate=True)
-
-    def deactivate(self):
-        """Deactivate this :class:`GSLB` service on the DynECT System"""
-        self._update(deactivate=True)
-
     def recover(self, address=None):
         """Recover the GSLB service on the designated zone node or a specific
         node IP within the service
         """
-        api_args = {}
         if address:
-            api_args['recoverip'] = True
-            api_args['address'] = address
+            api_args = {'recoverip': True, 'address': address}
         else:
-            api_args['recover'] = True
+            api_args = {'recover': True}
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
 
-    @property
-    def active(self):
-        """Indicates if the service is active. When setting directly, rather
-        than using activate/deactivate valid arguments are 'Y' or True to
-        activate, or 'N' or False to deactivate. Note: If your service is
-        already active and you try to activate it, nothing will happen. And
-        vice versa for deactivation.
+    def add_region(self, region_code, pool, serve_count=None,
+                   failover_mode=None, failover_data=None):
+        """Add a new :class:`GSLBRegion` to this :class:`GSLB` service
 
-        :returns: An :class:`Active` object representing the current state of
-            this :class:`GSLB` Service
+        :param region_code: ISO region code of this :class:`GSLBRegion`
+        :param pool: The IP Pool list for this :class:`GSLBRegion`
+        :param serve_count: How many records will be returned in each DNS
+            response
+        :param failover_mode: How the :class:`GSLBRegion` should failover. Must
+            be one of 'ip', 'cname', 'region', 'global'
+        :param failover_data: Dependent upon failover_mode. Must be one of
+            'ip', 'cname', 'region', 'global'
+        :return: The newly created :class:`GSLBRegion` object
         """
-        return self._active
-    @active.setter
-    def active(self, value):
-        deactivate = ('N', False)
-        activate = ('Y', True)
-        if value in deactivate and self.active:
-            self.deactivate()
-        elif value in activate and not self.active:
-            self.activate()
+        new_region = GSLBRegion(self.zone, self.fqdn, region_code, pool,
+                                serve_count, failover_mode, failover_data)
+        self._region.append(new_region)
+        return new_region
 
     def __str__(self):
         """str override"""

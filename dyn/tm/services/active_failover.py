@@ -2,7 +2,7 @@
 from ._shared import BaseMonitor
 from ..utils import Active, APIList
 from ..session import DynectSession
-from ...core import (APIObject, ImmutableAttribute, StringAttribute,
+from ...core import (APIService, ImmutableAttribute, StringAttribute,
                      ClassAttribute, IntegerAttribute, ValidatedListAttribute)
 from ...compat import force_unicode
 
@@ -20,7 +20,7 @@ class AFOMonitor(BaseMonitor):
         raise ValueError
 
 
-class ActiveFailover(APIObject):
+class ActiveFailover(APIService):
     """With Active Failover, we monitor your Primary IP.  If a failover event
     is detected, our system auto switches (hot swaps) to your dedicated back-up
     IP
@@ -28,20 +28,51 @@ class ActiveFailover(APIObject):
     uri = '/Failover/{zone}/{fqdn}/'
     session_type = DynectSession
 
+    #: The zone that this :class:`ActiveFailover` service is attached to
     zone = ImmutableAttribute('zone')
+
+    #: The fqdn of this :class:`ActiveFailover` service is attached to
     fqdn = ImmutableAttribute('fqdn')
+
+    #: IPv4 Address or FQDN being monitored by this :class:`ActiveFailover`
     address = StringAttribute('address')
+
+    #: The target failover resource type.
     failover_mode = StringAttribute('failover_mode')
+
+    #: The IPv4 Address or CNAME data for the failover target
     failover_data = StringAttribute('failover_data')
+
+    #: The :class:`AFOMonitor` for this :class:`ActiveFailover` service
     monitor = ClassAttribute('monitor', AFOMonitor)
+
+    #: Name of contact to receive notifications for this service
     contact_nickname = StringAttribute('contact_nickname')
+
+    #: Indicates whether this service should restore its original state when
+    #: the source IPs resume online status
     auto_recover = StringAttribute('auto_recover')
+
+    #: A comma separated list of what events trigger notifications. Must be one
+    #: of 'ip', 'svc', or 'nosrv'
     notify_events = ValidatedListAttribute('notify_events',
                                            validator=('ip', 'svc', 'nosrv'))
+
+    #: The Hostname or IP address of a server to receive syslog notifications
+    #: on monitoring events
     syslog_server = StringAttribute('syslog_server')
+
+    #: The port where the remote syslog server listens
     syslog_port = IntegerAttribute('syslog_port')
+
+    #: The ident to use when sending syslog notifications
     syslog_ident = StringAttribute('syslog_ident')
+
+    #: The syslog facility to use when sending syslog notifications
     syslog_facility = StringAttribute('syslog_facility')
+
+    #: TTL in seconds of records in the service. Must be less than 1/2 of the
+    #: :class:`AFOMonitor`'s monitoring interval
     ttl = IntegerAttribute('ttl')
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -133,36 +164,6 @@ class ActiveFailover(APIObject):
                 'failover_data': self.failover_data,
                 'monitor': self.monitor.to_json(),
                 'contact_nickname': self.contact_nickname}
-
-    @property
-    def active(self):
-        """Return whether or not this :class:`ActiveFailover` service is
-        active. When setting directly, rather than using activate/deactivate
-        valid arguments are 'Y' or True to activate, or 'N' or False to
-        deactivate. Note: If your service is already active and you try to
-        activate it, nothing will happen. And vice versa for deactivation.
-
-        :returns: An :class:`Active` object representing the current state of
-            this :class:`ActiveFailover` Service
-        """
-        self._get()
-        return self._active
-    @active.setter
-    def active(self, value):
-        deactivate = ('N', False)
-        activate = ('Y', True)
-        if value in deactivate and self.active:
-            self.deactivate()
-        elif value in activate and not self.active:
-            self.activate()
-
-    def activate(self):
-        """Activate this :class:`ActiveFailover` service"""
-        self._update(activate=True)
-
-    def deactivate(self):
-        """Deactivate this :class:`ActiveFailover` service"""
-        self._update(deactivate=True)
 
     def __str__(self):
         """str override"""

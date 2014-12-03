@@ -85,7 +85,8 @@ class APIList(list):
     def _update(self, api_args):
         """Private update (PUT) method"""
         if self.session_func is not None and self.uri is not None:
-            response = self.session_func().execute(self.uri, 'PUT', api_args)
+            response = self.session_func.get_session().execute(self.uri, 'PUT',
+                                                               api_args)
             data = response['data'][self.name]
             for new_data, item in zip(data, self):
                 item._update(new_data)

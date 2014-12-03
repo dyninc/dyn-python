@@ -53,8 +53,7 @@ class DNSSECKey(object):
         for key, val in kwargs.items():
             setattr(self, key, val)
 
-    @property
-    def _json(self):
+    def to_json(self):
         """The JSON representation of this :class:`DNSSECKey` object"""
         json_blob = {'type': self.key_type,
                      'algorithm': self.algorithm,
@@ -121,7 +120,7 @@ class DNSSEC(APIObject):
         self._keys += keys
         self._contact_nickname = contact_nickname
         self._notify_events = notify_events
-        api_args = {'keys': [key._json for key in self._keys],
+        api_args = {'keys': [key.to_json() for key in self._keys],
                     'contact_nickname': self._contact_nickname}
         for key, val in self.__dict__.items():
             if val is not None and not hasattr(val, '__call__') and \
@@ -191,10 +190,10 @@ class DNSSEC(APIObject):
     @keys.setter
     def keys(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
-            self._keys = APIList(DynectSession.get_session, 'keys', None, value)
+            self._keys = APIList(DynectSession.get_session, 'keys', self.uri,
+                                 value)
         elif isinstance(value, APIList):
             self._keys = value
-        self._keys.uri = self.uri
 
     def activate(self):
         """Activate this :class:`DNSSEC` service"""

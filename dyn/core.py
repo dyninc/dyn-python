@@ -230,12 +230,47 @@ class APIObject(object):
         if self.session_type is not None:
             self.session_type.get_session().execute(self.uri, 'DELETE')
 
-    @property
-    def __json__(self):
+    def to_json(self):
         """Generic JSON reprsentation of this object"""
         dict_obj = cleared_class_dict(self.__dict__)
         return {x: dict_obj[x] for x in dict_obj if x.startswith('_') and
                 not x.startswith('__')}
+
+
+class APIService(APIObject):
+    """:class:`APIObject` subclass with some additional info provided for
+    services that have "activate" and "deactivate" functionality to simplify
+    the ability to activate and deactivate the service
+    """
+
+    @property
+    def active(self):
+        """Indicates if the service is active. When setting directly, rather
+        than using activate/deactivate valid arguments are 'Y' or True to
+        activate, or 'N' or False to deactivate. Note: If your service is
+        already active and you try to activate it, nothing will happen. And
+        vice versa for deactivation.
+
+        :returns: An :class:`Active` object representing the current state of
+            this :class:`GSLB` Service
+        """
+        return self.active
+    @active.setter
+    def active(self, value):
+        deactivate = ('N', False)
+        activate = ('Y', True)
+        if value in deactivate and self.active:
+            self.deactivate()
+        elif value in activate and not self.active:
+            self.activate()
+
+    def activate(self):
+        """Ensure that this service is currently activated"""
+        self._update(activate=True)
+
+    def deactivate(self):
+        """Ensure that this service is currently deactivated"""
+        self._update(deactivate=True)
 
 
 class _History(list):

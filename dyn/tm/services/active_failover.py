@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from ._shared import BaseMonitor
-from ..utils import Active
+from ..utils import Active, APIList
 from ..session import DynectSession
 from ...core import (APIObject, ImmutableAttribute, StringAttribute,
                      ClassAttribute, IntegerAttribute, ValidatedListAttribute)
@@ -20,7 +20,6 @@ class AFOMonitor(BaseMonitor):
         raise ValueError
 
 
-# noinspection PyUnresolvedReferences
 class ActiveFailover(APIObject):
     """With Active Failover, we monitor your Primary IP.  If a failover event
     is detected, our system auto switches (hot swaps) to your dedicated back-up
@@ -73,6 +72,7 @@ class ActiveFailover(APIObject):
         :param ttl: Time To Live in seconds of records in the service. Must be
             less than 1/2 of the Health Probe's monitoring interval
         """
+        self._zone, self._fqdn = zone, fqdn
         self.uri = self.uri.format(zone=zone, fqdn=fqdn)
         super(ActiveFailover, self).__init__(*args, **kwargs)
 
@@ -105,9 +105,10 @@ class ActiveFailover(APIObject):
             api_args['monitor'] = api_args['monitor'].to_json()
         if 'notify_events' in api_args:
             api_args['notify_events'] = ', '.join(api_args['notify_events'])
-        for key, val in self.api_args:
-            if key not in api_args:
-                api_args[key] = val
+        if 'activate' not in api_args and 'deactivate' not in api_args:
+            for key, val in self.api_args.items():
+                if key not in api_args:
+                    api_args[key] = val
         super(ActiveFailover, self)._update(**api_args)
 
     def _build(self, data):
@@ -116,6 +117,11 @@ class ActiveFailover(APIObject):
             self._monitor = AFOMonitor(**data.pop('monitor'))
         if 'active' in data:
             self._active = Active(data.pop('active'))
+        if 'notify_events' in data:
+            events = data.pop('notify_events').split(',')
+            filtered = [event.strip() for event in events if event.strip()]
+            self._notify_events = APIList(DynectSession, 'notify_events',
+                                          self.uri, filtered)
         super(ActiveFailover, self)._build(data)
 
     @property

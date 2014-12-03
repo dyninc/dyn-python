@@ -4,23 +4,35 @@
 from ..utils import Active
 from ..session import DynectSession
 from ..accounts import User
-from ...core import APIObject, ImmutableAttribute, StringAttribute
+from ...core import APIService, ImmutableAttribute, StringAttribute
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['DynamicDNS']
 
 
-class DynamicDNS(APIObject):
+class DynamicDNS(APIService):
     """DynamicDNS is a service which aliases a dynamic IP Address to a static
     hostname
     """
     uri = '/DDNS/{zone}/{fqdn}/{rr_type}/'
     session_type = DynectSession
+
+    #: The zone to attach this :class:`DynamicDNS` Service to
     zone = ImmutableAttribute('zone')
+
+    #: The FQDN of the node where this service will be attached
     fqdn = ImmutableAttribute('fqdn')
+
+    #: Either A, for IPv4, or AAAA, for IPv6
     record_type = ImmutableAttribute('record_type')
+
+    #: IPv4 (if `record_type` is A) or IPv6 (if `record_type` is AAAA) address
+    #: for the service
     address = StringAttribute('address')
+
+    #: Name of the user to create, or the name of an existing update user to
+    #: allow access to this service
     user = ImmutableAttribute('user')
 
     def __init__(self, zone, fqdn, record_type, *args, **kwargs):
@@ -57,38 +69,8 @@ class DynamicDNS(APIObject):
         if user:
             api_args['user'] = user
             api_args['full_setup'] = True
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def active(self):
-        """Returns whether or not this :class:`DynamicDNS` Service is currently
-        active. When setting directly, rather than using activate/deactivate
-        valid arguments are 'Y' or True to activate, or 'N' or False to
-        deactivate. Note: If your service is already active and you try to
-        activate it, nothing will happen. And vice versa for deactivation.
-
-        :returns: An :class:`Active` object representing the current state of
-            this :class:`DynamicDNS` Service
-        """
-        return self._active
-    @active.setter
-    def active(self, value):
-        deactivate = ('N', False)
-        activate = ('Y', True)
-        if value in deactivate and self.active:
-            self.deactivate()
-        elif value in activate and not self.active:
-            self.activate()
-
-    def activate(self):
-        """Activate this Dynamic DNS service"""
-        self._update(activate=True)
-
-    def deactivate(self):
-        """Deactivate this Dynamic DNS service"""
-        self._update(deactivate=True)
+        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        self._build(resp['data'])
 
     def reset(self):
         """Resets the abuse count on this Dynamic DNS service"""

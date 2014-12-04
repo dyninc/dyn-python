@@ -105,13 +105,7 @@ class DNSRecord(APIObject):
         return self.record_type.replace('Record', '').lower()
 
     def __str__(self):
-        """str override"""
         return force_unicode('<{0}>: {1}').format(self.record_type, self.fqdn)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class ARecord(DNSRecord):

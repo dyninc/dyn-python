@@ -80,13 +80,7 @@ class DNSSECKey(object):
                 setattr(self, key, val)
 
     def __str__(self):
-        """str override"""
         return force_unicode('<DNSSECKey>: {0}').format(self.algorithm)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class DNSSEC(APIObject):
@@ -225,10 +219,4 @@ class DNSSEC(APIObject):
         return response['data']
 
     def __str__(self):
-        """str override"""
         return force_unicode('<DNSSEC>: {0}').format(self.zone)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

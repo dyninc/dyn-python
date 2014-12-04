@@ -554,14 +554,7 @@ class Zone(APIObject):
         return response['data']
 
     def __str__(self):
-        """str override"""
         return force_unicode('<Zone>: {0}').format(self.name)
-
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class SecondaryZone(APIObject):
@@ -633,14 +626,7 @@ class SecondaryZone(APIObject):
         self._update(retransfer=True)
 
     def __str__(self):
-        """str override"""
         return force_unicode('<SecondaryZone>: {0}').format(self.zone)
-
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class Node(object):
@@ -798,10 +784,4 @@ class Node(object):
         DynectSession.get_session().execute(uri, 'DELETE')
 
     def __str__(self):
-        """str override"""
         return force_unicode('<Node>: {0}').format(self.fqdn)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

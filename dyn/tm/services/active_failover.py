@@ -166,10 +166,4 @@ class ActiveFailover(APIService):
                 'contact_nickname': self.contact_nickname}
 
     def __str__(self):
-        """str override"""
         return force_unicode('<ActiveFailover>: {0}').format(self.fqdn)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

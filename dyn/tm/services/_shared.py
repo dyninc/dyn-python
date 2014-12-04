@@ -96,11 +96,5 @@ class BaseMonitor(APIObject):
         return respnose['data']['status']
 
     def __str__(self):
-        """str override"""
         return force_unicode('<{0}>: {1}').format(self.__class__.__name__,
                                                   self.protocol)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

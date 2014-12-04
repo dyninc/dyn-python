@@ -106,10 +106,4 @@ class ReverseDNS(APIObject):
         self._update(deactivate=True)
 
     def __str__(self):
-        """str override"""
         return force_unicode('<ReverseDNS>: {0}').format(self.fqdn)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

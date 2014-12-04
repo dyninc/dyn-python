@@ -81,15 +81,9 @@ class GSLBRegionPoolEntry(APIObject):
         return output
 
     def __str__(self):
-        """str override"""
         return force_unicode('<GSLBRegionPoolEntry>: {0}'.format(
             self.region_code)
         )
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class GSLBRegion(APIObject):
@@ -185,13 +179,7 @@ class GSLBRegion(APIObject):
         return output
 
     def __str__(self):
-        """str override"""
         return force_unicode('<GSLBRegion>: {0}').format(self.region_code)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class GSLB(APIService):
@@ -343,10 +331,4 @@ class GSLB(APIService):
         return new_region
 
     def __str__(self):
-        """str override"""
         return force_unicode('<GSLB>: {0}').format(self.fqdn)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

@@ -4,9 +4,9 @@ from datetime import datetime
 from ._shared import BaseMonitor
 from ..utils import APIList, Active, unix_date
 from ..session import DynectSession
-from ...core import (APIObject, ImmutableAttribute, StringAttribute,
-                     ValidatedAttribute, IntegerAttribute, ClassAttribute,
-                     ValidatedListAttribute, ListAttribute)
+from ...core import (APIObject, APIService, ImmutableAttribute,
+                     StringAttribute, ValidatedAttribute, IntegerAttribute,
+                     ClassAttribute, ValidatedListAttribute, ListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -62,6 +62,7 @@ class RegionPoolEntry(APIObject):
         :param serve_mode: Sets the behavior of this particular record. Must be
             one of 'always', 'obey', 'remove', or 'no'
         """
+        self._address = address
         super(RegionPoolEntry, self).__init__(address, label, weight,
                                               serve_mode, **kwargs)
 
@@ -83,13 +84,7 @@ class RegionPoolEntry(APIObject):
         return json_blob
 
     def __str__(self):
-        """str override"""
         return force_unicode('<RTTMRegionPoolEntry>: {0}').format(self.address)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class RTTMRegion(APIObject):
@@ -186,8 +181,7 @@ class RTTMRegion(APIObject):
         data.pop('pool', None)
         super(RTTMRegion, self)._build(data)
 
-    @property
-    def _json(self):
+    def to_json(self):
         """Unpack this object and return it as a JSON blob"""
         json_blob = {'region_code': self.region_code,
                      'pool': [entry.to_json() for entry in self.pool]}
@@ -208,27 +202,57 @@ class RTTMRegion(APIObject):
         return json_blob
 
     def __str__(self):
-        """str override"""
         return force_unicode('<RTTMRegion>: {0}').format(self.region_code)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
-class RTTM(APIObject):
+class RTTM(APIService):
+    """Real Time Traffic Management (RTTM) is a DynECT Managed DNS service,
+    which monitors all of your endpoints to detect the best-performing ones and
+    also auto-populates your regional pools using that information to provide
+    you with the lowest latency possible. Differing from GSLB, RTTM collects
+    real-time performance data on the load time of each of your endpoints,
+    rather than just routing your traffic to manually entered, static
+    configurations.
+    """
     uri = '/RTTM/{zone}/{fqdn}/'
     session_type = DynectSession
+
+    #: The zone that this :class:`RTTM` service is attached to
     zone = ImmutableAttribute('zone')
+
+    #: The FQDN of the node that this :class:`RTTM` service is attached to
     fqdn = ImmutableAttribute('fqdn')
+
+    #: Indicates whether or not the service should automatically come out of
+    #: failover when the IP addresses resume active status or if the service
+    #: should remain in failover until manually reset. Must be one of
+    #: :const:`True`, :const:`False`, 'Y', or 'N'
     auto_recover = ValidatedAttribute('auto_recover', validator=('Y', 'N'))
+
+    #: Time To Live in seconds of records in the service. Must be less than
+    #: 1/2 of the :class:`RTTMMonitor`'s monitoring interval. Must be one of
+    #: 30, 60, 150, 300, or 450.
     ttl = ValidatedAttribute('ttl', validator=(30, 60, 150, 300, 450))
+
+    #: A list of the events which trigger notifications. Must be one of 'ip',
+    #: 'svc', or 'nosrv'
     notify_events = ValidatedListAttribute('notify_events',
                                            validator=('ip', 'svc', 'nosrv'))
+
+    #: The Hostname or IP address of a server to receive syslog notifications
+    #: on monitoring events
     syslog_server = StringAttribute('syslog_server')
+
+    #: The port where the remote syslog server listens for notifications
     syslog_port = IntegerAttribute('syslog_port')
+
+    #: The ident to use when sending syslog notifications
     syslog_ident = StringAttribute('syslog_ident')
+
+    #: The syslog facility to use when sending syslog notifications. Must be
+    #: one of kern, user, mail, daemon, auth, syslog, lpr, news, uucp, cron,
+    #: authpriv, ftp, ntp, security, console, local0, local1, local2, local3,
+    #: local4, local5, local6, or local7
     syslog_facility = ValidatedAttribute('syslog_facility',
                                          validator=(
                                              'kern', 'user', 'mail', 'daemon',
@@ -239,9 +263,15 @@ class RTTM(APIObject):
                                              'local3', 'local4', 'local5',
                                              'local6', 'local7'
                                          ))
-    monitor = ClassAttribute('monitor', class_type=Monitor)
+
+    #: The :class:`RTTMMonitor` for this service
+    monitor = ClassAttribute('monitor', class_type=RTTMMonitor)
+
+    #: The :class:`RTTMPerformanceMonitor` for this service
     performance_monitor = ClassAttribute('performance_monitor',
-                                         class_type=PerformanceMonitor)
+                                         class_type=RTTMPerformanceMonitor)
+
+    #: Name of contact to receive notifications
     contact_nickname = StringAttribute('contact_nickname')
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -252,8 +282,8 @@ class RTTM(APIObject):
             active status or if the service should remain in failover until
             manually reset. Must be one of 'Y' or 'N'
         :param ttl: Time To Live in seconds of records in the service. Must be
-            less than 1/2 of the Health Probe's monitoring interval. Must be one
-            of 30, 60, 150, 300, or 450.
+            less than 1/2 of the Health Probe's monitoring interval. Must be
+            one of 30, 60, 150, 300, or 450.
         :param notify_events: A list of the events which trigger notifications.
             Must be one of 'ip', 'svc', or 'nosrv'
         :param syslog_server: The Hostname or IP address of a server to receive
@@ -267,11 +297,12 @@ class RTTM(APIObject):
             console, local0, local1, local2, local3, local4, local5, local6, or
             local7
         :param region: A list of :class:`RTTMRegion`'s
-        :param monitor: The :class:`Monitor` for this service
+        :param monitor: The :class:`RTTMMonitor` for this service
         :param performance_monitor: The performance monitor for the service
         :param contact_nickname: Name of contact to receive notifications
         """
         self.uri = self.uri.format(zone=zone, fqdn=fqdn)
+        self._zone, self._fqdn = zone, fqdn
         super(RTTM, self).__init__(*args, **kwargs)
         self.region.uri = self.uri
 
@@ -282,41 +313,24 @@ class RTTM(APIObject):
         """Create a new RTTM Service on the DynECT System"""
         api_args = {'contact_nickname': contact_nickname,
                     'performance_monitor': performance_monitor.to_json(),
-                    'region': region.to_json()}
-        if auto_recover:
-            self.auto_recover = auto_recover
-            api_args['auto_recover'] = self.auto_recover
-        if ttl:
-            self.ttl = ttl
-            api_args['ttl'] = self.ttl
-        if notify_events:
-            self.notify_events = notify_events
-            api_args['notify_events'] = self.notify_events
-        if syslog_server:
-            api_args['syslog_server'] = syslog_server
-        if syslog_port:
-            api_args['syslog_port'] = syslog_port
-        if syslog_ident:
-            api_args['syslog_ident'] = syslog_ident
-        if syslog_facility:
-            self.syslog_facility = syslog_facility
-            api_args['syslog_facility'] = self.syslog_facility
-        if region:
-            api_args['region'] = [region._json for region in region]
+                    'region': [reg.to_json() for reg in region], 'ttl': ttl,
+                    'auto_recover': auto_recover,
+                    'notify_events': notify_events,
+                    'syslog_server': syslog_server, 'syslog_port': syslog_port,
+                    'syslog_ident': syslog_ident,
+                    'syslog_facility': syslog_facility}
         if monitor:
             api_args['monitor'] = monitor.to_json()
         if performance_monitor:
             api_args['performance_monitor'] = performance_monitor.to_json()
-        if contact_nickname:
-            api_args['contact_nickname'] = contact_nickname
 
         # API expects a CSV string, not a list
         if isinstance(self.notify_events, list):
-            api_args['notify_events'] = ', '.join(self.notify_events)
+            api_args['notify_events'] = ', '.join(notify_events)
 
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
-        self._build(response['data'])
+        api_args = {api_args[k] for k in api_args if api_args[k] is not None}
+        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        self._build(resp['data'])
 
     def _build(self, data):
         """Build the neccesary substructures under this :class:`RTTM`"""
@@ -338,7 +352,7 @@ class RTTM(APIObject):
                 monitor = data.pop('monitor')
                 proto = monitor.pop('protocol', None)
                 inter = monitor.pop('interval', None)
-                self.monitor = Monitor(proto, inter, **monitor)
+                self.monitor = RTTMMonitor(proto, inter, **monitor)
         if 'performance_monitor' in data:
             if self.performance_monitor is not None:
                 self.performance_monitor.zone = self.zone
@@ -347,8 +361,8 @@ class RTTM(APIObject):
                 monitor = data.pop('performance_monitor')
                 proto = monitor.pop('protocol', None)
                 inter = monitor.pop('interval', None)
-                self.performance_monitor = PerformanceMonitor(proto, inter,
-                                                              **monitor)
+                self.performance_monitor = RTTMPerformanceMonitor(proto, inter,
+                                                                  **monitor)
         if 'notify_events' in data:
             self._notify_events = [item.strip() for item in
                                    data.pop('notify_events').split(',')]
@@ -394,14 +408,6 @@ class RTTM(APIObject):
                                                        'POST', api_args)
         return response['data']
 
-    def activate(self):
-        """Activate this RTTM Service"""
-        self._update(activate=True)
-
-    def deactivate(self):
-        """Deactivate this RTTM Service"""
-        self._update(deactivate=True)
-
     def recover(self, recoverip=None, address=None):
         """Recovers the RTTM service or a specific node IP within the service
         """
@@ -409,36 +415,8 @@ class RTTM(APIObject):
         if recoverip:
             api_args['recoverip'] = recoverip
             api_args['address'] = address
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def active(self):
-        """Returns whether or not this :class:`RTTM` Service is currently
-        active. When setting directly, rather than using activate/deactivate
-        valid arguments are 'Y' or True to activate, or 'N' or False to
-        deactivate. Note: If your service is already active and you try to
-        activate it, nothing will happen. And vice versa for deactivation.
-
-        :returns: An :class:`Active` object representing the current state of
-            this :class:`ReverseDNS` Service
-        """
-        return self._active
-    @active.setter
-    def active(self, value):
-        deactivate = ('N', False)
-        activate = ('Y', True)
-        if value in deactivate and self.active:
-            self.deactivate()
-        elif value in activate and not self.active:
-            self.activate()
+        resp = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(resp['data'])
 
     def __str__(self):
-        """str override"""
         return force_unicode('<RTTM>: {0}').format(self.fqdn)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

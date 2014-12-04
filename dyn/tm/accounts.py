@@ -233,13 +233,7 @@ class UpdateUser(APIObject):
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
     def __str__(self):
-        """Custom str method"""
-        return force_unicode('<UpdateUser>: {}').format(self.user_name)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
+        return force_unicode('<UpdateUser>: {0}').format(self.user_name)
 
 
 # noinspection PyAttributeOutsideInit,PyUnresolvedReferences
@@ -526,13 +520,7 @@ class User(APIObject):
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
     def __str__(self):
-        """Custom str method"""
-        return force_unicode('<User>: {}').format(self.user_name)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
+        return force_unicode('<User>: {0}').format(self.user_name)
 
 
 class PermissionsGroup(APIObject):
@@ -724,13 +712,7 @@ class PermissionsGroup(APIObject):
         self._subgroup.remove(name)
 
     def __str__(self):
-        """Custom str method"""
         return force_unicode('<PermissionsGroup>: {0}').format(self.group_name)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 # noinspection PyUnresolvedReferences,PyMissingConstructor
@@ -797,13 +779,7 @@ class Notifier(APIObject):
         self._build(response['data'])
 
     def __str__(self):
-        """Custom str method"""
         return force_unicode('<Notifier>: {0}').format(self.label)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
 
 
 class Contact(APIObject):
@@ -938,10 +914,4 @@ class Contact(APIObject):
         super(Contact, self)._update(**api_args)
 
     def __str__(self):
-        """Custom str method"""
         return force_unicode('<Contact>: {0}').format(self.nickname)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())

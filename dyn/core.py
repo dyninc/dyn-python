@@ -236,6 +236,18 @@ class APIObject(object):
         return {x: dict_obj[x] for x in dict_obj if x.startswith('_') and
                 not x.startswith('__')}
 
+    def __str__(self):
+        return force_unicode('<APIObject>')
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __unicode__(self):
+        return self.__str__()
+
+    def __bytes__(self):
+        return bytes(self.__str__())
+
 
 class APIService(APIObject):
     """:class:`APIObject` subclass with some additional info provided for

@@ -2239,7 +2239,7 @@ class TLSARecord(DNSRecord):
     @cert_usage.setter
     def cert_usage(self, value):
         self._cert_usage = value
-        self.api_args['rdata']['cert_usage,'] = self._cert_usage
+        self.api_args['rdata']['cert_usage'] = self._cert_usage
         self._update_record(self.api_args)
         
     @property
@@ -2252,7 +2252,7 @@ class TLSARecord(DNSRecord):
     @selector.setter
     def selector(self, value):
         self._selector = value
-        self.api_args['rdata']['selector,'] = self._selector
+        self.api_args['rdata']['selector'] = self._selector
         self._update_record(self.api_args)
 
     @property
@@ -2264,7 +2264,7 @@ class TLSARecord(DNSRecord):
     @match_type.setter
     def match_type(self, value):
         self._match_type = value
-        self.api_args['rdata']['match_type,'] = self._match_type
+        self.api_args['rdata']['match_type'] = self._match_type
         self._update_record(self.api_args)
         
     @property
@@ -2277,7 +2277,7 @@ class TLSARecord(DNSRecord):
     @certificate.setter
     def certificate(self, value):
         self._certificate = value
-        self.api_args['rdata']['certificate,'] = self._certificate
+        self.api_args['rdata']['certificate'] = self._certificate
         self._update_record(self.api_args)
  
 

@@ -13,7 +13,8 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
            'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord', 'DSRecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
-           'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TXTRecord']
+           'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TLSARecord',
+           'TXTRecord']
 
 
 class DNSRecord(object):
@@ -2193,9 +2194,12 @@ class TLSARecord(DNSRecord):
         else:
             super(TLSARecord, self).__init__(zone, fqdn)
             self._record_type = 'TLSARecord'
-            self._exchange = self._preference = None
+            self._cert_usage = self._selector = None
+            self._mathc_type = self._certificate = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
+            elif len(args) + len(kwargs) == 1:
+                self._get_record(*args, **kwargs)
             elif 'cert_usage' in kwargs or 'selector' in \
                     kwargs or 'match_type' in kwargs or \
                     'certificate' in kwargs or 'ttl' in kwargs:

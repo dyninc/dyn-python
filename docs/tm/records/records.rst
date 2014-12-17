@@ -132,6 +132,12 @@ SRVRecord
     :members:
     :undoc-members:
 
+TLSARecord
+=========
+.. autoclass:: dyn.tm.records.TLSARecord
+    :members:
+    :undoc-members:
+
 TXTRecord
 =========
 .. autoclass:: dyn.tm.records.TXTRecord

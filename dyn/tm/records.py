@@ -14,7 +14,8 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
            'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord', 'DSRecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
-           'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TXTRecord']
+           'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TXTRecord',
+           'RECORD_TYPES']
 
 
 # noinspection PyMissingConstructor
@@ -540,3 +541,13 @@ class TXTRecord(DNSRecord):
         guts = super(TXTRecord, self).rdata()
         shell = {'txt_rdata': guts}
         return shell
+
+RECORD_TYPES = {
+    'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord, 'CNAME': CNAMERecord,
+    'DHCID': DHCIDRecord, 'DNAME': DNAMERecord, 'DNSKEY': DNSKEYRecord,
+    'DS': DSRecord, 'KEY': KEYRecord, 'KX': KXRecord, 'LOC': LOCRecord,
+    'IPSECKEY': IPSECKEYRecord, 'MX': MXRecord, 'NAPTR': NAPTRRecord,
+    'PTR': PTRRecord, 'PX': PXRecord, 'NSAP': NSAPRecord, 'RP': RPRecord,
+    'NS': NSRecord, 'SOA': SOARecord, 'SPF': SPFRecord, 'SRV': SRVRecord,
+    'TXT': TXTRecord
+}

@@ -6,11 +6,7 @@ from datetime import datetime
 
 from .utils import unix_date
 from .errors import DynectCreateError, DynectGetError
-from .records import (ARecord, AAAARecord, CERTRecord, CNAMERecord,
-                      DHCIDRecord, DNAMERecord, DNSKEYRecord, DSRecord,
-                      KEYRecord, KXRecord, LOCRecord, IPSECKEYRecord, MXRecord,
-                      NAPTRRecord, PTRRecord, PXRecord, NSAPRecord, RPRecord,
-                      NSRecord, SOARecord, SPFRecord, SRVRecord, TXTRecord)
+from .records import RECORD_TYPES
 from .session import DynectSession
 from .services import (ActiveFailover, DynamicDNS, DNSSEC, TrafficDirector,
                        GSLB, ReverseDNS, RTTM)
@@ -20,14 +16,6 @@ from ..compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
-
-RECS = {'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord,
-        'CNAME': CNAMERecord, 'DHCID': DHCIDRecord, 'DNAME': DNAMERecord,
-        'DNSKEY': DNSKEYRecord, 'DS': DSRecord, 'KEY': KEYRecord,
-        'KX': KXRecord, 'LOC': LOCRecord, 'IPSECKEY': IPSECKEYRecord,
-        'MX': MXRecord, 'NAPTR': NAPTRRecord, 'PTR': PTRRecord, 'PX': PXRecord,
-        'NSAP': NSAPRecord, 'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord,
-        'SPF': SPFRecord, 'SRV': SRVRecord, 'TXT': TXTRecord}
 
 
 def get_all_zones():
@@ -62,7 +50,7 @@ def get_all_secondary_zones():
 
 # noinspection PyUnresolvedReferences
 class Zone(APIObject):
-    """A class representing a DynECT Zone"""
+    """A class representing a DynECT Primary Zone"""
     #: Primary Zone URI
     uri = '/Zone/{zone_name}/'
 
@@ -114,8 +102,7 @@ class Zone(APIObject):
             complete
         """
         self.uri = self.uri.format(zone_name=name)
-        self.records = {}
-        self.services = {}
+        self.records, self.services = dict(), dict()
         self._contact = self._ttl = None
         super(Zone, self).__init__(*args, **kwargs)
         self._fqdn = name if name.endswith('.') else '{0}.'.format(name)
@@ -206,8 +193,6 @@ class Zone(APIObject):
                 raise DynectCreateError(response['msgs'])
             elif response['data']['status'] in ok_labels:
                 self._get()
-            else:
-                pass  # Should never get here
 
     @property
     def __root_soa(self):
@@ -289,7 +274,7 @@ class Zone(APIObject):
         """
         fqdn = name + '.' + self.name + '.' if name else self.name + '.'
         # noinspection PyCallingNonCallable
-        rec = RECS[record_type](self.name, fqdn, *args, **kwargs)
+        rec = RECORD_TYPES[record_type](self.name, fqdn, *args, **kwargs)
         if record_type in self.records:
             self.records[record_type].append(rec)
         else:
@@ -364,7 +349,7 @@ class Zone(APIObject):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            constructor = RECORD_TYPES[search]
             list_records = []
             for record in record_list:
                 del record['zone']
@@ -397,7 +382,7 @@ class Zone(APIObject):
                  'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TXT': 'TXTRecord'}
-        constructor = RECS[record_type]
+        constructor = RECORD_TYPES[record_type]
         uri = '/{0}/{1}/{2}/'.format(names[record_type], self.name, self.fqdn)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -428,7 +413,7 @@ class Zone(APIObject):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            constructor = RECORD_TYPES[search]
             list_records = []
             for record in record_list:
                 del record['zone']
@@ -661,7 +646,7 @@ class Node(object):
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
         # noinspection PyCallingNonCallable
-        rec = RECS[record_type](self.zone, self.fqdn, *args, **kwargs)
+        rec = RECORD_TYPES[record_type](self.zone, self.fqdn, *args, **kwargs)
         if record_type in self.records:
             self.records[record_type].append(rec)
         else:
@@ -702,7 +687,7 @@ class Node(object):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            constructor = RECORD_TYPES[search]
             list_records = []
             for record in record_list:
                 del record['zone']
@@ -735,7 +720,7 @@ class Node(object):
                  'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TXT': 'TXTRecord'}
-        constructor = RECS[record_type]
+        constructor = RECORD_TYPES[record_type]
         uri = '/{0}/{1}/{2}/'.format(names[record_type], self.zone, self.fqdn)
         api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -763,7 +748,7 @@ class Node(object):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            constructor = RECORD_TYPES[search]
             list_records = []
             for record in record_list:
                 del record['zone']

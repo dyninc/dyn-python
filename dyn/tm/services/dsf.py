@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
-"""This module contains wrappers for interfacing with every element of a Traffic
-Director (DSF) service.
+"""This module contains wrappers for interfacing with every element of a
+Traffic Director (DSF) service.
 """
 from ..utils import APIList, Active
 from ..errors import DynectInvalidArgumentError
 from ..records import *
 from ..session import DynectSession
+from ...core import (APIObject, ImmutableAttribute, StringAttribute,
+                     IntegerAttribute, ValidatedAttribute, APIDescriptor,
+                     BooleanAttribute, ListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
-           'DSFAAAARecord', 'DSFCERTRecord', 'DSFCNAMERecord', 'DSFDHCIDRecord',
-           'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord', 'DSFKEYRecord',
-           'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord', 'DSFMXRecord',
-           'DSFNAPTRRecord', 'DSFPTRRecord', 'DSFPXRecord', 'DSFNSAPRecord',
-           'DSFRPRecord', 'DSFNSRecord', 'DSFSPFRecord', 'DSFSRVRecord',
-           'DSFTXTRecord', 'DSFRecordSet', 'DSFFailoverChain',
-           'DSFResponsePool', 'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor',
-           'TrafficDirector']
+           'DSFAAAARecord', 'DSFCERTRecord', 'DSFCNAMERecord',
+           'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord',
+           'DSFDSRecord', 'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord',
+           'DSFIPSECKEYRecord', 'DSFMXRecord', 'DSFNAPTRRecord',
+           'DSFPTRRecord', 'DSFPXRecord', 'DSFNSAPRecord', 'DSFRPRecord',
+           'DSFNSRecord', 'DSFSPFRecord', 'DSFSRVRecord', 'DSFTXTRecord',
+           'DSFRecordSet', 'DSFFailoverChain', 'DSFResponsePool', 'DSFRuleset',
+           'DSFMonitorEndpoint', 'DSFMonitor', 'TrafficDirector']
 
 
 def get_all_dsf_services():
@@ -42,8 +45,21 @@ def get_all_dsf_monitors():
     return mons
 
 
-class _DSFRecord(object):
-    """docstring for _DSFRecord"""
+class _DSFRecord(APIObject):
+    """Base type for all DSF Records"""
+    uri = ''
+    session_type = DynectSession
+    label = StringAttribute('label')
+    weight = IntegerAttribute('weight')
+    automation = ValidatedAttribute('automation',
+                                    validator=('auto', 'auto_down', 'manual'))
+    endpoints = APIDescriptor('endpoints')
+    endpoint_up_count = IntegerAttribute('endpoint_up_count')
+    eligible = BooleanAttribute('eligible')
+
+    dsf_id = ImmutableAttribute('dsf_id')
+    record_set_id = ImmutableAttribute('record_set_id')
+
     def __init__(self, label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
         """Create a :class:`_DSFRecord` object.
@@ -58,55 +74,39 @@ class _DSFRecord(object):
             Record status to be 'up'
         :param eligible: Indicates whether or not the Record can be served
         """
-        self.valid_automation = ('auto', 'auto_down', 'manual')
-        self._label = label
-        self._weight = weight
-        if automation not in self.valid_automation:
-            raise DynectInvalidArgumentError('automation', automation,
-                                             self.valid_automation)
-        self._automation = automation
-        self._endpoints = endpoints
-        self._endpoint_up_count = endpoint_up_count
-        self._eligible = eligible
-        self._dsf_id = self._record_set_id = self.uri = None
-        for key, val in kwargs.items():
-            setattr(self, '_' + key, val)
+        if 'api' not in kwargs:
+            kwargs['api'] = False
+        super(_DSFRecord, self).__init__(label, weight, automation, endpoints,
+                                         endpoint_up_count, eligible, **kwargs)
 
     def _post(self, dsf_id, record_set_id):
         """Create a new :class:`DSFRecord` on the DynECT System
 
         :param dsf_id: The unique system id for the DSF service associated with
             this :class:`DSFRecord`
-        :param record_set_id: The unique system id for the record set associated
-            with this :class:`DSFRecord`
+        :param record_set_id: The unique system id for the record set
+            associated with this :class:`DSFRecord`
         """
-        self._dsf_id = dsf_id
-        self._record_set_id = record_set_id
-        self.uri = '/DSFRecord/{}/{}/'.format(self._dsf_id, self._record_set_id)
+        self.uri = '/DSFRecord/{0}/{1}/'.format(dsf_id, record_set_id)
         api_args = {}
         for key, val in self.__dict__.items():
             if val is not None and not hasattr(val, '__call__') and \
                     key.startswith('_'):
                 if key != '_dsf_id' and key != '_record_set_id':
                     api_args[key[1:]] = val
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
-        self._build(response['data'])
+        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        self._build(resp['data'])
 
     def _get(self, dsf_id, record_set_id):
         """Get an existing :class:`DSFRecord` from the DynECT System
 
         :param dsf_id: The unique system id for the DSF service associated with
             this :class:`DSFRecord`
-        :param record_set_id: The unique system id for the record set associated
-            with this :class:`DSFRecord`
+        :param record_set_id: The unique system id for the record set
+            associated with this :class:`DSFRecord`
         """
-        self._dsf_id = dsf_id
-        self._record_set_id = record_set_id
-        self.uri = '/DSFRecord/{}/{}/'.format(self._dsf_id, self._record_set_id)
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
+        self.uri = '/DSFRecord/{0}/{1}/'.format(dsf_id, record_set_id)
+        response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
 
     def _build(self, data):
@@ -120,112 +120,14 @@ class _DSFRecord(object):
             else:
                 setattr(self, '_' + key, val)
 
-    @property
-    def dsf_id(self):
-        """The unique system id for the DSF service associated with this
-        :class:`DSFRecord`
-        """
-        return self._dsf_id
-    @dsf_id.setter
-    def dsf_id(self, value):
-        pass
-
-    @property
-    def record_set_id(self):
-        """The unique system id for the record set associated with this
-        :class:`DSFRecord`
-        """
-        return self._record_set_id
-    @record_set_id.setter
-    def record_set_id(self, value):
-        pass
-
-    @property
-    def label(self):
-        """A unique label for this :class:`DSFRecord`"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def weight(self):
-        """Weight for this :class:`DSFRecord`"""
-        return self._weight
-    @weight.setter
-    def weight(self, value):
-        self._weight = value
-        api_args = {'weight': self._weight}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def automation(self):
-        """Defines how eligible can be changed in response to monitoring. Must
-        be one of 'auto', 'auto_down', or 'manual'
-        """
-        return self._automation
-    @automation.setter
-    def automation(self, value):
-        self._automation = value
-        api_args = {'automation': self._automation}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def endpoints(self):
-        """Endpoints are used to determine status, torpidity, and eligible in
-        response to monitor data
-        """
-        return self._endpoints
-    @endpoints.setter
-    def endpoints(self, value):
-        self._endpoints = value
-        api_args = {'endpoints': self._endpoints}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def endpoint_up_count(self):
-        """Number of endpoints that must be up for the Record status to be 'up'
-        """
-        return self._endpoint_up_count
-    @endpoint_up_count.setter
-    def endpoint_up_count(self, value):
-        self._endpoint_up_count = value
-        api_args = {'endpoint_up_count': self._endpoint_up_count}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def eligible(self):
-        """Indicates whether or not the Record can be served"""
-        return self._eligible
-    @eligible.setter
-    def eligible(self, value):
-        self._eligible = value
-        api_args = {'eligible': self._eligible}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
     def to_json(self):
         """Convert this DSFRecord to a json blob"""
-        json = {'label': self._label, 'weight': self._weight,
-                'automation': self._automation, 'endpoints': self._endpoints,
-                'eligible': self._eligible,
-                'endpoint_up_count': self._endpoint_up_count}
+        json = {'label': self.label, 'weight': self.weight,
+                'automation': self.automation, 'endpoints': self.endpoints,
+                'eligible': self.eligible,
+                'endpoint_up_count': self.endpoint_up_count}
         json_blob = {x: json[x] for x in json if json[x] is not None}
-        if hasattr(self, '_record_type'):
-            # label = self._record_type.split('Record')[0].lower() + '_rdata'
+        if hasattr(self, '_record_type') and hasattr(self, 'rdata'):
             # We don't need to worry about rdata() throwing an error since if
             # we have a record type, then we know we're a subclass of a
             # DNSRecord
@@ -266,8 +168,7 @@ class DSFARecord(_DSFRecord, ARecord):
             Record status to be 'up'
         :param eligible: Indicates whether or not the Record can be served
         """
-        ARecord.__init__(self, None, None, address=address, ttl=ttl,
-                         create=False)
+        ARecord.__init__(self, None, None, address=address, ttl=ttl, api=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
 
@@ -332,8 +233,8 @@ class DSFCERTRecord(_DSFRecord, CERTRecord):
 
 
 class DSFCNAMERecord(_DSFRecord, CNAMERecord):
-    """An :class:`CNAMERecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`CNAMERecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
     def __init__(self, cname, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -359,8 +260,8 @@ class DSFCNAMERecord(_DSFRecord, CNAMERecord):
 
 
 class DSFDHCIDRecord(_DSFRecord, DHCIDRecord):
-    """An :class:`DHCIDRecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`DHCIDRecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
     def __init__(self, digest, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -386,8 +287,8 @@ class DSFDHCIDRecord(_DSFRecord, DHCIDRecord):
 
 
 class DSFDNAMERecord(_DSFRecord, DNAMERecord):
-    """An :class:`DNAMERecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`DNAMERecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
     def __init__(self, dname, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -592,8 +493,9 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
     for use by a :class:`TrafficDirector` service.
     """
     def __init__(self, precedence, gatetype, algorithm, gateway, public_key,
-                 ttl=0, label=None, weight=1, automation='auto', endpoints=None,
-                 endpoint_up_count=None, eligible=True, **kwargs):
+                 ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None, endpoint_up_count=None, eligible=True,
+                 **kwargs):
         """Create a :class:`DSFIPSECKEYRecord` object
 
         :param precedence: Indicates priority among multiple IPSECKEYS. Lower
@@ -618,8 +520,8 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
         """
         IPSECKEYRecord.__init__(self, None, None, precedence=precedence,
                                 gatetype=gatetype, algorithm=algorithm,
-                                gateway=gateway, public_key=public_key, ttl=ttl,
-                                create=False)
+                                gateway=gateway, public_key=public_key,
+                                ttl=ttl, create=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
 
@@ -700,9 +602,9 @@ class DSFPTRRecord(_DSFRecord, PTRRecord):
     """An :class:`PTRRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, ptrdname, ttl=0, label=None, weight=1, automation='auto',
-                 endpoints=None, endpoint_up_count=None, eligible=True,
-                 **kwargs):
+    def __init__(self, ptrdname, ttl=0, label=None, weight=1,
+                 automation='auto', endpoints=None, endpoint_up_count=None,
+                 eligible=True, **kwargs):
         """Create a :class:`DSFPTRRecord` object
 
         :param ptrdname: The hostname where the IP address should be directed
@@ -727,9 +629,9 @@ class DSFPXRecord(_DSFRecord, PXRecord):
     """An :class:`PXRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, preference, map822, mapx400, ttl=0, label=None, weight=1,
-                 automation='auto', endpoints=None, endpoint_up_count=None,
-                 eligible=True, **kwargs):
+    def __init__(self, preference, map822, mapx400, ttl=0, label=None,
+                 weight=1, automation='auto', endpoints=None,
+                 endpoint_up_count=None, eligible=True, **kwargs):
         """Create a :class:`DSFPXRecord` object
 
         :param preference: Sets priority for processing records of the same
@@ -748,7 +650,8 @@ class DSFPXRecord(_DSFRecord, PXRecord):
         :param eligible: Indicates whether or not the Record can be served
         """
         PXRecord.__init__(self, None, None, preference=preference,
-                          map822=map822, mapx400=mapx400, ttl=ttl, create=False)
+                          map822=map822, mapx400=mapx400, ttl=ttl,
+                          create=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
 
@@ -879,9 +782,9 @@ class DSFSRVRecord(_DSFRecord, SRVRecord):
             exist on the zone/node
         :param target: The domain name of a host where the service is running
             on the specified port
-        :param rr_weight: Secondary prioritizing of records to serve. Records of
-            equal priority should be served based on their weight. Higher values
-            are served more often
+        :param rr_weight: Secondary prioritizing of records to serve. Records
+            of equal priority should be served based on their weight. Higher
+            values are served more often
         :param ttl: TTL for this record
         :param label: A unique label for this :class:`DSFSRVRecord`
         :param weight: Weight for this :class:`DSFSRVRecord`
@@ -928,10 +831,24 @@ class DSFTXTRecord(_DSFRecord, TXTRecord):
                             endpoint_up_count, eligible, **kwargs)
 
 
-class DSFRecordSet(object):
+class DSFRecordSet(APIObject):
     """A Collection of DSFRecord Type objects belonging to a
     :class:`DSFFailoverChain`
     """
+    session_type = DynectSession
+    records = ListAttribute('records')
+    status = ImmutableAttribute('status')
+    label = StringAttribute('label')
+    rdata_class = StringAttribute('rdata_class')
+    ttl = IntegerAttribute('ttl')
+    automation = ValidatedAttribute('automation',
+                                    validator=('auto', 'auto_down', 'manual'))
+    serve_count = IntegerAttribute('serve_count')
+    fail_count = IntegerAttribute('fail_count')
+    trouble_count = IntegerAttribute('trouble_count')
+    eligible = BooleanAttribute('eligible')
+    dsf_monitor_id = ImmutableAttribute('dsf_monitor_id')
+
     def __init__(self, rdata_class, label=None, ttl=None, automation=None,
                  serve_count=None, fail_count=None, trouble_count=None,
                  eligible=None, dsf_monitor_id=None, records=None, **kwargs):
@@ -948,10 +865,10 @@ class DSFRecordSet(object):
             :class:`DSFRecordSet`
         :param fail_count: The number of Records that must not be okay before
             this :class:`DSFRecordSet` becomes ineligible.
-        :param trouble_count: The number of Records that must not be okay before
-            this :class:`DSFRecordSet` becomes in trouble.
-        :param eligible: Indicates whether or not this :class:`DSFRecordSet` can
-            be served.
+        :param trouble_count: The number of Records that must not be okay
+            before this :class:`DSFRecordSet` becomes in trouble.
+        :param eligible: Indicates whether or not this :class:`DSFRecordSet`
+            can be served.
         :param dsf_monitor_id: The unique system id of the DSF Monitor attached
             to this :class:`DSFRecordSet`
         :param records: A list of :class:`DSFRecord`'s within this
@@ -959,16 +876,15 @@ class DSFRecordSet(object):
         :param kwargs: Used for manipulating additional data to be speicified
             by the creation of other system objects.
         """
-        super(DSFRecordSet, self).__init__()
-        self._label = label
         self._rdata_class = rdata_class
-        self._ttl = ttl
-        self._automation = automation
-        self._serve_count = serve_count
-        self._fail_count = fail_count
-        self._trouble_count = trouble_count
-        self._eligible = eligible
-        self._dsf_monitor_id = dsf_monitor_id
+        super(DSFRecordSet, self).__init__(rdata_class, label=label, ttl=ttl,
+                                           automation=automation,
+                                           serve_count=serve_count,
+                                           fail_count=fail_count,
+                                           trouble_count=trouble_count,
+                                           eligible=eligible,
+                                           dsf_monitor_id=dsf_monitor_id,
+                                           records=records, **kwargs)
         if records is not None and len(records) > 0 and isinstance(records[0],
                                                                    dict):
             self._records = []
@@ -988,7 +904,7 @@ class DSFRecordSet(object):
                                 'srv': DSFSRVRecord, 'txt': DSFTXTRecord}
                 rec_type = record['rdata_class'].lower()
                 constructor = constructors[rec_type]
-                rdata_key = 'rdata_{}'.format(rec_type)
+                rdata_key = 'rdata_{0}'.format(rec_type)
                 kws = ('ttl', 'label', 'weight', 'automation', 'endpoints',
                        'endpoint_up_count', 'eligible', 'dsf_record_id',
                        'dsf_record_set_id', 'status', 'torpidity')
@@ -1007,9 +923,10 @@ class DSFRecordSet(object):
             if key != 'records':
                 setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._service_id is not None and self._dsf_record_set_id is not None:
-            self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
-                                                     self._dsf_record_set_id)
+        if self._service_id is not None \
+                and self._dsf_record_set_id is not None:
+            self.uri = '/DSFRecordSet/{0}/{1}/'.format(self._service_id,
+                                                       self._dsf_record_set_id)
 
     def _post(self, dsf_id):
         """Create a new :class:`DSFRecordSet` on the DynECT System
@@ -1018,7 +935,7 @@ class DSFRecordSet(object):
             :class:`DSFRecordSet` is attached to
         """
         self._service_id = dsf_id
-        uri = '/DSFRecordSet/{}/'.format(self._service_id)
+        uri = '/DSFRecordSet/{0}/'.format(self._service_id)
         api_args = {}
         for key, val in self.__dict__.items():
             if key == 'records':
@@ -1028,8 +945,8 @@ class DSFRecordSet(object):
                 api_args[key[1:]] = val
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
-        self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
-                                                 self._dsf_record_set_id)
+        self.uri = '/DSFRecordSet/{0}/{1}/'.format(self._service_id,
+                                                   self._dsf_record_set_id)
 
     def _get(self, dsf_id, dsf_record_set_id):
         """Get an existing :class:`DSFRecordSet` from the DynECT System
@@ -1041,11 +958,9 @@ class DSFRecordSet(object):
         """
         self._service_id = dsf_id
         self._dsf_record_set_id = dsf_record_set_id
-        self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
-                                                 self._dsf_record_set_id)
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
+        self.uri = '/DSFRecordSet/{0}/{1}/'.format(self._service_id,
+                                                   self._dsf_record_set_id)
+        response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
 
     def _build(self, data):
@@ -1054,197 +969,37 @@ class DSFRecordSet(object):
             if key != 'records':
                 setattr(self, '_' + key, val)
 
-    @property
-    def records(self):
-        """The list of DSFRecord types that are stored in this
-        :class:`DSFRecordSet`
-        """
-        return self._records
-    @records.setter
-    def records(self, value):
-        pass
-
-    @property
-    def status(self):
-        """The current status of this :class:`DSFRecordSet`"""
-        self._get(self._service_id, self._dsf_record_set_id)
-        return self._status
-    @status.setter
-    def status(self, value):
-        pass
-
-    @property
-    def label(self):
-        """A unique label for this :class:`DSFRecordSet`"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def rdata_class(self):
-        """The rdata property is a read-only attribute"""
-        return self._rdata_class
-    @rdata_class.setter
-    def rdata_class(self, value):
-        pass
-
-    @property
-    def ttl(self):
-        """Default TTL for :class:`DSFRecord`'s within this
-            :class:`DSFRecordSet`"""
-        return self._ttl
-    @ttl.setter
-    def ttl(self, value):
-        self._ttl = value
-        api_args = {'ttl': self._ttl}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def automation(self):
-        """Defines how eligible can be changed in response to monitoring"""
-        return self._automation
-    @automation.setter
-    def automation(self, value):
-        self._automation = value
-        api_args = {'automation': self._automation}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def serve_count(self):
-        """How many Records to serve out of this :class:`DSFRecordSet`"""
-        return self._serve_count
-    @serve_count.setter
-    def serve_count(self, value):
-        self._serve_count = value
-        api_args = {'serve_count': self._serve_count}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def fail_count(self):
-        """The number of Records that must not be okay before this
-        :class:`DSFRecordSet` becomes ineligible.
-        """
-        return self._fail_count
-    @fail_count.setter
-    def fail_count(self, value):
-        self._fail_count = value
-        api_args = {'fail_count': self._fail_count}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def trouble_count(self):
-        """The number of Records that must not be okay before this
-        :class:`DSFRecordSet` becomes in trouble.
-        """
-        return self._trouble_count
-    @trouble_count.setter
-    def trouble_count(self, value):
-        self._trouble_count = value
-        api_args = {'trouble_count': self._trouble_count}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def eligible(self):
-        """Indicates whether or not this :class:`DSFRecordSet` can be served."""
-        return self._eligible
-    @eligible.setter
-    def eligible(self, value):
-        self._eligible = value
-        api_args = {'eligible': self._eligible}
-        if self._master_line:
-            api_args['master_line'] = self._master_line
-        else:
-            api_args['rdata'] = self._rdata
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
-    @property
-    def dsf_monitor_id(self):
-        """The unique system id of the DSF Monitor attached to this
-        :class:`DSFRecordSet`
-        """
-        return self._dsf_monitor_id
-    @dsf_monitor_id.setter
-    def dsf_monitor_id(self, value):
-        self._dsf_monitor_id = value
-        api_args = {'dsf_monitor_id': self._dsf_monitor_id}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
-
     def to_json(self):
         """Convert this :class:`DSFRecordSet` to a JSON blob"""
-        json_blob = {'rdata_class': self._rdata_class}
-        if self._label:
-            json_blob['label'] = self._label
-        if self._ttl:
-            json_blob['ttl'] = self._ttl
-        if self._automation:
-            json_blob['automation'] = self._automation
-        if self._serve_count:
-            json_blob['serve_count'] = self._serve_count
-        if self._fail_count:
-            json_blob['fail_count'] = self._fail_count
-        if self._trouble_count:
-            json_blob['trouble_count'] = self._trouble_count
-        if self._eligible:
-            json_blob['eligible'] = self._eligible
-        if self._dsf_monitor_id:
-            json_blob['dsf_monitor_id'] = self._dsf_monitor_id
-        if self._records:
-            json_blob['records'] = [rec.to_json() for rec in self._records]
-        else:
-            json_blob['records'] = []
-        return json_blob
+        json_blob = {'rdata_class': self._rdata_class,
+                     'label': self.label, 'ttl': self.ttl,
+                     'automation': self.automation,
+                     'serve_count': self.serve_count,
+                     'fail_count': self.fail_count,
+                     'trouble_count': self.trouble_count,
+                     'eligible': self.eligible,
+                     'dsf_monitor_id': self.dsf_monitor_id,
+                     'records': [rec.to_json() for rec in self.records]}
+        return {json_blob[key] for key in json_blob if json_blob[key]}
 
     def delete(self):
         """Delete this :class:`DSFRecordSet` from the Dynect System"""
         api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
+    def __str__(self):
+        return '<DSFRecordSet ({0})>: {1}'.format(self.rdata_class, self.label)
 
-class DSFFailoverChain(object):
-    """docstring for DSFFailoverChain"""
+
+class DSFFailoverChain(APIObject):
+    uri = '/DSFRecordSetFailoverChain/{0}/{1}/'
+    session_type = DynectSession
+    label = StringAttribute('label')
+    core = BooleanAttribute('core')
+    record_sets = ListAttribute('record_sets')
+    dsf_response_pool_id = ImmutableAttribute('dsf_response_pool_id')
+    dsf_id = ImmutableAttribute('dsf_id')
+
     def __init__(self, label=None, core=None, record_sets=None, **kwargs):
         """Create a :class:`DSFFailoverChain` object
 
@@ -1254,7 +1009,6 @@ class DSFFailoverChain(object):
         :param record_sets: A list of :class:`DSFRecordSet`'s for this
             :class:`DSFFailoverChain`
         """
-        super(DSFFailoverChain, self).__init__()
         self._label = label
         self._core = core
         if isinstance(record_sets, list) and len(record_sets) > 0 and \
@@ -1263,20 +1017,13 @@ class DSFFailoverChain(object):
             self._record_sets = []
             # Create new record set objects
             for record_set in record_sets:
-                if 'service_id' in record_set and \
-                                record_set['service_id'] == '':
+                if 'service_id' in record_set \
+                        and record_set['service_id'] == '':
                     record_set['service_id'] = kwargs['service_id']
-                self._record_sets.append(DSFRecordSet(**record_set))
+                self._record_sets.append(DSFRecordSet(api=False, **record_set))
         else:
             self._record_sets = record_sets
-        self._dsf_id = self._dsf_response_pool_id = self.uri = None
-        for key, val in kwargs.items():
-            setattr(self, '_' + key, val)
-        # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._dsf_id is not None and self._dsf_response_pool_id is not None:
-            r_pid = self._dsf_response_pool_id
-            self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
-                                                                  r_pid)
+        super(DSFFailoverChain, self).__init__(**kwargs)
 
     def _post(self, dsf_id, dsf_response_pool_id):
         """Create a new :class:`DSFFailoverChain` on the Dynect System
@@ -1288,8 +1035,7 @@ class DSFFailoverChain(object):
         """
         self._dsf_id = dsf_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
-                                                              self._dsf_response_pool_id)
+        self.uri = self.uri.format(self.dsf_id, self.dsf_response_pool_id)
         api_args = {'publish': 'Y'}
         if self._label:
             api_args['label'] = self._label
@@ -1297,11 +1043,8 @@ class DSFFailoverChain(object):
             api_args['core'] = self._core
         if self._record_sets:
             api_args['record_sets'] = self._record_sets.to_json()
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        self._build(resp['data'])
 
     def _get(self, dsf_id, dsf_response_pool_id):
         """Retrieve an existing :class:`DSFFailoverChain` from the Dynect System
@@ -1313,64 +1056,24 @@ class DSFFailoverChain(object):
         """
         self._dsf_id = dsf_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
-                                                              self._dsf_response_pool_id)
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self.uri = self.uri.format(self.dsf_id, self.dsf_response_pool_id)
+        super(DSFFailoverChain, self)._get()
 
-    @property
-    def label(self):
-        """A unique label for this :class:`DSFFailoverChain`"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def core(self):
-        """Indicates whether or not the contained :class:`DSFRecordSet`'s are
-        core record sets.
-        """
-        return self._core
-    @core.setter
-    def core(self, value):
-        self._core = value
-        api_args = {'core': self._core}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def record_sets(self):
-        """A list of hashes to create a new :class:`DSFRecordSet` or
-        specify/update an existing :class:`DSFRecordSet`
-        """
-        return self._record_sets
-    @record_sets.setter
-    def record_sets(self, value):
-        pass
+    def _build(self, data):
+        if 'record_sets' in data:
+            data.pop('record_sets')
+        super(DSFFailoverChain, self)._build(data)
 
     def to_json(self):
-        """Convert this :class:`DSFFailoverChain` to a JSON blob"""
+        """Convert this :class:`DSFFailoverChain` to JSON"""
         json_blob = {}
         if self._label:
             json_blob['label'] = self._label
         if self._core:
             json_blob['core'] = self._core
         if self.record_sets:
-            json_blob['record_sets'] = [rs.to_json() for rs in self.record_sets]
+            json_blob['record_sets'] = [rs.to_json() for rs in
+                                        self.record_sets]
         return json_blob
 
     def delete(self):
@@ -1378,10 +1081,25 @@ class DSFFailoverChain(object):
         api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
+    def __str__(self):
+        return '<DSFFailoverChain>: {0}'.format(self.label)
 
-class DSFResponsePool(object):
-    """docstring for DSFResponsePool"""
-    def __init__(self, label, core_set_count=1, eligible=True,
+
+class DSFResponsePool(APIObject):
+    uri = '/DSFResponsePool/{0}/{1}/'
+    session_type = DynectSession
+    _get_length = 1
+    label = StringAttribute('label')
+    core_set_count = IntegerAttribute('core_set_count')
+    eligible = BooleanAttribute('eligible')
+    automation = StringAttribute('automation')
+    dsf_ruleset_id = ImmutableAttribute('dsf_ruleset_id')
+    dsf_response_pool_id = ImmutableAttribute('dsf_response_pool_id')
+    index = IntegerAttribute('index')
+    rs_chains = ImmutableAttribute('rs_chains')
+    dsf_id = ImmutableAttribute('dsf_id')
+
+    def __init__(self, label, dsf_id, core_set_count=1, eligible=True,
                  automation='auto', dsf_ruleset_id=None, index=None,
                  rs_chains=None, **kwargs):
         """Create a :class:`DSFResponsePool` object
@@ -1400,168 +1118,63 @@ class DSFResponsePool(object):
         :param rs_chains: A list of :class:`DSFFailoverChain` that are defined
             for this :class:`DSFResponsePool`
         """
-        super(DSFResponsePool, self).__init__()
-        self._label = label
-        self._core_set_count = core_set_count
-        self._eligible = eligible
-        self._automation = automation
-        self._dsf_ruleset_id = dsf_ruleset_id
-        self._index = index
+        self._label, self._dsf_id = label, dsf_id
+
         if isinstance(rs_chains, list) and len(rs_chains) > 0 and \
                 isinstance(rs_chains[0], dict):
             # Clear Failover Chains
             self._rs_chains = []
             # Create a new FO Chain for each entry returned from API
             for chain in rs_chains:
-                self._rs_chains.append(DSFFailoverChain(**chain))
+                self._rs_chains.append(DSFFailoverChain(api=False, **chain))
         else:
             self._rs_chains = rs_chains
-        self._dsf_id = self._dsf_response_pool_id = self.uri = None
-        for key, val in kwargs.items():
-            setattr(self, '_' + key, val)
-        # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._dsf_id is not None and self._dsf_response_pool_id is not None:
-            r_pid = self._dsf_response_pool_id
-            self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
-                                                        r_pid)
 
-    def _post(self, dsf_id):
-        """Create a new :class:`DSFResponsePool` on the DynECT System
+        super(DSFResponsePool, self).__init__(core_set_count=core_set_count,
+                                              eligible=eligible,
+                                              automation=automation,
+                                              dsf_ruleset_id=dsf_ruleset_id,
+                                              index=index, **kwargs)
 
-        :param dsf_id: the id of the DSF service this :class:`DSFResponsePool`
-            is attached to
-        """
-        self._dsf_id = dsf_id
-        uri = '/DSFResponsePool/{}/'.format(self._dsf_id)
+    def _post(self):
+        """Create a new :class:`DSFResponsePool` on the DynECT System"""
         api_args = {'publish': 'Y', 'label': self._label,
-                    'core_set_count': self._core_set_count,
-                    'eligible': self._eligible, 'automation': self._automation}
-        if self._dsf_ruleset_id:
-            api_args['dsf_ruleset_id'] = self._dsf_ruleset_id
-        if self._index:
-            api_args['index'] = self._index
+                    'core_set_count': self.core_set_count,
+                    'eligible': self.eligible, 'automation': self.automation}
+        if self.dsf_ruleset_id:
+            api_args['dsf_ruleset_id'] = self.dsf_ruleset_id
+        if self.index:
+            api_args['index'] = self.index
         if self._rs_chains:
             api_args['rs_chains'] = self._rs_chains
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
-                setattr(self, '_' + key, val)
-        self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
-                                                    self._dsf_response_pool_id)
+        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        self._build(resp['data'])
 
-    def _get(self, dsf_id, dsf_response_pool_id):
+    def _get(self, dsf_response_pool_id):
         """Get an existing :class:`DSFResponsePool` from the DynECT System
 
-        :param dsf_id: the id of the DSF service this :class:`DSFResponsePool`
-            is attached to
         :param dsf_response_pool_id: the id of this :class:`DSFResponsePool`
         """
-        self._dsf_id = dsf_id
-        self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
-                                                    self._dsf_response_pool_id)
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
-                setattr(self, '_' + key, val)
+        self.uri = self.uri.format(self.dsf_id, dsf_response_pool_id)
+        response = DynectSession.get_session().execute(self.uri, 'GET')
+        self._build(response['data'])
 
-    @property
-    def label(self):
-        """A unique label for this :class:`DSFResponsePool`"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def core_set_count(self):
-        """If fewer than this number of core record sets are eligible, status
-        will be set to fail
-        """
-        return self._core_set_count
-    @core_set_count.setter
-    def core_set_count(self, value):
-        self._core_set_count = value
-        api_args = {'core_set_count': self._core_set_count}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def eligible(self):
-        """Indicates whether or not the :class:`DSFResponsePool` can be served
-        """
-        return self._eligible
-    @eligible.setter
-    def eligible(self, value):
-        self._eligible = value
-        api_args = {'eligible': self._eligible}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def automation(self):
-        """Defines how eligible can be changed in response to monitoring"""
-        return self._automation
-    @automation.setter
-    def automation(self, value):
-        self._automation = value
-        api_args = {'automation': self._automation}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def dsf_ruleset_id(self):
-        """Unique system id of the Ruleset this :class:`DSFResponsePool` is
-        attached to
-        """
-        return self._dsf_ruleset_id
-    @dsf_ruleset_id.setter
-    def dsf_ruleset_id(self, value):
-        self._dsf_ruleset_id = value
-        api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def rs_chains(self):
-        """A list of :class:`DSFFailoverChain` that are defined for this
-        :class:`DSFResponsePool`
-        """
-        return self._rs_chains
-    @rs_chains.setter
-    def rs_chains(self, value):
-        pass
+    def _build(self, data):
+        if 'rs_chains' in data:
+            data.pop('rs_chains')
+        super(DSFResponsePool, self)._build(data)
+        self.uri = self.uri.format(self.dsf_id, self.dsf_response_pool_id)
 
     def to_json(self):
         """Convert this :class:`DSFResponsePool` to a JSON blob"""
         rs_json = [rs.to_json() for rs in self._rs_chains]
-        json_blob = {'label': self._label, 'eligible': self._eligible,
-                     'core_set_count': self._core_set_count,
-                     'automation': self._automation, 'rs_chains': rs_json}
-        if self._index:
-            json_blob['index'] = self._index
-        if self._dsf_ruleset_id:
-            json_blob['dsf_ruleset_id'] = self._dsf_ruleset_id
+        json_blob = {'label': self.label, 'eligible': self.eligible,
+                     'core_set_count': self.core_set_count,
+                     'automation': self.automation, 'rs_chains': rs_json}
+        if self.index:
+            json_blob['index'] = self.index
+        if self.dsf_ruleset_id:
+            json_blob['dsf_ruleset_id'] = self.dsf_ruleset_id
         return json_blob
 
     def delete(self):
@@ -1569,9 +1182,18 @@ class DSFResponsePool(object):
         api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
+    def __str__(self):
+        return '<DSFResponsePool>: {0}'.format(self.dsf_response_pool_id)
 
-class DSFRuleset(object):
-    """docstring for DSFRuleset"""
+
+class DSFRuleset(APIObject):
+    session_type = DynectSession
+    label = StringAttribute('label')
+    criteria_type = ValidatedAttribute('criteria_type',
+                                       validator=('always', 'geoip'))
+    criteria = ListAttribute('criteria')
+    response_pools = ImmutableAttribute('response_pools')
+
     def __init__(self, label, criteria_type, response_pools, criteria=None,
                  **kwargs):
         """Create a :class:`DSFRuleset` object
@@ -1583,28 +1205,19 @@ class DSFRuleset(object):
         :param response_pools: A list of :class:`DSFResponsePool`'s for this
             :class:`DSFRuleset`
         """
-        super(DSFRuleset, self).__init__()
-        self.valid_criteria_types = ('always', 'geoip')
-        self.valid_criteria = {'always': (),
-                               'geoip': ()}
-        self._label = label
-        self._criteria_type = criteria_type
+        self._label, self._criteria_type = label, criteria_type
         self._criteria = criteria
         if isinstance(response_pools, list) and len(response_pools) > 0 and \
                 isinstance(response_pools[0], dict):
             self._response_pools = []
             for pool in response_pools:
                 pool = {x: pool[x] for x in pool if x != 'rulesets'}
-                self._response_pools.append(DSFResponsePool(**pool))
+                self._response_pools.append(DSFResponsePool(api=False, **pool))
+            kwargs['api'] = False
         else:
             self._response_pools = response_pools
         self._service_id = self._dsf_ruleset_id = self.uri = None
-        for key, val in kwargs.items():
-            setattr(self, '_' + key, val)
-        # If dsf_id and dsf_ruleset_id were specified in kwargs
-        if self._service_id is not None and self._dsf_ruleset_id is not None:
-            self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
-                                                   self._dsf_ruleset_id)
+        super(DSFRuleset, self).__init__(**kwargs)
 
     def _post(self, dsf_id):
         """Create a new :class:`DSFRuleset` on the DynECT System
@@ -1613,16 +1226,14 @@ class DSFRuleset(object):
             attached to
         """
         self._service_id = dsf_id
-        uri = '/DSFRuleset/{}/'.format(self._service_id)
+        uri = '/DSFRuleset/{0}/'.format(self._service_id)
         api_args = {'publish': 'Y', 'label': self._label,
                     'criteria_type': self._criteria_type,
                     'criteria': self._criteria}
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
-                setattr(self, '_' + key, val)
-        self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
-                                               self._dsf_ruleset_id)
+        self._build(response['data'])
+        self.uri = '/DSFRuleset/{0}/{1}/'.format(self._service_id,
+                                                 self._dsf_ruleset_id)
 
     def _get(self, dsf_id, dsf_ruleset_id):
         """Get an existing :class:`DSFRuleset` from the DynECT System
@@ -1631,76 +1242,20 @@ class DSFRuleset(object):
             attached to
         :param dsf_ruleset_id: The unique system id of this :class:`DSFRuleset`
         """
-        self._service_id = dsf_id
-        self._dsf_ruleset_id = dsf_ruleset_id
-        self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
-                                               self._dsf_ruleset_id)
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
-                setattr(self, '_' + key, val)
+        self.uri = '/DSFRuleset/{0}/{1}/'.format(dsf_id, dsf_ruleset_id)
+        super(DSFRuleset, self)._get()
 
-    @property
-    def label(self):
-        """A unique label for this :class:`DSFRuleset`"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+    def _build(self, data):
+        """Pop out unused rs_chains data"""
+        if 'rs_chains' in data:
+            data.pop('rs_chains')
+        super(DSFRuleset, self)._build(data)
 
-    @property
-    def criteria_type(self):
-        """A set of rules describing what traffic is applied to the
-        :class:`DSFRuleset`
-        """
-        return self._criteria_type
-    @criteria_type.setter
-    def criteria_type(self, value):
-        self._criteria_type = value
-        api_args = {'criteria_type': self._criteria_type}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def criteria(self):
-        """The criteria rules, will be varied depending on the specified
-        criteria_type
-        """
-        return self._criteria
-    @criteria.setter
-    def criteria(self, value):
-        self._criteria = value
-        api_args = {'criteria': self._criteria}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
-
-    @property
-    def response_pools(self):
-        """A list of :class:`DSFResponsePool`'s for this :class:`DSFRuleset`"""
-        return self._response_pools
-    @response_pools.setter
-    def response_pools(self, value):
-        pass
-
-    @property
-    def _json(self):
+    def to_json(self):
         """JSON-ified version of this DSFRuleset Object"""
         pool_json = [pool.to_json() for pool in self._response_pools]
-        json_blob = {'label': self._label, 'criteria_type': self._criteria_type,
+        json_blob = {'label': self._label,
+                     'criteria_type': self._criteria_type,
                      'criteria': self._criteria,
                      'response_pools': pool_json}
         return json_blob
@@ -1712,6 +1267,9 @@ class DSFRuleset(object):
         api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
+    def __str__(self):
+        return '<DSFRuleset>: {0}'.format(self.label)
+
 
 class DSFMonitorEndpoint(object):
     """An Endpoint object to be passed to a :class:`DSFMonitor`"""
@@ -1720,8 +1278,9 @@ class DSFMonitorEndpoint(object):
 
         :param address: The address to monitor.
         :param label: A label to identify this :class:`DSFMonitorEndpoint`.
-        :param active: Indicates whether or not this :class:`DSFMonitorEndpoint`
-            endpoint is active. Must be one of True, False, 'Y', or 'N'
+        :param active: Indicates whether or not this
+            :class:`DSFMonitorEndpoint` endpoint is active. Must be one of
+            True, False, 'Y', or 'N'
         :param site_prefs: A ``list`` of site codes from which this
             :class:`DSFMonitorEndpoint` will be monitored
         """
@@ -1743,12 +1302,11 @@ class DSFMonitorEndpoint(object):
                 if id(endpoint) == id(self):
                     args_list.append(api_args)
                 else:
-                    args_list.append(endpoint._json)
+                    args_list.append(endpoint.to_json())
             api_args = {'endpoints': args_list}
             self._monitor._update(api_args)
 
-    @property
-    def _json(self):
+    def to_json(self):
         """Get the JSON representation of this :class:`DSFMonitorEndpoint`
         object
         """
@@ -1772,7 +1330,7 @@ class DSFMonitorEndpoint(object):
         valid_input = ('Y', 'N', True, False)
         if value not in valid_input:
             raise DynectInvalidArgumentError('active', value, valid_input)
-        api_args = self._json
+        api_args = self.to_json()
         api_args['active'] = value
         self._update(api_args)
 
@@ -1781,7 +1339,7 @@ class DSFMonitorEndpoint(object):
         return self._label
     @label.setter
     def label(self, value):
-        api_args = self._json
+        api_args = self.to_json()
         api_args['label'] = value
         self._update(api_args)
 
@@ -1790,7 +1348,7 @@ class DSFMonitorEndpoint(object):
         return self._address
     @address.setter
     def address(self, value):
-        api_args = self._json
+        api_args = self.to_json()
         api_args['address'] = value
         self._update(api_args)
 
@@ -1799,105 +1357,60 @@ class DSFMonitorEndpoint(object):
         return self._site_prefs
     @site_prefs.setter
     def site_prefs(self, value):
-        api_args = self._json
+        api_args = self.to_json()
         api_args['site_prefs'] = value
         self._update(api_args)
 
 
-class DSFMonitor(object):
+class DSFMonitor(APIObject):
     """A Monitor for a :class:`TrafficDirector` Service"""
-    def __init__(self, *args, **kwargs):
-        """Create a new :class:`DSFMonitor` object
-
-        :param label: A unique label to identify this :class:`DSFMonitor`
-        :param protocol: The protocol to monitor. Must be one of 'HTTP',
-            'HTTPS', 'PING', 'SMTP', or 'TCP'
-        :param response_count: The number of responses to determine whether or
-            not the endpoint is 'up' or 'down'
-        :param probe_interval: How often to run this :class:`DSFMonitor`
-        :param retries: How many retries this :class:`DSFMonitor` should attempt
-            on failure before giving up.
-        :param active: Indicates if this :class:`DSFMonitor` is active
-        :param options: Additional options pertaining to this
-            :class:`DSFMonitor`
-        :param endpoints: A List of :class:`DSFMonitorEndpoint`'s that are
-            associated with this :class:`DSFMonitor`
-        """
-        super(DSFMonitor, self).__init__()
-        self.uri = None
-        self._monitor_id = None
-        self._label = self._protocol = self._response_count = None
-        self._probe_interval = self._retries = self._active = None
-        self._options = self._dsf_monitor_id = self._timeout = self._port = None
-        self._path = self._host = self._header = self._expected = None
-        self._endpoints = []
-        if 'api' in kwargs:
-            del kwargs['api']
-            for key, val in kwargs.items():
-                setattr(self, '_' + key, val)
-            self.uri = '/DSFMonitor/{}/'.format(self._dsf_monitor_id)
-        elif len(args) + len(kwargs) == 1:
-            self._get(*args, **kwargs)
-        else:
-            self._post(*args, **kwargs)
+    uri = ''
+    session_type = DynectSession
+    _get_length = 1
+    dsf_monitor_id = ImmutableAttribute('dsf_monitor_id')
+    label = StringAttribute('label')
+    protocol = ValidatedAttribute('protocol',
+                                  validator=('HTTP', 'HTTPS', 'PING', 'SMTP',
+                                             'TCP'))
+    response_count = IntegerAttribute('response_count')
+    probe_interval = IntegerAttribute('probe_interval')
+    retries = IntegerAttribute('retries')
+    active = StringAttribute('active')
+    options = APIDescriptor('options')
+    endpoints = ListAttribute('endpoints')
 
     def _get(self, monitor_id):
         """Get an existing :class:`DSFMonitor` from the DynECT System"""
-        self._monitor_id = monitor_id
-        self.uri = '/DSFMonitor/{}/'.format(self._monitor_id)
-        api_args = {}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        self._build(response['data'])
+        self.uri = '/DSFMonitor/{0}/'.format(monitor_id)
+        super(DSFMonitor, self)._get()
 
     def _post(self, label, protocol, response_count, probe_interval, retries,
               active='Y', timeout=None, port=None, path=None, host=None,
               header=None, expected=None, endpoints=None):
         """Create a new :class:`DSFMonitor` on the DynECT System"""
         uri = '/DSFMonitor/'
-        self._label = label
-        self._protocol = protocol
-        self._response_count = response_count
-        self._probe_interval = probe_interval
-        self._retries = retries
         self._active = Active(active)
         self._options = {}
         if timeout:
-            self._timeout = timeout
             self._options['timeout'] = timeout
         if port:
-            self._port = port
             self._options['port'] = port
         if path:
-            self._path = path
             self._options['path'] = path
         if host:
-            self._host = host
             self._options['host'] = host
         if header:
-            self._header = header
             self._options['header'] = header
         if expected:
-            self._expected = expected
             self._options['expected'] = expected
-        self._endpoints = endpoints
-        api_args = {'label': self._label,
-                    'protocol': self._protocol,
-                    'response_count': self._response_count,
-                    'probe_interval': self._probe_interval,
-                    'retries': self._retries,
-                    'active': str(self._active),
+        api_args = {'label': label, 'protocol': protocol,
+                    'response_count': response_count,
+                    'probe_interval': probe_interval,
+                    'retries': retries, 'active': str(self._active),
                     'options': self._options}
         if self._endpoints is not None:
-            api_args['endpoints'] = [x._json for x in self._endpoints]
+            api_args['endpoints'] = [x.to_json() for x in self._endpoints]
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        self._build(response['data'])
-        self.uri = '/DSFMonitor/{}/'.format(self._dsf_monitor_id)
-
-    def _update(self, api_args):
-        """Private Update method"""
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -1905,129 +1418,47 @@ class DSFMonitor(object):
 
         :param data: The ``['data']`` field from an API JSON response
         """
-        for key, val in data.items():
-            if key == 'endpoints':
-                self._endpoints = []
-                for endpoint in val:
-                    ep = DSFMonitorEndpoint(**endpoint)
-                    ep._monitor = self
-                    self._endpoints.append(ep)
-            elif key == 'options':
-                for opt_key, opt_val in val.items():
-                    setattr(self, '_' + opt_key, opt_val)
-            elif key == 'active':
-                self._active = Active(val)
-            else:
-                setattr(self, '_' + key, val)
+        if 'endpoints' in data:
+            endpoints = data.pop('endpoints')
+            self._endpoints = []
+            for endpoint in endpoints:
+                ep = DSFMonitorEndpoint(**endpoint)
+                ep._monitor = self
+                self._endpoints.append(ep)
+        if 'options' in data:
+            options = data.pop('options')
+            for key, val in options.items():
+                data[key] = val
+        if 'active' in data:
+            self._active = Active(data.pop('active'))
+        super(DSFMonitor, self)._build(data)
+        self.uri = '/DSFMonitor/{0}/'.format(self.dsf_monitor_id)
 
-    @property
-    def dsf_monitor_id(self):
-        """The unique system id of this :class:`DSFMonitor`"""
-        return self._dsf_monitor_id
-    @dsf_monitor_id.setter
-    def dsf_monitor_id(self, value):
-        pass
-
-    @property
-    def label(self):
-        """A unique label to identify this :class:`DSFMonitor`"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        self._update(api_args)
-
-    @property
-    def protocol(self):
-        """The protocol to monitor. Must be one of 'HTTP', 'HTTPS', 'PING',
-        'SMTP', or 'TCP'
-        """
-        return self._protocol
-    @protocol.setter
-    def protocol(self, value):
-        self._protocol = value
-        api_args = {'protocol': self._protocol}
-        self._update(api_args)
-
-    @property
-    def response_count(self):
-        """The number of responses to determine whether or not the endpoint is
-        'up' or 'down'
-        """
-        return self._response_count
-    @response_count.setter
-    def response_count(self, value):
-        self._response_count = value
-        api_args = {'response_count': self._response_count}
-        self._update(api_args)
-
-    @property
-    def probe_interval(self):
-        """How often to run this :class:`DSFMonitor`"""
-        return self._probe_interval
-    @probe_interval.setter
-    def probe_interval(self, value):
-        self._probe_interval = value
-        api_args = {'probe_interval': self._probe_interval}
-        self._update(api_args)
-
-    @property
-    def retries(self):
-        """How many retries this :class:`DSFMonitor` should attempt on failure
-        before giving up.
-        """
-        return self._retries
-    @retries.setter
-    def retries(self, value):
-        self._retries = value
-        api_args = {'retries': self._retries}
-        self._update(api_args)
-
-    @property
-    def active(self):
-        """Returns whether or not this :class:`DSFMonitor` is active. Will
-        return either 'Y' or 'N'
-        """
-        return self._active
-    @active.setter
-    def active(self, value):
-        self._active = value
-        api_args = {'active': self._active}
-        self._update(api_args)
-
-    @property
-    def endpoints(self):
-        """A list of the endpoints (and their statuses) that this
-        :class:`DSFMonitor` is currently monitoring.
-        """
-        self._get(self.dsf_monitor_id)
-        return self._endpoints
-    @endpoints.setter
-    def endpoints(self, value):
-        pass
-
-    @property
-    def options(self):
-        """Additional options pertaining to this :class:`DSFMonitor`"""
-        return self._options
-    @options.setter
-    def options(self, value):
-        self._options = value
-        api_args = {'options': self._options}
-        self._update(api_args)
-
-    def delete(self):
-        """Delete an existing :class:`DSFMonitor` from the DynECT System"""
-        api_args = {}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+    def __str__(self):
+        return '<DSFMonitor>: {0}'.format(self.dsf_monitor_id)
 
 
-class TrafficDirector(object):
+class TrafficDirector(APIObject):
     """Traffic Director is a DNS based traffic routing and load balancing
     service that is Geolocation aware and can support failover by monitoring
     endpoints.
+
+from dyn.tm.session import DynectSession
+from dyn.tm.services.dsf import TrafficDirector, get_all_dsf_services
+Lab_DTE = {'host': 'api2.dte.plab.mht.dyndns.com', 'customer': 'DynDTE',
+           'username': 'dte-apitest', 'password': 'dyndns01', 'port': 8002}
+s = DynectSession(**Lab_DTE)
+# services = get_all_dsf_services()
+ethan = TrafficDirector('-inl6Rq8c8KCc2FbgLVEFO4sTGc')
     """
+    uri = '/DSF/'
+    session_type = DynectSession
+    _get_length = 1
+    service_id = ImmutableAttribute('service_id')
+    label = StringAttribute('label')
+    ttl = IntegerAttribute('ttl')
+    rulesets = ListAttribute('rulesets')
+
     def __init__(self, *args, **kwargs):
         """Create a :class:`TrafficDirector` object
 
@@ -2041,117 +1472,86 @@ class TrafficDirector(object):
         :param rulesets: A list of :class:`DSFRulesets` that are defined for
             this :class:`TrafficDirector` service
         """
-        super(TrafficDirector, self).__init__()
-        self._label = self._ttl = self._publish = self._response_pools = None
-        self._record_sets = self.uri = self._service_id = None
         self._notifiers = APIList(DynectSession.get_session, 'notifiers')
         self._nodes = APIList(DynectSession.get_session, 'nodes')
         self._rulesets = APIList(DynectSession.get_session, 'rulesets')
-        if 'api' in kwargs:
-            del kwargs['api']
-            self._build(kwargs)
-        elif len(args) + len(kwargs) == 1:
-            self._get(*args, **kwargs)
-        else:
-            self._post(*args, **kwargs)
-        self.uri = '/DSF/{}/'.format(self._service_id)
         self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+        super(TrafficDirector, self).__init__(*args, **kwargs)
 
     def _post(self, label, ttl=None, publish='Y', nodes=None, notifiers=None,
               rulesets=None):
         """Create a new :class:`TrafficDirector` on the DynECT System"""
         uri = '/DSF/'
-        self._label = label
-        self._ttl = ttl
-        self._nodes = nodes
-        self._notifiers = notifiers
-        self._rulesets = rulesets
-        api_args = {'label': self._label,
-                    'publish': publish}
+        api_args = {'label': label, 'publish': publish}
         if ttl:
-            api_args['ttl'] = self._ttl
+            api_args['ttl'] = ttl
         if nodes:
-            api_args['nodes'] = self._nodes
+            api_args['nodes'] = nodes
         if notifiers:
             if isinstance(notifiers[0], dict):
                 api_args['notifiers'] = notifiers
             else:  # notifiers is a list of Notifier objects
-                api_args['notifiers'] = [{'notifier_id': x.notifier_id} for x
-                                          in self._notifiers]
+                api_args['notifiers'] = [{'notifier_id': n.notifier_id} for n
+                                         in notifiers]
         if rulesets:
-            api_args['rulesets'] = [rule._json for rule in self._rulesets]
+            api_args['rulesets'] = [rule.to_json() for rule in rulesets]
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        self.uri = '/DSF/{}/'.format(response['data']['service_id'])
+        self.uri = '/DSF/{0}/'.format(response['data']['service_id'])
         self._build(response['data'])
 
     def _build(self, data):
-        for key, val in data.items():
-            if key == 'notifiers':
-                # Don't do anything special with these dicts for now
-                self._notifiers = APIList(DynectSession.get_session,
-                                          'notifiers', None, val)
-            elif key == 'rulesets':
-                # Clear Rulesets
-                self._rulesets = APIList(DynectSession.get_session, 'rulesets')
-                self._rulesets.uri = None
-                # For each Ruleset returned, create a new DSFRuleset object
-                for ruleset in val:
-                    self._rulesets.append(DSFRuleset(**ruleset))
-            elif key == 'nodes':
-                # Don't do anything special with these dicts for now
-                self._nodes = APIList(DynectSession.get_session, 'nodes', None,
-                                      val)
-            else:
-                setattr(self, '_' + key, val)
-        self.uri = '/DSF/{}/'.format(self._service_id)
+        if 'notifiers' in data:
+            self._notifiers = APIList(DynectSession.get_session, 'notifiers',
+                                      None, data.pop('notifiers'))
+        if 'rulesets' in data:
+            self._rulesets = APIList(DynectSession.get_session, 'rulesets')
+            self._rulesets.uri = None
+            # For each Ruleset returned, create a new DSFRuleset object
+            for ruleset in data.pop('rulesets'):
+                for pool in ruleset.get('response_pools', []):
+                    pool['dsf_id'] = self.service_id
+                self._rulesets.append(DSFRuleset(**ruleset))
+        if 'nodes' in data:
+            self._nodes = APIList(DynectSession.get_session, 'nodes', None,
+                                  data.pop('nodes'))
         self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+        super(TrafficDirector, self)._build(data)
 
     def _get(self, service_id):
         """Get an existing :class:`TrafficDirector` from the DynECT System"""
-        self._service_id = service_id
-        self.uri = '/DSF/{}/'.format(self._service_id)
+        self.uri = '/DSF/{0}/'.format(service_id)
         api_args = {'pending_changes': 'Y'}
-        response = DynectSession.get_session().execute(self.uri, 'GET',
-                                                       api_args)
-        self._build(response['data'])
+        resp = DynectSession.get_session().execute(self.uri, 'GET', api_args)
+        self._build(resp['data'])
 
-    def _update(self, api_args):
+    def _update(self, **api_args):
         """Private update method"""
         if 'publish' not in api_args:
             api_args['publish'] = 'Y'
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
+        super(TrafficDirector, self)._update(**api_args)
 
     def revert_changes(self):
         """Clears the changeset for this service and reverts all non-published
         changes to their original state
         """
-        api_args = {'revert': True}
-        self._update(api_args)
+        self._update(revert=True)
 
     def add_notifier(self, notifier_id, publish='Y'):
         """Links the Notifier with the specified id to this Traffic Director
         service
         """
-        api_args = {'add_notifier': True, 'notifier_id': notifier_id,
-                    'publish': publish}
-        self._update(api_args)
+        self._update(add_notifier=True, notifier_id=notifier_id,
+                     publish=publish)
 
     def remove_orphans(self):
         """Remove Record Set Chains which are no longer referenced by a
         :class:`DSFResponsePool`
         """
-        api_args = {'remove_orphans': 'Y'}
-        self._update(api_args)
+        self._update(remove_orphans='Y')
 
-    @property
-    def service_id(self):
-        """The unique System id of this DSF Service"""
-        return self._service_id
-    @service_id.setter
-    def service_id(self, value):
-        pass
+    def publish(self):
+        """Publish any pending changesets for this service"""
+        self._update(publish='Y')
 
     @property
     def records(self):
@@ -2161,9 +1561,6 @@ class TrafficDirector(object):
                 for rs_chains in response_pool.rs_chains
                 for record_set in rs_chains.record_sets
                 for record in record_set.records]
-    @records.setter
-    def records(self, value):
-        pass
 
     @property
     def record_sets(self):
@@ -2174,9 +1571,6 @@ class TrafficDirector(object):
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains
                 for record_set in rs_chains.record_sets]
-    @record_sets.setter
-    def record_sets(self, value):
-        pass
 
     @property
     def response_pools(self):
@@ -2185,9 +1579,6 @@ class TrafficDirector(object):
         """
         return [response_pool for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools]
-    @response_pools.setter
-    def response_pools(self, value):
-        pass
 
     @property
     def rs_chains(self):
@@ -2197,86 +1588,6 @@ class TrafficDirector(object):
         return [rs_chains for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains]
-    @rs_chains.setter
-    def rs_chains(self, value):
-        pass
-
-    @property
-    def notifiers(self):
-        """A list of names of notifiers associated with this
-        :class:`TrafficDirector` service
-        """
-        return self._notifiers
-    @notifiers.setter
-    def notifiers(self, value):
-        if isinstance(value, list) and not isinstance(value, APIList):
-            self._notifiers = APIList(DynectSession.get_session, 'notifiers',
-                                      None, value)
-        elif isinstance(value, APIList):
-            self._notifiers = value
-        self._notifiers.uri = self.uri
-
-    @property
-    def rulesets(self):
-        """A list of :class:`DSFRulesets` that are defined for this
-        :class:`TrafficDirector` service
-        """
-        return self._rulesets
-    @rulesets.setter
-    def rulesets(self, value):
-        if isinstance(value, list) and not isinstance(value, APIList):
-            self._rulesets = APIList(DynectSession.get_session, 'rulesets',
-                                     None, value)
-        elif isinstance(value, APIList):
-            self._rulesets = value
-        self._rulesets.uri = self.uri
-
-    @property
-    def nodes(self):
-        """A list of zone, FQDN pairs in a hash that are linked, or to be linked
-        to this :class:`TrafficDirector` service"""
-        return self._nodes
-    @nodes.setter
-    def nodes(self, value):
-        if isinstance(value, list) and not isinstance(value, APIList):
-            self._nodes = APIList(DynectSession.get_session, 'nodes', None,
-                                  value)
-        elif isinstance(value, APIList):
-            self._nodes = value
-        self._nodes.uri = self.uri
-
-    @property
-    def label(self):
-        """A unique label for this :class:`TrafficDirector` service"""
-        return self._label
-    @label.setter
-    def label(self, value):
-        self._label = value
-        api_args = {'label': self._label}
-        self._update(api_args)
-
-    @property
-    def ttl(self):
-        """The default TTL to be used across this service"""
-        if not isinstance(self._ttl, int):
-            self._ttl = int(self._ttl)
-        return self._ttl
-    @ttl.setter
-    def ttl(self, value):
-        self._ttl = value
-        api_args = {'ttl': self._ttl}
-        self._update(api_args)
-
-    def delete(self):
-        """Delete this :class:`TrafficDirector` from the DynECT System"""
-        api_args = {}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
     def __str__(self):
-        """str override"""
-        return force_unicode('<TrafficDirector>: {}').format(self._service_id)
-    __repr__ = __unicode__ = __str__
-
-    def __bytes__(self):
-        """bytes override"""
-        return bytes(self.__str__())
+        return force_unicode('<TrafficDirector>: {0}').format(self.service_id)

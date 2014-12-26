@@ -120,16 +120,10 @@ class DynectSession(SessionEngine):
         :param user_name: The user whose permissions will be returned. Defaults
             to the current user
         """
-        api_args = dict()
-        api_args['user_name'] = user_name or self.username
+        api_args = {'user_name': user_name or self.username}
         uri = '/UserPermissionReport/'
         response = self.execute(uri, 'POST', api_args)
-        permissions = []
-        for key, val in response['data'].items():
-            if key == 'allowed':
-                for permission in val:
-                    permissions.append(permission['name'])
-        return permissions
+        return [perm['name'] for perm in response['data'].get('allowed', [])]
 
     @property
     def permissions(self):
@@ -137,9 +131,6 @@ class DynectSession(SessionEngine):
         if self._permissions is None:
             self._permissions = self.user_permissions_report()
         return self._permissions
-    @permissions.setter
-    def permissions(self, value):
-        pass
 
     def authenticate(self):
         """Authenticate to the DynectSession service with the provided
@@ -159,7 +150,7 @@ class DynectSession(SessionEngine):
 
     def log_out(self):
         """Log the current session out from the DynECT API system"""
-        self.execute('/Session/', 'DELETE', {})
+        self.execute('/Session/', 'DELETE')
         self.close_session()
 
     @property

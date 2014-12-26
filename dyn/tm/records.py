@@ -527,123 +527,34 @@ class SRVRecord(DNSRecord):
 
 
 class TLSARecord(DNSRecord):
-    """The TLSA record is used to associate a TLS server
-    certificate or public key with the domain name where the record is
-    found, thus forming a "TLSA certificate association". Defined in RFC 6698
+    """The TLSA record is used to associate a TLS server certificate or public
+    key with the domain name where the record is found, thus forming a
+    "TLSA certificate association". Defined in RFC 6698
     """
+    record_type = 'TLSARecord'
 
-    def __init__(self, zone, fqdn, *args, **kwargs):
-        """Create an :class:`~dyn.tm.records.TLSARecord` object
+    #: Specifies the provided association that will be used to match the
+    #: certificate presented in the TLS handshake
+    cert_usage = IntegerAttribute('cert_usage')
 
-        :param zone: Name of zone where the record will be added
-        :param fqdn: Name of node where the record will be added
-        :param cert_usage: Specifies the provided association that will be used
-            to match the certificate presented in the TLS handshake. Example
-            values: 0 (CA constraint), 1 (Service certificate constraint),
-            2 (Trust anchor assertion ), 3 (Domain-issued certificate)
-        :param selector: Specifies which part of the TLS certificate presented
-            by the server will be matched against the association data. Example
-            values: 0 (Full certificate), 1 (SubjectPublicKeyInfo)
-        :param match_type: Specifies how the certificate association is
-            presented. Example values: 0 (No hash used), 1 (SHA-256),
-            2 (SHA-512)
-        :param certificate: Full certificate or its SubjectPublicKeyInfo, or
-            hash based on the matching type.
-        :param ttl: TTL for the record in seconds
-        """
-        if 'create' in kwargs:
-            super(TLSARecord, self).__init__(zone, fqdn, kwargs['create'])
-            del kwargs['create']
-            self._build(kwargs)
-            self._record_type = 'TLSARecord'
-        else:
-            super(TLSARecord, self).__init__(zone, fqdn)
-            self._record_type = 'TLSARecord'
-            self._cert_usage = self._selector = None
-            self._mathc_type = self._certificate = None
-            if 'record_id' in kwargs:
-                self._get_record(kwargs['record_id'])
-            elif len(args) + len(kwargs) == 1:
-                self._get_record(*args, **kwargs)
-            elif 'cert_usage' in kwargs or 'selector' in \
-                    kwargs or 'match_type' in kwargs or \
-                    'certificate' in kwargs or 'ttl' in kwargs:
-                self._post(*args, **kwargs)
-            elif len(args) + len(kwargs) >= 1:
-                self._post(*args, **kwargs)
+    #: Specifies which part of the TLS certificate presented by the server will
+    #: be matched against the association data.
+    selector = IntegerAttribute('selector')
 
-    def _post(self, cert_usage, selector, match_type, certificate, ttl=0):
-        """Create a new :class:`~dyn.tm.records.TLSARecord` on the DynECT System
-        """
-        self._ttl = ttl
-        self._cert_usage = cert_usage
-        self._selector = selector
-        self._match_type = match_type
-        self._certificate = certificate
-        self.api_args = {'rdata': {'cert_usage': self._cert_usage,
-                                   'selector': self._selector,
-                                   'match_type': self._match_type,
-                                   'certificate': self._certificate},
-                         'ttl': self._ttl}
-        self._create_record(self.api_args)
+    #: Specifies how the certificate association is presented.
+    match_type = IntegerAttribute('match_type')
+
+    #: Full certificate or its SubjectPublicKeyInfo, or hash based on the
+    #: matching type
+    certificate = StringAttribute('certificate')
 
     def rdata(self):
-        """Return this :class:`~dyn.tm.records.TLSARecord`'s rdata as a JSON blob
+        """Return this :class:`~dyn.tm.records.TLSARecord`'s rdata as a JSON
+        blob
         """
         guts = super(TLSARecord, self).rdata()
         shell = {'tlsa_rdata': guts}
         return shell
-
-    @property
-    def cert_usage(self):
-        """Specifies the provided association that will be used
-        to match the certificate presented in the TLS handshake
-        """
-        return self._cert_usage
-
-    @cert_usage.setter
-    def cert_usage(self, value):
-        self._cert_usage = value
-        self.api_args['rdata']['cert_usage'] = self._cert_usage
-        self._update_record(self.api_args)
-        
-    @property
-    def selector(self):
-        """Specifies which part of the TLS certificate presented
-        by the server will be matched against the association data.
-        """
-        return self._selector
-
-    @selector.setter
-    def selector(self, value):
-        self._selector = value
-        self.api_args['rdata']['selector'] = self._selector
-        self._update_record(self.api_args)
-
-    @property
-    def match_type(self):
-        """Specifies how the certificate association is presented.
-        """
-        return self._match_type
-
-    @match_type.setter
-    def match_type(self, value):
-        self._match_type = value
-        self.api_args['rdata']['match_type'] = self._match_type
-        self._update_record(self.api_args)
-        
-    @property
-    def certificate(self):
-        """Full certificate or its SubjectPublicKeyInfo, or
-        hash based on the matching type
-        """
-        return self._certificate
-
-    @certificate.setter
-    def certificate(self, value):
-        self._certificate = value
-        self.api_args['rdata']['certificate'] = self._certificate
-        self._update_record(self.api_args)
  
 
 class TXTRecord(DNSRecord):
@@ -669,5 +580,5 @@ RECORD_TYPES = {
     'IPSECKEY': IPSECKEYRecord, 'MX': MXRecord, 'NAPTR': NAPTRRecord,
     'PTR': PTRRecord, 'PX': PXRecord, 'NSAP': NSAPRecord, 'RP': RPRecord,
     'NS': NSRecord, 'SOA': SOARecord, 'SPF': SPFRecord, 'SRV': SRVRecord,
-    'TXT': TXTRecord
+    'TLSA': TLSARecord,'TXT': TXTRecord
 }

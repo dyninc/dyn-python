@@ -67,14 +67,15 @@ class APIDescriptor(object):
     API responses
     """
 
-    def __init__(self, name=''):
+    def __init__(self, name='', default=None):
         super(APIDescriptor, self).__init__()
         self.name = name
         self.private_name = '_' + self.name
+        self.default = default
 
     def __get__(self, instance, cls):
         """Return a handle on the private instance of this descriptor"""
-        return getattr(instance, self.private_name, None)
+        return getattr(instance, self.private_name, self.default)
 
     def __set__(self, instance, value):
         """Update the value of the private attribute represented by this
@@ -129,9 +130,9 @@ class ClassAttribute(TypedAttribute):
     for API attributes that are wrapped in something else to make them more
     easy to use
     """
-    def __init__(self, name='', class_type=object):
+    def __init__(self, name='', default=None, class_type=object):
         self.ty = class_type
-        super(ClassAttribute, self).__init__(name)
+        super(ClassAttribute, self).__init__(name=name, default=default)
 
 
 class ValidatedAttribute(APIDescriptor):
@@ -139,13 +140,13 @@ class ValidatedAttribute(APIDescriptor):
     values
     """
 
-    def __init__(self, name='', validator=None):
+    def __init__(self, name='', default=None, validator=None):
         """An API field that must be one of a specific set of values
 
         :param name: The name of this field
         :param validator: An optional list of valid values for this field
         """
-        super(ValidatedAttribute, self).__init__(name)
+        super(ValidatedAttribute, self).__init__(name=name, default=default)
         self.validator = validator
 
     def __set__(self, instance, value):

@@ -79,7 +79,7 @@ class APIList(list):
 
     def __build_args(self):
         """Convert this list into an API Args dict"""
-        my_list = [x._json for x in self if x is not None]
+        my_list = [x.to_json() for x in self if x is not None]
         return {self.name: my_list}
 
     def _update(self, api_args):

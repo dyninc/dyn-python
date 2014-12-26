@@ -196,7 +196,7 @@ class APIObject(object):
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
-        elif len(args) == 0 and len(kwargs) == self._get_length:
+        elif len(args) + len(kwargs) == self._get_length:
             self._get(*args, **kwargs)
         else:
             self._post(*args, **kwargs)

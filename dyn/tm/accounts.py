@@ -3,9 +3,9 @@
 REST API
 """
 from .errors import DynectInvalidArgumentError
-from .session import DynectSession
-from ..core import (APIObject, ImmutableAttribute, StringAttribute,
-                    ListAttribute, ValidatedAttribute)
+from .session import DynectSession, DNSAPIObject
+from ..core import (ImmutableAttribute, StringAttribute, ListAttribute,
+                    ValidatedAttribute)
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
@@ -15,16 +15,17 @@ __all__ = ['get_updateusers', 'get_users', 'get_permissions_groups',
 
 
 def get_updateusers(search=None):
-    """Return a ``list`` of :class:`~dyn.tm.accounts.UpdateUser` objects. If
-    *search* is specified, then only :class:`~dyn.tm.accounts.UpdateUsers` who
-    match those search criteria will be returned in the list. Otherwise, all
-    :class:`~dyn.tm.accounts.UpdateUsers`'s will be returned.
+    """Return a :const:`list` of :class:`~dyn.tm.accounts.UpdateUser` objects.
+    If *search* is specified, then only :class:`~dyn.tm.accounts.UpdateUsers`
+    who match those search criteria will be returned in the list. Otherwise,
+    all :class:`~dyn.tm.accounts.UpdateUsers`'s will be returned.
 
-    :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`~dyn.tm.accounts.UpdateUsers` instance
-        and the value mapped to by that key will be used as the search criteria
-        for that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.UpdateUser` objects
+    :param search: A :const:`dict` of search criteria. Key's in this
+        :const:`dict` must map to an attribute a
+        :class:`~dyn.tm.accounts.UpdateUsers` instance and the value mapped to
+        by that key will be used as the search criteria for that key when
+        searching.
+    :return: a :const:`list` of :class:`~dyn.tm.accounts.UpdateUser` objects
     """
     uri = '/UpdateUser/'
     api_args = {'detail': 'Y'}
@@ -43,16 +44,16 @@ def get_updateusers(search=None):
 
 
 def get_users(search=None):
-    """Return a ``list`` of :class:`~dyn.tm.accounts.User` objects. If *search*
-    is specified, then only users who match those search parameters will be
-    returned in the list. Otherwise, all :class:`~dyn.tm.accounts.User`'s will
-    be returned.
+    """Return a :const:`list` of :class:`~dyn.tm.accounts.User` objects. If
+    *search* is specified, then only users who match those search parameters
+    will be returned in the list. Otherwise, all
+    :class:`~dyn.tm.accounts.User`'s will be returned.
 
-    :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`~dyn.tm.accounts.User` instance and the
-        value mapped to by that key will be used as the search criteria for
-        that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.User` objects
+    :param search: A :const:`dict` of search criteria. Key's in this
+        :const:`dict` must map to an attribute a :class:`~dyn.tm.accounts.User`
+        instance and the value mapped to by that key will be used as the search
+        criteria for that key when searching.
+    :return: a :const:`list` of :class:`~dyn.tm.accounts.User` objects
     """
     uri = '/User/'
     api_args = {'detail': 'Y'}
@@ -76,17 +77,20 @@ def get_users(search=None):
 
 
 def get_permissions_groups(search=None):
-    """Return a ``list`` of :class:`~dyn.tm.accounts.PermissionGroup` objects.
-    If *search* is specified, then only
+    """Return a :const:`list` of :class:`~dyn.tm.accounts.PermissionGroup`
+    objects. If *search* is specified, then only
     :class:`~dyn.tm.accounts.PermissionGroup`'s that match those search
     criteria will be returned in the list. Otherwise, all
     :class:`~dyn.tm.accounts.PermissionGroup`'s will be returned.
 
-    :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`~dyn.tm.accounts.PermissionGroup`
-        instance and the value mapped to by that key will be used as the search
-        criteria for that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.PermissionGroup` objects"""
+    :param search: A :const:`dict` of search criteria. Key's in this
+        :const:`dict` must map to an attribute a
+        :class:`~dyn.tm.accounts.PermissionGroup` instance and the value mapped
+        to by that key will be used as the search criteria for that key when
+        searching.
+    :return: a :const:`list` of :class:`~dyn.tm.accounts.PermissionGroup`
+        objects
+    """
     uri = '/PermissionGroup/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -104,16 +108,18 @@ def get_permissions_groups(search=None):
 
 
 def get_contacts(search=None):
-    """Return a ``list`` of :class:`~dyn.tm.accounts.Contact` objects. If
+    """Return a `:const:`list` of :class:`~dyn.tm.accounts.Contact` objects. If
     *search* is specified, then only :class:`~dyn.tm.accounts.Contact`'s who
     match those search criteria will be returned in the list. Otherwise, all
     :class:`~dyn.tm.accounts.Contact`'s will be returned.
 
-    :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`~dyn.tm.accounts.Contact` instance and
-        the value mapped to by that key will be used as the search criteria
-        for that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.Contact` objects"""
+    :param search: A :const:`dict` of search criteria. Key's in this
+        :const:`dict` must map to an attribute a
+        :class:`~dyn.tm.accounts.Contact` instance and the value mapped to by
+        that key will be used as the search criteria for that key when
+        searching.
+    :return: a :const:`list` of :class:`~dyn.tm.accounts.Contact` objects
+    """
     uri = '/Contact/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -134,16 +140,18 @@ def get_contacts(search=None):
 
 
 def get_notifiers(search=None):
-    """Return a ``list`` of :class:`~dyn.tm.accounts.Notifier` objects. If
+    """Return a :const:`list` of :class:`~dyn.tm.accounts.Notifier` objects. If
     *search* is specified, then only :class:`~dyn.tm.accounts.Notifier`'s who
     match those search criteria will be returned in the list. Otherwise, all
     :class:`~dyn.tm.accounts.Notifier`'s will be returned.
 
-    :param search: A ``dict`` of search criteria. Key's in this ``dict`` much
-        map to an attribute a :class:`~dyn.tm.accounts.Notifier` instance and
-        the value mapped to by that key will be used as the search criteria for
-        that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.Notifier` objects"""
+    :param search: A :const:`dict` of search criteria. Key's in this
+        :const:`dict` must map to an attribute a
+        :class:`~dyn.tm.accounts.Notifier` instance and the value mapped to by
+        that key will be used as the search criteria for that key when
+        searching.
+    :return: a :const:`list` of :class:`~dyn.tm.accounts.Notifier` objects
+    """
     uri = '/Notifier/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -160,14 +168,15 @@ def get_notifiers(search=None):
     return notifiers
 
 
-class UpdateUser(APIObject):
+class UpdateUser(DNSAPIObject):
     """:class:`~dyn.tm.accounts.UpdateUser` type objects are a special form of
     a :class:`~dyn.tm.accounts.User` which are tied to a specific Dynamic DNS
     services.
     """
+    _get_length = 1
+
     #: UpdateUser URI
     uri = '/UpdateUser/'
-    session_type = DynectSession
 
     #: This UpdateUser's user_name. An UpdateUser's user_name is a read-only
     #: property which can not be updated after the UpdateUser has been created.
@@ -185,6 +194,10 @@ class UpdateUser(APIObject):
     #: System, while active UpdateUser's are.
     status = ImmutableAttribute('status')
 
+    def __init__(self, *args, **kwargs):
+        super(UpdateUser, self).__init__(*args, **kwargs)
+        self.uri = '/UpdateUser/{0}/'.format(self._user_name)
+
     def _post(self, nickname, password):
         """Create a new :class:`~dyn.tm.accounts.UpdateUser` on the DynECT
         System
@@ -193,14 +206,13 @@ class UpdateUser(APIObject):
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
-        self.uri = '/UpdateUser/{}/'.format(self._user_name)
 
     def _get(self, user_name):
         """Get an existing :class:`~dyn.tm.accounts.UpdateUser` from the
         DynECT System
         """
         self._user_name = user_name
-        self.uri = '/UpdateUser/{}/'.format(self._user_name)
+        self.uri = '/UpdateUser/{0}/'.format(user_name)
         response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
 
@@ -237,12 +249,10 @@ class UpdateUser(APIObject):
 
 
 # noinspection PyAttributeOutsideInit,PyUnresolvedReferences
-class User(APIObject):
+class User(DNSAPIObject):
     """DynECT System User object"""
     #: DynECT User URI
     uri = '/User/{user_name}/'
-
-    session_type = DynectSession
 
     #: This User's user_name. This is a read-only property.
     user_name = ImmutableAttribute('user_name')
@@ -256,7 +266,10 @@ class User(APIObject):
     #: The nickname asociated with this User
     nickname = StringAttribute('nickname')
 
-    #:
+    #: This User's Email address
+    email = StringAttribute('email')
+
+    #: The password for this user
     password = StringAttribute('password')
 
     #: The organization this User belongs to
@@ -341,13 +354,13 @@ class User(APIObject):
             :class:`~dyn.tm.accounts.User` should receive messages destined
             for a pager
         :param post_code: Zip code or Postal code
-        :param group_name: A list of permission groups this
+        :param group_name: A :const:`list` of permission groups this
             :class:`~dyn.tm.accounts.User` belongs to
-        :param permission: A list of permissions assigned to this
+        :param permission: A :const:`list` of permissions assigned to this
             :class:`~dyn.tm.accounts.User`
-        :param zone: A list of zones where this
+        :param zone: A :const:`list` of zones where this
             :class:`~dyn.tm.accounts.User`'s permissions apply
-        :param forbid: A list of forbidden permissions for this
+        :param forbid: A :const:`list` of forbidden permissions for this
             :class:`~dyn.tm.accounts.User`
         :param status: Current status of this :class:`~dyn.tm.accounts.User`
         :param website: This :class:`~dyn.tm.accounts.User`'s website
@@ -411,12 +424,12 @@ class User(APIObject):
         DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions(self, permissions=None):
-        """Replaces the list of permissions for this
+        """Replaces the :const:`list` of permissions for this
         :class:`~dyn.tm.accounts.User`
 
-        :param permissions: A list of permissions. Pass an empty list or omit
-            the argument to clear the list of permissions of the
-            :class:`~dyn.tm.accounts.User`
+        :param permissions: A :const:`list` of permissions. Pass an empty
+            :const:`list` or omit the argument to clear the :const:`list` of
+            permissions of the :class:`~dyn.tm.accounts.User`
         """
         api_args = {}
         if permissions is not None:
@@ -449,12 +462,12 @@ class User(APIObject):
         DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions_group(self, groups=None):
-        """Replaces the list of permissions for this
+        """Replaces the :const:`list` of permissions for this
         :class:`~dyn.tm.accounts.User`
 
-        :param groups: A list of permissions groups. Pass an empty list or omit
-            the argument to clear the list of permissions groups of the
-            :class:`~dyn.tm.accounts.User`
+        :param groups: A :const:`list` of permissions groups. Pass an empty
+            :const:`list` or omit the argument to clear the :const:`list` of
+            permissions groups of the :class:`~dyn.tm.accounts.User`
         """
         api_args = {}
         if groups is not None:
@@ -483,7 +496,7 @@ class User(APIObject):
 
         :param permission: the permission to forbid from this
             :class:`~dyn.tm.accounts.User`
-        :param zone: A list of zones where the forbid rule applies
+        :param zone: A :const:`list` of zones where the forbid rule applies
         """
         api_args = {}
         if zone is not None:
@@ -492,13 +505,13 @@ class User(APIObject):
         DynectSession.get_session().execute(uri, 'POST', api_args)
 
     def replace_forbid_rules(self, forbid=None):
-        """Replaces the list of forbidden permissions in the
+        """Replaces the :const:`list` of forbidden permissions in the
         :class:`~dyn.tm.accounts.User`'s permissions group with a new list.
 
-        :param forbid: A list of rules to replace the forbidden rules on the
-            :class:`~dyn.tm.accounts.User`'s permission group. If empty or not
-            passed in, the :class:`~dyn.tm.accounts.User`'s forbid list will be
-            cleared
+        :param forbid: A :const:`list` of rules to replace the forbidden rules
+            on the :class:`~dyn.tm.accounts.User`'s permission group. If empty
+            or not passed in, the :class:`~dyn.tm.accounts.User`'s forbid
+            :const:`list` will be cleared
         """
         api_args = {}
         if forbid is not None:
@@ -511,7 +524,7 @@ class User(APIObject):
         :class:`~dyn.tm.accounts.User`'s permission group
 
         :param permission: permission
-        :param zone: A list of zones where the forbid rule applies
+        :param zone: A :const:`list` of zones where the forbid rule applies
         """
         api_args = {}
         if zone is not None:
@@ -523,11 +536,10 @@ class User(APIObject):
         return force_unicode('<User>: {0}').format(self.user_name)
 
 
-class PermissionsGroup(APIObject):
+class PermissionsGroup(DNSAPIObject):
     """A DynECT System Permissions Group object"""
     #: The DynECT Permissions Group URI
     uri = '/PermissionGroup/{group_name}/'
-    session_type = DynectSession
 
     #: The name of this Permissions Group
     group_name = StringAttribute('group_name')
@@ -543,16 +555,18 @@ class PermissionsGroup(APIObject):
     #: user_name is passed in
     all_users = StringAttribute('all_users')
 
-    #: A list of permissions to apply to this Permissions Group
-    permission = StringAttribute('permission')
+    #: A :const:`list` of permissions to apply to this Permissions Group
+    permission = ListAttribute('permission')
 
-    #: A list of users who belong to this Permissions Group
+    #: A :const:`list` of users who belong to this Permissions Group
     user_name = StringAttribute('user_name')
 
-    #: A list of Permissions Group's that belong to this Permissions Group
+    #: A :const:`list` of Permissions Group's that belong to this Permissions
+    #: Group
     subgroup = StringAttribute('subgroup')
 
-    #: A list of zones where this Permissions Group's permissions apply
+    #: A :const:`list` of zones where this Permissions Group's permissions
+    #: apply
     zone = ListAttribute('zone')
 
     def __init__(self, group_name, *args, **kwargs):
@@ -564,10 +578,14 @@ class PermissionsGroup(APIObject):
             plain or default
         :param all_users: If 'Y', all current users will be added to the group. 
             Cannot be used if user_name is passed in
-        :param permission: A list of permissions that the group contains
-        :param user_name: A list of users that belong to the permission group
-        :param subgroup: A list of groups that belong to the permission group
-        :param zone: A list of zones where the group's permissions apply
+        :param permission: A :const:`list` of permissions that the group
+            contains
+        :param user_name: A :const:`list` of users that belong to the
+            permission group
+        :param subgroup: A :const:`list` of groups that belong to the
+            permission group
+        :param zone: A :const:`list` of zones where the group's permissions
+            apply
         """
         self.uri = self.uri.format(group_name=group_name)
         self._group_name = group_name
@@ -609,6 +627,7 @@ class PermissionsGroup(APIObject):
         for zone in zones:
             self._zone.append(zone['zone_name'])
         super(PermissionsGroup, self)._build(data)
+        self.uri = '/PermissionGroup/{0}/'.format(self.group_name)
 
     def _get(self):
         """Get an existing :class:`~dyn.tm.accounts.PermissionsGroup` from the
@@ -621,7 +640,7 @@ class PermissionsGroup(APIObject):
         """Update this object on the DynECT System"""
         if 'group_name' in api_args:
             api_args['new_group_name'] = api_args.pop('group_name')
-        super(PermissionsGroup, self)._update(group_name=self.group_name,
+        super(PermissionsGroup, self)._update(#group_name=self.group_name,
                                               **api_args)
 
     def add_permission(self, permission):
@@ -635,10 +654,11 @@ class PermissionsGroup(APIObject):
         self._permission.append(permission)
 
     def replace_permissions(self, permission=None):
-        """Replaces a list of individual user permissions for the user
+        """Replaces a :const:`list` of individual user permissions for the user
 
-        :param permission: A list of permissions. Pass an empty list or omit 
-            the argument to clear the list of permissions of the user
+        :param permission: A :const:`list` of permissions. Pass an empty
+            :const:`list` or omit the argument to clear the :const:`list` of
+            permissions of the user
         """
         api_args = {}
         if permission is not None:
@@ -716,11 +736,10 @@ class PermissionsGroup(APIObject):
 
 
 # noinspection PyUnresolvedReferences,PyMissingConstructor
-class Notifier(APIObject):
+class Notifier(DNSAPIObject):
     """DynECT System Notifier"""
     #: The DynECT Notifier URI
     uri = '/Notifier/'
-    session_type = DynectSession
 
     #: The unique DynECT system id for this Notifier
     notifier_id = ImmutableAttribute('notifier_id')
@@ -728,10 +747,10 @@ class Notifier(APIObject):
     #: A unique label for this Notifier
     label = StringAttribute('label')
 
-    #: A list of recipients attached to this Notifier
+    #: A :const:`list` of recipients attached to this Notifier
     recipients = ListAttribute('recipients')
 
-    #: A list of services that this Notifier is attached to
+    #: A :const:`list` of services that this Notifier is attached to
     services = ListAttribute('services')
 
     def __init__(self, *args, **kwargs):
@@ -782,11 +801,10 @@ class Notifier(APIObject):
         return force_unicode('<Notifier>: {0}').format(self.label)
 
 
-class Contact(APIObject):
+class Contact(DNSAPIObject):
     """A DynECT System Contact"""
     #: The DynECT Contact URI
     uri = '/Contact/{nickname}/'
-    session_type = DynectSession
 
     #: The nickname for this Contact
     nickname = StringAttribute('nickname')
@@ -870,14 +888,8 @@ class Contact(APIObject):
         :param website: The :class:`~dyn.tm.accounts.Contact`'s website
         """
         self.uri = self.uri.format(nickname=nickname)
-        super(Contact, self).__init__()
-        if 'api' in kwargs:
-            del kwargs['api']
-            self._build(kwargs)
-        elif len(args) == 0 and len(kwargs) == 0:
-            self._get()
-        else:
-            self._post(*args, **kwargs)
+        self._nickname = nickname
+        super(Contact, self).__init__(*args, **kwargs)
 
     def _post(self, email, first_name, last_name, organization, address=None,
               address_2=None, city=None, country=None, fax=None,
@@ -905,8 +917,9 @@ class Contact(APIObject):
 
     def _build(self, data):
         if '_nickname' in data:
-            setattr(self, 'nickname', data.pop('_nickname'))
+            setattr(self, '_nickname', data.pop('_nickname'))
         super(Contact, self)._build(data)
+        self.uri = '/Contact/{0}/'.format(self._nickname)
 
     def _update(self, **api_args):
         if 'nickname' in api_args:

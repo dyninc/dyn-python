@@ -5,8 +5,8 @@ methods that return various types of DynECT objects which will provide their
 own respective functionality.
 """
 # API Libs
-from ..core import SessionEngine
 from .errors import *
+from ..core import SessionEngine, APIObject
 from ..compat import force_unicode
 from ..encrypt import AESCipher
 
@@ -164,3 +164,10 @@ class DynectSession(SessionEngine):
         header = super(DynectSession, self).__str__()
         return header + force_unicode(': {}, {}').format(self.customer,
                                                          self.username)
+
+
+class DNSAPIObject(APIObject):
+    """:class:`APIObject` subclass with a default `session_type` of
+    :class:`~dyn.tm.session.DynectSession`
+    """
+    session_type = DynectSession

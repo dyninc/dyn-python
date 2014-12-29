@@ -1047,7 +1047,8 @@ class DSFFailoverChain(APIObject):
         self._build(resp['data'])
 
     def _get(self, dsf_id, dsf_response_pool_id):
-        """Retrieve an existing :class:`DSFFailoverChain` from the Dynect System
+        """Retrieve an existing :class:`DSFFailoverChain` from the Dynect
+        System
 
         :param dsf_id: The unique system id of the DSF service this
             :class:`DSFFailoverChain` is attached to
@@ -1442,21 +1443,21 @@ class TrafficDirector(APIObject):
     """Traffic Director is a DNS based traffic routing and load balancing
     service that is Geolocation aware and can support failover by monitoring
     endpoints.
-
-from dyn.tm.session import DynectSession
-from dyn.tm.services.dsf import TrafficDirector, get_all_dsf_services
-Lab_DTE = {'host': 'api2.dte.plab.mht.dyndns.com', 'customer': 'DynDTE',
-           'username': 'dte-apitest', 'password': 'dyndns01', 'port': 8002}
-s = DynectSession(**Lab_DTE)
-# services = get_all_dsf_services()
-ethan = TrafficDirector('-inl6Rq8c8KCc2FbgLVEFO4sTGc')
     """
     uri = '/DSF/'
     session_type = DynectSession
     _get_length = 1
+
+    #: The unique DynECT system id for this Traffic Director service
     service_id = ImmutableAttribute('service_id')
+
+    #: A unique label describing this Traffic Director service
     label = StringAttribute('label')
+
+    #: The default TTL to be used across this service
     ttl = IntegerAttribute('ttl')
+
+    #: A list of :class:`DSFRulesets` that are defined for this service
     rulesets = ListAttribute('rulesets')
 
     def __init__(self, *args, **kwargs):

@@ -838,15 +838,37 @@ class DSFRecordSet(APIObject):
     session_type = DynectSession
     records = ListAttribute('records')
     status = ImmutableAttribute('status')
+
+    #: A unique label for this DSF Record Set
     label = StringAttribute('label')
+
+    #: The type of rdata represented by this DFS Record Set
     rdata_class = StringAttribute('rdata_class')
+
+    #: Default TTL for all DSF Record's within this DSF Record SEt
     ttl = IntegerAttribute('ttl')
+
+    #: Defines how eligibility can be changed in response to monitoring. Must
+    #: be one of 'auto', 'auto_down', or 'manual'
     automation = ValidatedAttribute('automation',
                                     validator=('auto', 'auto_down', 'manual'))
+
+    #: How many records to serve out of this DSF Record Set
     serve_count = IntegerAttribute('serve_count')
+
+    #: The number of records that must be failing before this DSF Record Set
+    #: becomes ineligible
     fail_count = IntegerAttribute('fail_count')
+
+    #: The number of Records that must not be okay before this DSFRecordSet
+    #: becomes in trouble.
     trouble_count = IntegerAttribute('trouble_count')
+
+    #: Indicates whether or not this DSFRecordSet can be served.
     eligible = BooleanAttribute('eligible')
+
+    #: The unique DynECT system id of the DSF Monitor attached to this
+    #: DSFRecordSet
     dsf_monitor_id = ImmutableAttribute('dsf_monitor_id')
 
     def __init__(self, rdata_class, label=None, ttl=None, automation=None,
@@ -994,10 +1016,23 @@ class DSFRecordSet(APIObject):
 class DSFFailoverChain(APIObject):
     uri = '/DSFRecordSetFailoverChain/{0}/{1}/'
     session_type = DynectSession
+
+    #: A unique label for this DSF Failover Chain
     label = StringAttribute('label')
+
+    #: Indicates whether or not the contained DSF Record Sets are core record
+    #: sets
     core = BooleanAttribute('core')
+
+    #: A :const:`list` of :class:`DSFRecordSet`'s for this DSF Failover Chain
     record_sets = ListAttribute('record_sets')
+
+    #: The unique DynECT system id for the response pool that this DSF Failover
+    #: Chain belongs to
     dsf_response_pool_id = ImmutableAttribute('dsf_response_pool_id')
+
+    #: The unique system id for the Traffic Director service that this failover
+    #: chain belongs to
     dsf_id = ImmutableAttribute('dsf_id')
 
     def __init__(self, label=None, core=None, record_sets=None, **kwargs):
@@ -1090,14 +1125,37 @@ class DSFResponsePool(APIObject):
     uri = '/DSFResponsePool/{0}/{1}/'
     session_type = DynectSession
     _get_length = 1
+
+    #: A unique label for this DSF Response Pool
     label = StringAttribute('label')
+
+    #: If fewer than this number of core record sets are eligible, status will
+    #: be set to 'fail'
     core_set_count = IntegerAttribute('core_set_count')
+
+    #: Indicates whether or not this DSF Response Pool can be served
     eligible = BooleanAttribute('eligible')
+
+    #: Defines how eligibility can be changed in response to monitoring
     automation = StringAttribute('automation')
+
+    #: The unique DynECT system id for the :class:`DSFRuleset` that this
+    #: response pool belongs to
     dsf_ruleset_id = ImmutableAttribute('dsf_ruleset_id')
+
+    #: The unique DynECT system id for this DSF Response Pool
     dsf_response_pool_id = ImmutableAttribute('dsf_response_pool_id')
+
+    #: When specified with `dsf_ruleset_id`, indicates the position of the
+    #: DSF Response Pool
     index = IntegerAttribute('index')
+
+    #: A :const:`list` of :class:`DSFFailoverChain`'s that are defined for this
+    #: DSF Response Pool
     rs_chains = ImmutableAttribute('rs_chains')
+
+    #: The unique DynECT system id for the Traffic Director service that this
+    #: DFS Response Pool belongs to
     dsf_id = ImmutableAttribute('dsf_id')
 
     def __init__(self, label, dsf_id, core_set_count=1, eligible=True,
@@ -1189,10 +1247,19 @@ class DSFResponsePool(APIObject):
 
 class DSFRuleset(APIObject):
     session_type = DynectSession
+
+    #: A unique label for this DSF Ruleset
     label = StringAttribute('label')
+
+    #: A set of rules describing what traffic is applied to this DSF Ruleset.
+    #: Must be one of 'always' or 'geoip'
     criteria_type = ValidatedAttribute('criteria_type',
                                        validator=('always', 'geoip'))
+
+    #: Varied depending on this specified `criteria_type`
     criteria = ListAttribute('criteria')
+
+    #: A :const:`list` of :class:`DSFResponsePool`'s for this DSF Ruleset
     response_pools = ImmutableAttribute('response_pools')
 
     def __init__(self, label, criteria_type, response_pools, criteria=None,
@@ -1365,19 +1432,41 @@ class DSFMonitorEndpoint(object):
 
 class DSFMonitor(APIObject):
     """A Monitor for a :class:`TrafficDirector` Service"""
-    uri = ''
+    uri = '/DSFMonitor/'
     session_type = DynectSession
     _get_length = 1
+
+    #: The unique DynECT system id for this DSF Monitor
     dsf_monitor_id = ImmutableAttribute('dsf_monitor_id')
+
+    #: A unique label used to describe this DSF Monitor
     label = StringAttribute('label')
+
+    #: The protocol for this monitor to use while monitoring. Must be one of
+    #: 'HTTP', 'HTTPS', 'PING', 'SMTP', or 'TCP'
     protocol = ValidatedAttribute('protocol',
                                   validator=('HTTP', 'HTTPS', 'PING', 'SMTP',
                                              'TCP'))
+
+    #: The number of responses to determine whether or not the endpoint is
+    #: 'up' or 'down'
     response_count = IntegerAttribute('response_count')
+
+    #: How often to this DSF Monitor should monitor
     probe_interval = IntegerAttribute('probe_interval')
+
+    #: How many retries this :class:`DSFMonitor` should attempt on failure
+    #: before giving up.
     retries = IntegerAttribute('retries')
+
+    #: Indicates whether or not this DSFMonitor is active
     active = StringAttribute('active')
+
+    #: Additional options pertaining to this DSF Monitor
     options = APIDescriptor('options')
+
+    #: A List of :class:`DSFMonitorEndpoint`'s that are associated with this
+    #: DSFMonitor
     endpoints = ListAttribute('endpoints')
 
     def _get(self, monitor_id):
@@ -1389,7 +1478,6 @@ class DSFMonitor(APIObject):
               active='Y', timeout=None, port=None, path=None, host=None,
               header=None, expected=None, endpoints=None):
         """Create a new :class:`DSFMonitor` on the DynECT System"""
-        uri = '/DSFMonitor/'
         self._active = Active(active)
         self._options = {}
         if timeout:
@@ -1411,7 +1499,8 @@ class DSFMonitor(APIObject):
                     'options': self._options}
         if self._endpoints is not None:
             api_args['endpoints'] = [x.to_json() for x in self._endpoints]
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):

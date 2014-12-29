@@ -124,8 +124,8 @@ class Active(object):
         """
         return self.value
 
-    # For forwards compatibility with Python 3.x where __bool__ is called when
-    # evaluating boolean expressions
+    # For Python 2.x/3.x compatibility where __bool__ or __nonzero__ can be 
+    # called when evaluating boolean expressions
     __bool__ = __nonzero__
 
     def __str__(self):

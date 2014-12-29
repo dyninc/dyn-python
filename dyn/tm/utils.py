@@ -124,7 +124,7 @@ class Active(object):
         """
         return self.value
 
-    # For Python 2.x/3.x compatibility where __bool__ or __nonzero__ can be 
+    # For Python 2.x/3.x compatibility where __bool__ or __nonzero__ can be
     # called when evaluating boolean expressions
     __bool__ = __nonzero__
 

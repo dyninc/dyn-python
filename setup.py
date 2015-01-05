@@ -1,14 +1,16 @@
 from distutils.core import setup
 from dyn import __version__
 
-from pip.req import parse_requirements
-
 with open('README.rst') as f:
     readme = f.read()
 with open('HISTORY.rst') as f:
     history = f.read()
 with open('LICENSE') as f:
     license_file = f.read()
+with open('requirements.txt') as f:
+    requires = [line.strip() for line in f if line.strip()]
+with open('test-requirements.txt') as f:
+    tests_requires = [line.strip() for line in f if line.strip()]
 
 setup(
     name='dyn',
@@ -26,6 +28,6 @@ setup(
         'Topic :: Internet :: Name Service (DNS)',
         'Topic :: Software Development :: Libraries', 
     ],
-    install_requires=[str(pkg.req) for pkg in parse_requirements('requirements.txt')],
-    tests_require=[str(pkg.req) for pkg in parse_requirements('test-requirements.txt')],
+    install_requires=requires,
+    tests_require=tests_requires,
 )

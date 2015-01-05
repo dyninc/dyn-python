@@ -1,5 +1,42 @@
 Dyn API Python SDK
 ==================
+
+.. image:: https://pypip.in/d/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Downloads
+
+.. image:: https://pypip.in/v/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Latest Version
+
+.. image:: https://pypip.in/py_versions/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Supported Python versions
+
+.. image:: https://pypip.in/implementation/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Supported Python implementations
+
+.. image:: https://pypip.in/status/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Development Status
+
+.. image:: https://pypip.in/wheel/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Wheel Status
+
+.. image:: https://pypip.in/egg/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Egg Status
+
+.. image:: https://pypip.in/format/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: Download format
+
+.. image:: https://pypip.in/license/dyn/badge.svg
+    :target: https://pypi.python.org/pypi/dyn/
+    :alt: License
+
 This library provides an easily scriptable approach to accessing all of the
 features provided by your Traffic Management (TM) or Message Management (MM)
 services.

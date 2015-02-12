@@ -6,13 +6,12 @@ import logging
 from ..session import DynectSession
 from ...compat import force_unicode
 
-__author__ = 'sschneider'
+__author__ = 'xorg'
 __all__ = ['HTTPRedirect']
 
 
 class HTTPRedirect(object):
-    """HTTPRedirect is a service which aliases a dynamic IP Address to a static
-    hostname
+    """HTTPRedirect is a service which sets up a redirect to the specified URL.//
     """
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create a new :class:`HTTPRedirect` service object
@@ -123,7 +122,7 @@ class HTTPRedirect(object):
 
 
     def delete(self):
-        """Delete this Dynamic DNS service from the DynECT System"""
+        """Delete this HTTPRedirect service from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 

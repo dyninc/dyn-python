@@ -9,6 +9,7 @@ NOTES: LoadBalance and CDNManager are deprecated and not included
 """
 from .active_failover import *
 from .ddns import DynamicDNS
+from .httpredirect import HTTPRedirect
 from .dnssec import *
 from .dsf import *
 from .gslb import *

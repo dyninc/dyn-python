@@ -13,26 +13,6 @@ Dyn API Python SDK
     :target: https://pypi.python.org/pypi/dyn/
     :alt: Supported Python versions
 
-.. image:: https://pypip.in/implementation/dyn/badge.svg
-    :target: https://pypi.python.org/pypi/dyn/
-    :alt: Supported Python implementations
-
-.. image:: https://pypip.in/status/dyn/badge.svg
-    :target: https://pypi.python.org/pypi/dyn/
-    :alt: Development Status
-
-.. image:: https://pypip.in/wheel/dyn/badge.svg
-    :target: https://pypi.python.org/pypi/dyn/
-    :alt: Wheel Status
-
-.. image:: https://pypip.in/egg/dyn/badge.svg
-    :target: https://pypi.python.org/pypi/dyn/
-    :alt: Egg Status
-
-.. image:: https://pypip.in/format/dyn/badge.svg
-    :target: https://pypi.python.org/pypi/dyn/
-    :alt: Download format
-
 .. image:: https://pypip.in/license/dyn/badge.svg
     :target: https://pypi.python.org/pypi/dyn/
     :alt: License

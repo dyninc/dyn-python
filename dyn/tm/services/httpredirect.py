@@ -31,14 +31,14 @@ class HTTPRedirect(object):
             for key, val in kwargs.items():
                 setattr(self, '_' + key, val)
         elif len(args) + len(kwargs) == 1:
-            self._get(*args, **kwargs)
+            self._get()
         else:
             self._post(*args, **kwargs)
 
     def _get(self):
         """Build an object around an existing DynECT HTTPRedirect Service"""
         self.uri = '/HTTPRedirect/{}/{}/'.format(self._zone, self._fqdn)
-        api_args = {}
+        api_args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
         for key, val in response['data'].items():

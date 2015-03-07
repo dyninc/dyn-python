@@ -5,10 +5,10 @@ Traffic Director (DSF) service.
 from ..utils import APIList, Active
 from ..errors import DynectInvalidArgumentError
 from ..records import *
-from ..session import DynectSession
-from ...core import (APIObject, ImmutableAttribute, StringAttribute,
-                     IntegerAttribute, ValidatedAttribute, APIDescriptor,
-                     BooleanAttribute, ListAttribute)
+from ..session import DynectSession, DNSAPIObject
+from ...core import (ImmutableAttribute, StringAttribute, IntegerAttribute,
+                     ValidatedAttribute, APIDescriptor, BooleanAttribute,
+                     ListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -45,10 +45,9 @@ def get_all_dsf_monitors():
     return mons
 
 
-class _DSFRecord(APIObject):
+class _DSFRecord(DNSAPIObject):
     """Base type for all DSF Records"""
     uri = ''
-    session_type = DynectSession
     label = StringAttribute('label')
     weight = IntegerAttribute('weight')
     automation = ValidatedAttribute('automation',
@@ -831,11 +830,10 @@ class DSFTXTRecord(_DSFRecord, TXTRecord):
                             endpoint_up_count, eligible, **kwargs)
 
 
-class DSFRecordSet(APIObject):
+class DSFRecordSet(DNSAPIObject):
     """A Collection of DSFRecord Type objects belonging to a
     :class:`DSFFailoverChain`
     """
-    session_type = DynectSession
     records = ListAttribute('records')
     status = ImmutableAttribute('status')
 
@@ -1013,9 +1011,8 @@ class DSFRecordSet(APIObject):
         return '<DSFRecordSet ({0})>: {1}'.format(self.rdata_class, self.label)
 
 
-class DSFFailoverChain(APIObject):
+class DSFFailoverChain(DNSAPIObject):
     uri = '/DSFRecordSetFailoverChain/{0}/{1}/'
-    session_type = DynectSession
 
     #: A unique label for this DSF Failover Chain
     label = StringAttribute('label')
@@ -1121,9 +1118,8 @@ class DSFFailoverChain(APIObject):
         return '<DSFFailoverChain>: {0}'.format(self.label)
 
 
-class DSFResponsePool(APIObject):
+class DSFResponsePool(DNSAPIObject):
     uri = '/DSFResponsePool/{0}/{1}/'
-    session_type = DynectSession
     _get_length = 1
 
     #: A unique label for this DSF Response Pool
@@ -1245,9 +1241,7 @@ class DSFResponsePool(APIObject):
         return '<DSFResponsePool>: {0}'.format(self.dsf_response_pool_id)
 
 
-class DSFRuleset(APIObject):
-    session_type = DynectSession
-
+class DSFRuleset(DNSAPIObject):
     #: A unique label for this DSF Ruleset
     label = StringAttribute('label')
 
@@ -1430,10 +1424,9 @@ class DSFMonitorEndpoint(object):
         self._update(api_args)
 
 
-class DSFMonitor(APIObject):
+class DSFMonitor(DNSAPIObject):
     """A Monitor for a :class:`TrafficDirector` Service"""
     uri = '/DSFMonitor/'
-    session_type = DynectSession
     _get_length = 1
 
     #: The unique DynECT system id for this DSF Monitor
@@ -1527,13 +1520,12 @@ class DSFMonitor(APIObject):
         return '<DSFMonitor>: {0}'.format(self.dsf_monitor_id)
 
 
-class TrafficDirector(APIObject):
+class TrafficDirector(DNSAPIObject):
     """Traffic Director is a DNS based traffic routing and load balancing
     service that is Geolocation aware and can support failover by monitoring
     endpoints.
     """
     uri = '/DSF/'
-    session_type = DynectSession
     _get_length = 1
 
     #: The unique DynECT system id for this Traffic Director service

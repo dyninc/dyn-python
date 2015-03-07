@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 from ..utils import Active
-from ..session import DynectSession
-from ...core import (APIObject, StringAttribute, ImmutableAttribute,
-                     ValidatedListAttribute, ListAttribute, IntegerAttribute)
+from ..session import DynectSession, DNSAPIObject
+from ...core import (APIService, StringAttribute, ImmutableAttribute,
+                     ListAttribute, ValidatedListAttribute, IntegerAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['ReverseDNS']
 
 
-class ReverseDNS(APIObject):
+class ReverseDNS(APIService, DNSAPIObject):
     """A DynECT ReverseDNS service"""
     uri = '/IPTrack/{zone}/{fqdn}/'
     _get_length = 1
-    session_type = DynectSession
 
     zone = ImmutableAttribute('zone')
     fqdn = ImmutableAttribute('fqdn')
@@ -75,34 +74,6 @@ class ReverseDNS(APIObject):
                 api_args['hosts'] = self.hosts
                 break  # Only need to check/assign them once
         super(ReverseDNS, self)._update(**api_args)
-
-    @property
-    def active(self):
-        """Indicates whether or not the service is active. When setting
-        directly, rather than using activate/deactivate valid arguments are 'Y'
-        or True to activate, or 'N' or False to deactivate. Note: If your
-        service is already active and you try to activate it, nothing will
-        happen. And vice versa for deactivation.
-
-        :returns: An :class:`Active` object representing the current state of
-            this :class:`ReverseDNS` Service
-        """
-        return self._active
-    @active.setter
-    def active(self, value):
-        deactivate, activate = ('N', False), ('Y', True)
-        if value in deactivate and self.active:
-            self.deactivate()
-        elif value in activate and not self.active:
-            self.activate()
-
-    def activate(self):
-        """Activate this ReverseDNS service"""
-        self._update(activate=True)
-
-    def deactivate(self):
-        """Deactivate this ReverseDNS service"""
-        self._update(deactivate=True)
 
     def __str__(self):
         return force_unicode('<ReverseDNS>: {0}').format(self.fqdn)

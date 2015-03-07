@@ -2,9 +2,9 @@
 from datetime import datetime
 
 from ..utils import APIList, Active, unix_date
-from ..session import DynectSession
-from ...core import (APIObject, ImmutableAttribute, StringAttribute,
-                     ValidatedListAttribute)
+from ..session import DynectSession, DNSAPIObject
+from ...core import (ImmutableAttribute, StringAttribute,
+                     ValidatedListAttribute, APIService)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -83,10 +83,9 @@ class DNSSECKey(object):
         return force_unicode('<DNSSECKey>: {0}').format(self.algorithm)
 
 
-class DNSSEC(APIObject):
+class DNSSEC(APIService, DNSAPIObject):
     """A DynECT System DNSSEC Service"""
     uri = '/DNSSEC/{zone_name}/'
-    session_type = DynectSession
     zone = ImmutableAttribute('zone')
     contact_nickname = StringAttribute('contact_nickname')
     notify_events = ValidatedListAttribute('notify_events',
@@ -150,28 +149,6 @@ class DNSSEC(APIObject):
         super(DNSSEC, self)._update(**api_args)
 
     @property
-    def active(self):
-        """The current status of this :class:`DNSSEC` service. When setting
-        directly, rather than using activate/deactivate valid arguments are 'Y'
-        or True to activate, or 'N' or False to deactivate. Note: If your
-        service is already active and you try to activate it, nothing will
-        happen. And vice versa for deactivation.
-
-        :returns: An :class:`Active` object representing the current state of
-            this :class:`DNSSEC` Service
-        """
-        self._get()  # Do a get to ensure we have the most up-to-date status
-        return self._active
-    @active.setter
-    def active(self, value):
-        deactivate = ('N', False)
-        activate = ('Y', True)
-        if value in deactivate and self.active:
-            self.deactivate()
-        elif value in activate and not self.active:
-            self.activate()
-
-    @property
     def keys(self):
         """A List of :class:`DNSSECKey`'s associated with this :class:`DNSSEC`
         service
@@ -187,14 +164,6 @@ class DNSSEC(APIObject):
                                  value)
         elif isinstance(value, APIList):
             self._keys = value
-
-    def activate(self):
-        """Activate this :class:`DNSSEC` service"""
-        self._update(activate='Y')
-
-    def deactivate(self):
-        """Deactivate this :class:`DNSSEC` service"""
-        self._update(deactivate='Y')
 
     def timeline_report(self, start_ts=None, end_ts=None):
         """Generates a report of events this :class:`DNSSEC` service has

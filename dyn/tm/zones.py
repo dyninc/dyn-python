@@ -7,11 +7,11 @@ from datetime import datetime
 from .utils import unix_date
 from .errors import DynectCreateError, DynectGetError
 from .records import RECORD_TYPES
-from .session import DynectSession
+from .session import DynectSession, DNSAPIObject
 from .services import (ActiveFailover, DynamicDNS, DNSSEC, TrafficDirector,
                        GSLB, ReverseDNS, RTTM, HTTPRedirect)
-from ..core import (APIObject, IntegerAttribute, StringAttribute,
-                    ListAttribute, ImmutableAttribute, ValidatedAttribute)
+from ..core import (IntegerAttribute, StringAttribute, ListAttribute,
+                    ImmutableAttribute, ValidatedAttribute)
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
@@ -49,12 +49,10 @@ def get_all_secondary_zones():
 
 
 # noinspection PyUnresolvedReferences
-class Zone(APIObject):
+class Zone(DNSAPIObject):
     """A class representing a DynECT Primary Zone"""
     #: Primary Zone URI
     uri = '/Zone/{zone_name}/'
-
-    session_type = DynectSession
 
     #: The name of this Zone
     zone = ImmutableAttribute('zone')
@@ -556,12 +554,10 @@ class Zone(APIObject):
         return force_unicode('<Zone>: {0}').format(self.name)
 
 
-class SecondaryZone(APIObject):
+class SecondaryZone(DNSAPIObject):
     """A class representing DynECT Secondary zones"""
     # Secondary Zone URI
     uri = '/Secondary/{zone_name}/'
-
-    session_type = DynectSession
 
     #: The name of this secondary zone
     zone = StringAttribute('zone')

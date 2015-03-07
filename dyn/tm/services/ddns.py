@@ -2,7 +2,7 @@
 """This module contains API Wrapper implementations of the Dynamic DNS service
 """
 from ..utils import Active
-from ..session import DynectSession
+from ..session import DynectSession, DNSAPIObject
 from ..accounts import User
 from ...core import APIService, ImmutableAttribute, StringAttribute
 from ...compat import force_unicode
@@ -11,12 +11,11 @@ __author__ = 'jnappi'
 __all__ = ['DynamicDNS']
 
 
-class DynamicDNS(APIService):
+class DynamicDNS(APIService, DNSAPIObject):
     """DynamicDNS is a service which aliases a dynamic IP Address to a static
     hostname
     """
     uri = '/DDNS/{zone}/{fqdn}/{rr_type}/'
-    session_type = DynectSession
 
     #: The zone to attach this :class:`DynamicDNS` Service to
     zone = ImmutableAttribute('zone')

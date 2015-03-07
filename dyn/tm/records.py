@@ -4,9 +4,9 @@
 These DNS_Records should really only need to be created via a zone instance but
 could also be created independently if passed valid zone, fqdn data
 """
-from .session import DynectSession
-from ..core import (APIObject, ImmutableAttribute, IntegerAttribute,
-                    StringAttribute, ValidatedAttribute)
+from .session import DynectSession, DNSAPIObject
+from ..core import (ImmutableAttribute, IntegerAttribute, StringAttribute,
+                    ValidatedAttribute)
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
@@ -19,12 +19,10 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
 
 
 # noinspection PyMissingConstructor
-class DNSRecord(APIObject):
+class DNSRecord(DNSAPIObject):
     """Base record object contains functionality to be used across all other
     record type objects
     """
-    session_type = DynectSession
-
     #: Name of zone that this record belongs to
     zone = ImmutableAttribute('zone')
 

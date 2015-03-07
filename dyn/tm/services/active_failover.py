@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from ._shared import BaseMonitor
 from ..utils import Active, APIList
-from ..session import DynectSession
+from ..session import DynectSession, DNSAPIObject
 from ...core import (APIService, ImmutableAttribute, StringAttribute,
                      ClassAttribute, IntegerAttribute, ValidatedListAttribute)
 from ...compat import force_unicode
@@ -20,13 +20,12 @@ class AFOMonitor(BaseMonitor):
         raise ValueError
 
 
-class ActiveFailover(APIService):
+class ActiveFailover(APIService, DNSAPIObject):
     """With Active Failover, we monitor your Primary IP.  If a failover event
     is detected, our system auto switches (hot swaps) to your dedicated back-up
     IP
     """
     uri = '/Failover/{zone}/{fqdn}/'
-    session_type = DynectSession
 
     #: The zone that this :class:`ActiveFailover` service is attached to
     zone = ImmutableAttribute('zone')

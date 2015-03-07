@@ -3,10 +3,10 @@ from datetime import datetime
 
 from ._shared import BaseMonitor
 from ..utils import APIList, Active, unix_date
-from ..session import DynectSession
-from ...core import (APIObject, APIService, ImmutableAttribute,
-                     StringAttribute, ValidatedAttribute, IntegerAttribute,
-                     ClassAttribute, ValidatedListAttribute, ListAttribute)
+from ..session import DynectSession, DNSAPIObject
+from ...core import (APIService, ImmutableAttribute, StringAttribute,
+                     ValidatedAttribute, IntegerAttribute, ClassAttribute,
+                     ValidatedListAttribute, ListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -34,12 +34,10 @@ class RTTMPerformanceMonitor(RTTMMonitor):
         super(BaseMonitor, self)._build(data.pop('performance_monitor'))
 
 
-class RegionPoolEntry(APIObject):
+class RegionPoolEntry(DNSAPIObject):
     """Creates a new RTTM service region pool entry in the zone/node
     indicated
     """
-    session_type = DynectSession
-
     zone = ImmutableAttribute('zone')
     fqdn = ImmutableAttribute('fqdn')
     region_code = ImmutableAttribute('region_code')
@@ -87,10 +85,9 @@ class RegionPoolEntry(APIObject):
         return force_unicode('<RTTMRegionPoolEntry>: {0}').format(self.address)
 
 
-class RTTMRegion(APIObject):
+class RTTMRegion(DNSAPIObject):
     """docstring for RTTMRegion"""
     uri = '/RTTMRegion/{zone}/{fqdn}/{region}/'
-    session_type = DynectSession
     zone = ImmutableAttribute('zone')
     fqdn = ImmutableAttribute('fqdn')
     region_code = ValidatedAttribute('region_code',
@@ -204,7 +201,7 @@ class RTTMRegion(APIObject):
         return force_unicode('<RTTMRegion>: {0}').format(self.region_code)
 
 
-class RTTM(APIService):
+class RTTM(APIService, DNSAPIObject):
     """Real Time Traffic Management (RTTM) is a DynECT Managed DNS service,
     which monitors all of your endpoints to detect the best-performing ones and
     also auto-populates your regional pools using that information to provide
@@ -214,7 +211,6 @@ class RTTM(APIService):
     configurations.
     """
     uri = '/RTTM/{zone}/{fqdn}/'
-    session_type = DynectSession
 
     #: The zone that this :class:`RTTM` service is attached to
     zone = ImmutableAttribute('zone')

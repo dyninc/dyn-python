@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-from ..session import DynectSession
-from ...core import (APIObject, StringAttribute, ValidatedAttribute,
-                     IntegerAttribute)
+from ..session import DynectSession, DNSAPIObject
+from ...core import StringAttribute, ValidatedAttribute, IntegerAttribute
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
 
 
-class BaseMonitor(APIObject):
+class BaseMonitor(DNSAPIObject):
     """A :class:`Monitor` for a GSLB Service"""
-    session_type = DynectSession
     protocol = ValidatedAttribute('protocol',
                                   validator=('HTTP', 'HTTPS', 'PING', 'SMTP',
                                              'TCP'))

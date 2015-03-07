@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from ._shared import BaseMonitor
 from ..utils import APIList
-from ..session import DynectSession
-from ...core import (APIObject, APIService, ImmutableAttribute,
-                     StringAttribute, ValidatedAttribute, IntegerAttribute,
-                     ClassAttribute, ListAttribute)
+from ..session import DynectSession, DNSAPIObject
+from ...core import (APIService, ImmutableAttribute, StringAttribute,
+                     ValidatedAttribute, IntegerAttribute, ClassAttribute,
+                     ListAttribute)
 from ...compat import force_unicode
 
 __author__ = 'jnappi'
@@ -21,9 +21,8 @@ class GSLBMonitor(BaseMonitor):
         raise ValueError
 
 
-class GSLBRegionPoolEntry(APIObject):
+class GSLBRegionPoolEntry(DNSAPIObject):
     uri = '/GSLBRegionPoolEntry/{zone}/{fqdn}/{region}/{address}/'
-    session_type = DynectSession
     zone = ImmutableAttribute('zone')
     fqdn = ImmutableAttribute('fqdn')
     region_code = ImmutableAttribute('region_code')
@@ -86,9 +85,8 @@ class GSLBRegionPoolEntry(APIObject):
         )
 
 
-class GSLBRegion(APIObject):
+class GSLBRegion(DNSAPIObject):
     uri = '/GSLBRegion/{zone}/{fqdn}/{region}/'
-    session_type = DynectSession
     zone = ImmutableAttribute('zone')
     fqdn = ImmutableAttribute('fqdn')
     region_code = ImmutableAttribute('region_code')
@@ -182,10 +180,9 @@ class GSLBRegion(APIObject):
         return force_unicode('<GSLBRegion>: {0}').format(self.region_code)
 
 
-class GSLB(APIService):
+class GSLB(APIService, DNSAPIObject):
     """A Global Server Load Balancing (GSLB) service"""
     uri = '/GSLB/{zone}/{fqdn}/'
-    session_type = DynectSession
     zone = ImmutableAttribute('zone')
     fqdn = ImmutableAttribute('fqdn')
     auto_recover = ValidatedAttribute('auto_recover', validator=('Y', 'N'))
@@ -293,7 +290,7 @@ class GSLB(APIService):
             self._region.uri = self.uri
         if 'monitor' in api_args:
             monitor = api_args.pop('monitor')
-                # We're only going accept new monitors of type Monitor
+            # We're only going accept new monitors of type Monitor
             if isinstance(monitor, GSLBMonitor):
                 api_args['monitor'] = monitor.to_json()
         super(GSLB, self)._update(**api_args)

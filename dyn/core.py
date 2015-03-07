@@ -299,6 +299,15 @@ class _History(list):
         super(_History, self).append(tuple([now_ts] + list(p_object)))
 
 
+class NoActiveSessionError(Exception):
+    """Custom exception type to be raised if `SessionEngine.get_session` is
+    called and there is not an active session instance for it to return
+    """
+    def __init__(self, sessiontype):
+        self.message = ('You must have an active {0} instance to perform this '
+                        'operation'.format(str(sessiontype)))
+
+
 # noinspection PyMethodParameters
 class SessionEngine(Singleton):
     """Base object representing a DynectSession Session"""
@@ -349,10 +358,16 @@ class SessionEngine(Singleton):
     def get_session(cls):
         """Return the current session for this Session type or None if there is
         not an active session
+
+        :raises :class:`NoActiveSessionError` if there is not currently an
+            active session
         """
         cur_thread = threading.current_thread()
         key = getattr(cls, '__metakey__')
-        return cls._instances.get(key, {}).get(cur_thread, None)
+        instance = cls._instances.get(key, {}).get(cur_thread, None)
+        if instance is None:
+            raise NoActiveSessionError(cls)
+        return instance
 
     @classmethod
     def get(cls, url, api_args=None):

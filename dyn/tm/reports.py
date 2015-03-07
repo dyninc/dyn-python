@@ -23,8 +23,7 @@ def get_check_permission(permission, zone_name=None):
     api_args = {'permission': permission}
     if zone_name is not None:
         api_args['zone_name'] = zone_name
-    response = DynectSession.get_session().execute('/CheckPermissionReport/',
-                                                   'POST', api_args)
+    response = DynectSession.post('/CheckPermissionReport/', api_args)
     return response['data']
 
 
@@ -47,8 +46,7 @@ def get_dnssec_timeline(zone_name, start_ts=None, end_ts=None):
         api_args['end_ts'] = unix_date(end_ts)
     elif end_ts is None and start_ts is not None:
         api_args['end_ts'] = unix_date(datetime.now())
-    response = DynectSession.get_session().execute('/DNSSECTimelineReport/',
-                                                   'POST', api_args)
+    response = DynectSession.post('/DNSSECTimelineReport/', api_args)
     return response['data']
 
 
@@ -67,8 +65,7 @@ def get_rttm_log(zone_name, fqdn, start_ts, end_ts=None):
     end_ts = end_ts or datetime.now()
     api_args = {'zone': zone_name, 'fqdn': fqdn,
                 'start_ts': unix_date(start_ts), 'end_ts': unix_date(end_ts)}
-    response = DynectSession.get_session().execute('/RTTMLogReport/', 'POST',
-                                                   api_args)
+    response = DynectSession.post('/RTTMLogReport/', api_args)
     return response['data']
 
 
@@ -83,8 +80,7 @@ def get_rttm_rrset(zone_name, fqdn, ts):
     :return: A *dict* containing rrset report data
     """
     api_args = {'zone': zone_name, 'fqdn': fqdn, 'ts': unix_date(ts)}
-    response = DynectSession.get_session().execute('/RTTMRRSetReport/',
-                                                   'POST', api_args)
+    response = DynectSession.post('/RTTMRRSetReport/', api_args)
     return response['data']
 
 
@@ -113,8 +109,7 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
         api_args['rrecs'] = rrecs
     if zones is not None:
         api_args['zones'] = zones
-    response = DynectSession.get_session().execute('/QPSReport/', 'POST',
-                                                   api_args)
+    response = DynectSession.post('/QPSReport/', api_args)
     return response['data']
 
 
@@ -132,6 +127,5 @@ def get_zone_notes(zone_name, offset=None, limit=None):
         api_args['offset'] = offset
     if limit:
         api_args['limit'] = limit
-    response = DynectSession.get_session().execute('/ZoneNoteReport/', 'POST',
-                                                   api_args)
+    response = DynectSession.post('/ZoneNoteReport/', api_args)
     return response['data']

@@ -15,7 +15,7 @@ def get_all_dnssec():
     """:return: A ``list`` of :class:`DNSSEC` Services"""
     uri = '/DNSSEC/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     dnssecs = []
     for dnssec in response['data']:
         zone = dnssec['zone']
@@ -126,8 +126,7 @@ class DNSSEC(APIObject):
         # Need to cast to CSV for API
         if self._notify_events is not None:
             api_args['notify_events'] = ', '.join(self._notify_events)
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -215,7 +214,7 @@ class DNSSEC(APIObject):
         elif end_ts is None and start_ts is not None:
             api_args['end_ts'] = unix_date(datetime.now())
         uri = '/DNSSECTimelineReport/'
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.post(uri, api_args)
         return response['data']
 
     def __str__(self):

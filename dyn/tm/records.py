@@ -59,8 +59,7 @@ class DNSRecord(APIObject):
 
         :param api_args: arguments to be pased to the API call
         """
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def _get(self, record_id):
@@ -68,8 +67,8 @@ class DNSRecord(APIObject):
 
         :param record_id: The id of the record you would like to get
         """
-        uri = self.uri + '{}/'.format(record_id)
-        response = DynectSession.get_session().execute(uri, 'GET')
+        uri = self.uri + '{0}/'.format(record_id)
+        response = DynectSession.get(uri)
         self._build(response['data'])
 
     def _update(self, **api_args):

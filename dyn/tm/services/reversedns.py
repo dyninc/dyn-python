@@ -51,14 +51,13 @@ class ReverseDNS(APIObject):
                     'netmask': netmask}
         if ttl is not None:
             api_args['ttl'] = ttl
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def _get(self, service_id):
         """Build an object around an existing DynECT ReverseDNS Service"""
-        uri = '/IPTrack/{}/{}/{}/'.format(self.zone, self.fqdn, service_id)
-        response = DynectSession.get_session().execute(uri, 'GET')
+        uri = '/IPTrack/{0}/{1}/{2}/'.format(self.zone, self.fqdn, service_id)
+        response = DynectSession.get(uri)
         self._build(response['data'])
 
     def _build(self, data):

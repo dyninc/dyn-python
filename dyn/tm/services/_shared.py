@@ -92,7 +92,7 @@ class BaseMonitor(APIObject):
         """Get the current status of this :class:`Monitor` from the
         DynECT System
         """
-        respnose = DynectSession.get_session().execute(self.uri, 'GET')
+        respnose = DynectSession.get(self.uri)
         return respnose['data']['status']
 
     def __str__(self):

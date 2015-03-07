@@ -9,7 +9,7 @@ from .errors import DynectCreateError, DynectGetError
 from .records import RECORD_TYPES
 from .session import DynectSession
 from .services import (ActiveFailover, DynamicDNS, DNSSEC, TrafficDirector,
-                       GSLB, ReverseDNS, RTTM)
+                       GSLB, ReverseDNS, RTTM, HTTPRedirect)
 from ..core import (APIObject, IntegerAttribute, StringAttribute,
                     ListAttribute, ImmutableAttribute, ValidatedAttribute)
 from ..compat import force_unicode
@@ -26,7 +26,7 @@ def get_all_zones():
     """
     uri = '/Zone/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     zones = []
     for zone in response['data']:
         zones.append(Zone(zone['zone'], api=False, **zone))
@@ -41,7 +41,7 @@ def get_all_secondary_zones():
     """
     uri = '/Secondary/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     zones = []
     for zone in response['data']:
         zones.append(SecondaryZone(zone.pop('zone'), api=False, **zone))
@@ -122,8 +122,7 @@ class Zone(APIObject):
 
             api_args = {'zone': self.name, 'rname': contact, 'ttl': ttl,
                         'serial_style': serial_style}
-            response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                           api_args)
+            response = DynectSession.post(self.uri, api_args)
             self._build(response['data'])
         self._status = 'active'
 
@@ -144,7 +143,7 @@ class Zone(APIObject):
             content = f.read()
             f.close()
             api_args = {'file': content}
-            DynectSession.get_session().execute(uri, 'POST', api_args)
+            DynectSession.post(uri, api_args)
             self.__poll_for_get()
 
     def _xfer(self, master_ip, timeout=None):
@@ -153,11 +152,11 @@ class Zone(APIObject):
         """
         uri = '/ZoneTransfer/{0}/'.format(self.name)
         api_args = {'master_ip': master_ip}
-        DynectSession.get_session().execute(uri, 'POST', api_args)
+        DynectSession.post(uri, api_args)
         time_out = timeout or 10
         count = 0
         while count < time_out:
-            response = DynectSession.get_session().execute(uri, 'GET')
+            response = DynectSession.get(uri)
             if response['status'] == 'running' and response['message'] == '':
                 sleep(60)
                 count += 1
@@ -185,8 +184,7 @@ class Zone(APIObject):
             api_args = {}
             if xfer_master_ip is not None:
                 api_args['master_ip'] = xfer_master_ip
-            response = DynectSession.get_session().execute(uri, 'GET',
-                                                           api_args)
+            response = DynectSession.get(uri, api_args)
             error_labels = ['running', 'waiting', 'failed', 'canceled']
             ok_labels = ['ready', 'unpublished', 'ok']
             if response['data']['status'] in error_labels:
@@ -256,7 +254,7 @@ class Zone(APIObject):
             api_args['offset'] = offset
         if limit:
             api_args['limit'] = limit
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.post(uri, api_args)
         return response['data']
 
     def add_record(self, name=None, record_type='A', *args, **kwargs):
@@ -343,7 +341,7 @@ class Zone(APIObject):
         if self.fqdn is not None:
             uri += '{0}/'.format(self.fqdn)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
                         response['data'].items() if rec_list != []}
@@ -386,7 +384,7 @@ class Zone(APIObject):
         constructor = RECORD_TYPES[record_type]
         uri = '/{0}/{1}/{2}/'.format(names[record_type], self.name, self.fqdn)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         records = []
         for record in response['data']:
             del record['fqdn']
@@ -407,7 +405,7 @@ class Zone(APIObject):
             return
         api_args = {'detail': 'Y'}
         uri = '/ANYRecord/{0}/{1}/'.format(self.name, self.fqdn)
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
                         response['data'].items() if rec_list != []}
@@ -435,7 +433,7 @@ class Zone(APIObject):
         """
         uri = '/Failover/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         afos = []
         for failover in response['data']:
             del failover['zone']
@@ -452,7 +450,7 @@ class Zone(APIObject):
         """
         uri = '/DDNS/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         ddnses = []
         for ddns in response['data']:
             del ddns['zone']
@@ -467,9 +465,9 @@ class Zone(APIObject):
 
         :return: A :class:`List` of :class:`HTTPRedirect` Services
         """
-        uri = '/HTTPRedirect/{}/'.format(self._name)
+        uri = '/HTTPRedirect/{0}/'.format(self._name)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         httpredirs = []
         for httpredir in response['data']:
             del httpredir['zone']
@@ -485,7 +483,7 @@ class Zone(APIObject):
         """
         uri = '/GSLB/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         gslbs = []
         for gslb_svc in response['data']:
             del gslb_svc['zone']
@@ -501,7 +499,7 @@ class Zone(APIObject):
         """
         uri = '/IPTrack/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         rdnses = []
         for rdns in response['data']:
             del rdns['zone']
@@ -518,7 +516,7 @@ class Zone(APIObject):
         """
         uri = '/RTTM/{0}/'.format(self.name)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         rttms = []
         for rttm_svc in response['data']:
             del rttm_svc['zone']
@@ -551,8 +549,7 @@ class Zone(APIObject):
             api_args['hosts'] = hosts
         if rrecs is not None:
             api_args['rrecs'] = rrecs
-        response = DynectSession.get_session().execute('/QPSReport/',
-                                                       'POST', api_args)
+        response = DynectSession.post('/QPSReport/', api_args)
         return response['data']
 
     def __str__(self):
@@ -609,8 +606,7 @@ class SecondaryZone(APIObject):
             api_args['contact_nickname'] = self._contact_nickname
         if tsig_key_name:
             api_args['tsig_key_name'] = self._tsig_key_name
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def activate(self):
@@ -703,7 +699,7 @@ class Node(object):
         if self.fqdn is not None:
             uri += '{0}/'.format(self.fqdn)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
                         response['data'].items() if rec_list != []}
@@ -746,7 +742,7 @@ class Node(object):
         constructor = RECORD_TYPES[record_type]
         uri = '/{0}/{1}/{2}/'.format(names[record_type], self.zone, self.fqdn)
         api_args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         records = []
         for record in response['data']:
             del record['fqdn']
@@ -764,7 +760,7 @@ class Node(object):
             return
         api_args = {'detail': 'Y'}
         uri = '/ANYRecord/{0}/{1}/'.format(self.zone, self.fqdn)
-        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        response = DynectSession.get(uri, api_args)
         # Strip out empty record_type lists
         record_lists = {label: rec_list for label, rec_list in
                         response['data'].items() if rec_list != []}
@@ -789,7 +785,7 @@ class Node(object):
         underneath this node
         """
         uri = '/Node/{0}/{1}'.format(self.zone, self.fqdn)
-        DynectSession.get_session().execute(uri, 'DELETE')
+        DynectSession.delete(uri)
 
     def __str__(self):
         return force_unicode('<Node>: {0}').format(self.fqdn)

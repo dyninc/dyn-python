@@ -61,7 +61,7 @@ class GSLBRegionPoolEntry(APIObject):
         api_args = {'address': self.address, 'label': label, 'weight': weight,
                     'serve_mode': serve_mode}
         api_args = {api_args[k] for k in api_args if api_args[k] is not None}
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.post(uri, api_args)
         self._build(response['data'])
 
     def _update(self, **api_args):
@@ -145,7 +145,7 @@ class GSLBRegion(APIObject):
                     'failover_mode': failover_mode,
                     'failover_data': failover_data}
         api_args = {api_args[k] for k in api_args if api_args[k] is not None}
-        response = DynectSession.get_session()(uri, 'POST', api_args)
+        response = DynectSession.post(uri, api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -256,8 +256,7 @@ class GSLB(APIService):
                     'syslog_facility': syslog_facility,
                     'monitor': monitor.to_json()}
         api_args = {api_args[k] for k in api_args if api_args[k] is not None}
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -307,8 +306,7 @@ class GSLB(APIService):
             api_args = {'recoverip': True, 'address': address}
         else:
             api_args = {'recover': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
+        response = DynectSession.put(self.uri, api_args)
         self._build(response['data'])
 
     def add_region(self, region_code, pool, serve_count=None,

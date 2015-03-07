@@ -74,7 +74,7 @@ class RegionPoolEntry(APIObject):
 
     def _get(self):
         args = {'detail': 'Y'}
-        response = DynectSession.get_session().execute(self.uri, 'GET', args)
+        response = DynectSession.get(self.uri, args)
         self._build(response['data'])
 
     def to_json(self):
@@ -168,13 +168,12 @@ class RTTMRegion(APIObject):
             api_args['failover_mode'] = self.failover_mode
         if self.failover_data:
             api_args['failover_data'] = self.failover_data
-        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.post(uri, api_args)
         self._build(response['data'])
 
     def _update(self, api_args):
         """Private Update method to cut back on redundant code"""
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
+        response = DynectSession.put(self.uri, api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -329,7 +328,7 @@ class RTTM(APIService):
             api_args['notify_events'] = ', '.join(notify_events)
 
         api_args = {api_args[k] for k in api_args if api_args[k] is not None}
-        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        resp = DynectSession.post(self.uri, api_args)
         self._build(resp['data'])
 
     def _build(self, data):
@@ -386,8 +385,7 @@ class RTTM(APIService):
         :return: dictionary containing rrset report data
         """
         api_args = {'zone': self.zone, 'fqdn': self.fqdn, 'ts': ts}
-        response = DynectSession.get_session().execute('/RTTMRRSetReport/',
-                                                       'POST', api_args)
+        response = DynectSession.post('/RTTMRRSetReport/', api_args)
         return response['data']
 
     def get_log_report(self, start_ts, end_ts=None):
@@ -404,8 +402,7 @@ class RTTM(APIService):
         api_args = {'zone': self.zone, 'fqdn': self.fqdn,
                     'start_ts': unix_date(start_ts),
                     'end_ts': unix_date(end_ts)}
-        response = DynectSession.get_session().execute('/RTTMLogReport/',
-                                                       'POST', api_args)
+        response = DynectSession.post('/RTTMLogReport/', api_args)
         return response['data']
 
     def recover(self, recoverip=None, address=None):
@@ -415,7 +412,7 @@ class RTTM(APIService):
         if recoverip:
             api_args['recoverip'] = recoverip
             api_args['address'] = address
-        resp = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        resp = DynectSession.put(self.uri, api_args)
         self._build(resp['data'])
 
     def __str__(self):

@@ -29,7 +29,7 @@ def get_updateusers(search=None):
     """
     uri = '/UpdateUser/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     update_users = []
     for user in response['data']:
         update_users.append(UpdateUser(api=False, **user))
@@ -65,7 +65,7 @@ def get_users(search=None):
             else:
                 search_string = '{}:"{}"'.format(key, val)
         api_args['search'] = search_string
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     users = []
     for user in response['data']:
         user_name = None
@@ -93,7 +93,7 @@ def get_permissions_groups(search=None):
     """
     uri = '/PermissionGroup/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     groups = []
     for group in response['data']:
         groups.append(PermissionsGroup(None, api=False, **group))
@@ -122,7 +122,7 @@ def get_contacts(search=None):
     """
     uri = '/Contact/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     contacts = []
     for contact in response['data']:
         if 'nickname' in contact:
@@ -154,7 +154,7 @@ def get_notifiers(search=None):
     """
     uri = '/Notifier/'
     api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    response = DynectSession.get(uri, api_args)
     notifiers = []
     for notifier in response['data']:
         notifiers.append(Notifier(None, api=False, **notifier))
@@ -203,8 +203,7 @@ class UpdateUser(DNSAPIObject):
         System
         """
         api_args = {'nickname': nickname, 'password': password}
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def _get(self, user_name):
@@ -213,7 +212,7 @@ class UpdateUser(DNSAPIObject):
         """
         self._user_name = user_name
         self.uri = '/UpdateUser/{0}/'.format(user_name)
-        response = DynectSession.get_session().execute(self.uri, 'GET')
+        response = DynectSession.get(self.uri)
         self._build(response['data'])
 
     def block(self):
@@ -242,7 +241,7 @@ class UpdateUser(DNSAPIObject):
         """Delete this :class:`~dyn.tm.accounts.UpdateUser` from the DynECT
         System. It is important to note that this operation can not be undone.
         """
-        DynectSession.get_session().execute(self.uri, 'DELETE')
+        DynectSession.delete(self.uri)
 
     def __str__(self):
         return force_unicode('<UpdateUser>: {0}').format(self.user_name)
@@ -400,7 +399,7 @@ class User(DNSAPIObject):
         self._forbid = forbid
         self._status = status
         self._website = website
-        response = DynectSession.get_session().execute(self.uri, 'POST', self)
+        response = DynectSession.post(self.uri, self)
         self._build(response['data'])
 
     def block(self):
@@ -421,7 +420,7 @@ class User(DNSAPIObject):
         self.permissions.append(permission)
         uri = '/UserPermissionEntry/{0}/{1}/'.format(self._user_name,
                                                      permission)
-        DynectSession.get_session().execute(uri, 'POST')
+        DynectSession.post(uri)
 
     def replace_permissions(self, permissions=None):
         """Replaces the :const:`list` of permissions for this
@@ -438,7 +437,7 @@ class User(DNSAPIObject):
         else:
             self.permissions = []
         uri = '/UserPermissionEntry/{}/'.format(self._user_name)
-        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        DynectSession.put(uri, api_args)
 
     def delete_permission(self, permission):
         """Remove this specific permission from the
@@ -449,7 +448,7 @@ class User(DNSAPIObject):
         if permission in self.permissions:
             self.permissions.remove(permission)
         uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
-        DynectSession.get_session().execute(uri, 'DELETE')
+        DynectSession.delete(uri)
 
     def add_permissions_group(self, group):
         """Assigns the permissions group to this :class:`~dyn.tm.accounts.User`
@@ -458,8 +457,8 @@ class User(DNSAPIObject):
             :class:`~dyn.tm.accounts.User`
         """
         self.permission_groups.append(group)
-        uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
-        DynectSession.get_session().execute(uri, 'POST')
+        uri = '/UserGroupEntry/{0}/{1}/'.format(self._user_name, group)
+        DynectSession.post(uri)
 
     def replace_permissions_group(self, groups=None):
         """Replaces the :const:`list` of permissions for this
@@ -475,8 +474,8 @@ class User(DNSAPIObject):
             self.groups = groups
         else:
             self.groups = []
-        uri = '/UserGroupEntry/{}/'.format(self._user_name)
-        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        uri = '/UserGroupEntry/{0}/'.format(self._user_name)
+        DynectSession.put(uri, api_args)
 
     def delete_permissions_group(self, group):
         """Removes the permissions group from the
@@ -488,7 +487,7 @@ class User(DNSAPIObject):
         if group in self.permissions:
             self.permission_groups.remove(group)
         uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
-        DynectSession.get_session().execute(uri, 'DELETE')
+        DynectSession.delete(uri)
 
     def add_forbid_rule(self, permission, zone=None):
         """Adds the forbid rule to the :class:`~dyn.tm.accounts.User`'s
@@ -501,8 +500,8 @@ class User(DNSAPIObject):
         api_args = {}
         if zone is not None:
             api_args['zone'] = zone
-        uri = '/UserForbidEntry/{}/{}/'.format(self._user_name, permission)
-        DynectSession.get_session().execute(uri, 'POST', api_args)
+        uri = '/UserForbidEntry/{0}/{1}/'.format(self._user_name, permission)
+        DynectSession.post(uri, api_args)
 
     def replace_forbid_rules(self, forbid=None):
         """Replaces the :const:`list` of forbidden permissions in the
@@ -516,8 +515,8 @@ class User(DNSAPIObject):
         api_args = {}
         if forbid is not None:
             api_args['forbid'] = forbid
-        uri = '/UserForbidEntry/{}/'.format(self._user_name)
-        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        uri = '/UserForbidEntry/{0}/'.format(self._user_name)
+        DynectSession.put(uri, api_args)
 
     def delete_forbid_rule(self, permission, zone=None):
         """Removes a forbid permissions rule from the
@@ -529,8 +528,8 @@ class User(DNSAPIObject):
         api_args = {}
         if zone is not None:
             api_args['zone'] = zone
-        uri = '/UserForbidEntry/{}/{}/'.format(self._user_name, permission)
-        DynectSession.get_session().execute(uri, 'DELETE', api_args)
+        uri = '/UserForbidEntry/{0}/{1}/'.format(self._user_name, permission)
+        DynectSession.delete(uri, api_args)
 
     def __str__(self):
         return force_unicode('<User>: {0}').format(self.user_name)
@@ -612,8 +611,7 @@ class PermissionsGroup(DNSAPIObject):
                     api_args['type'] = val
                 else:
                     api_args[key[1:]] = val
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       api_args)
+        response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -633,7 +631,7 @@ class PermissionsGroup(DNSAPIObject):
         """Get an existing :class:`~dyn.tm.accounts.PermissionsGroup` from the
         DynECT System
         """
-        response = DynectSession.get_session().execute(self.uri, 'GET')
+        response = DynectSession.get(self.uri)
         self._build(response['data'])
 
     def _update(self, **api_args):
@@ -650,7 +648,7 @@ class PermissionsGroup(DNSAPIObject):
         """
         uri = '/PermissionGroupPermissionEntry/{0}/{1}/'.format(
             self._group_name, permission)
-        DynectSession.get_session().execute(uri, 'POST')
+        DynectSession.post(uri)
         self._permission.append(permission)
 
     def replace_permissions(self, permission=None):
@@ -664,7 +662,7 @@ class PermissionsGroup(DNSAPIObject):
         if permission is not None:
             api_args['permission'] = permission
         uri = '/PermissionGroupPermissionEntry/{0}/'.format(self._group_name)
-        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        DynectSession.put(uri, api_args)
         if permission:
             self._permission = permission
         else:
@@ -677,7 +675,7 @@ class PermissionsGroup(DNSAPIObject):
         """
         uri = '/PermissionGroupPermissionEntry/{0}/{1}/'.format(
             self._group_name, permission)
-        DynectSession.get_session().execute(uri, 'DELETE')
+        DynectSession.delete(uri)
         self._permission.remove(permission)
 
     def add_zone(self, zone, recurse='Y'):
@@ -691,7 +689,7 @@ class PermissionsGroup(DNSAPIObject):
         api_args = {'recurse': recurse}
         uri = '/PermissionGroupZoneEntry/{0}/{1}/'.format(self._group_name,
                                                           zone)
-        DynectSession.get_session().execute(uri, 'POST', api_args)
+        DynectSession.post(uri, api_args)
         self._zone.append(zone)
 
     def add_subgroup(self, name):
@@ -704,7 +702,7 @@ class PermissionsGroup(DNSAPIObject):
         """
         uri = '/PermissionGroupSubgroupEntry/{0}/{1}/'.format(self._group_name,
                                                               name)
-        DynectSession.get_session().execute(uri, 'POST')
+        DynectSession.post(uri)
         self._subgroup.append(name)
 
     def update_subgroup(self, subgroups):
@@ -715,7 +713,7 @@ class PermissionsGroup(DNSAPIObject):
         """
         api_args = {'subgroup': subgroups}
         uri = '/PermissionGroupSubgroupEntry/{0}/'.format(self._group_name)
-        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        DynectSession.put(uri, api_args)
         self._subgroup = subgroups
 
     def delete_subgroup(self, name):
@@ -728,7 +726,7 @@ class PermissionsGroup(DNSAPIObject):
         """
         uri = '/PermissionGroupSubgroupEntry/{0}/{1}/'.format(self._group_name,
                                                               name)
-        DynectSession.get_session().execute(uri, 'DELETE')
+        DynectSession.delete(uri)
         self._subgroup.remove(name)
 
     def __str__(self):
@@ -786,7 +784,7 @@ class Notifier(DNSAPIObject):
         self._label = label
         self._recipients = recipients
         self._services = services
-        response = DynectSession.get_session().execute(uri, 'POST', self)
+        response = DynectSession.post(uri, self)
         self._build(response['data'])
 
     def _get(self, notifier_id):
@@ -794,7 +792,7 @@ class Notifier(DNSAPIObject):
         DynECT System
         """
         self.uri = '/Notifier/{0}/'.format(notifier_id)
-        response = DynectSession.get_session().execute(self.uri, 'GET')
+        response = DynectSession.get(self.uri)
         self._build(response['data'])
 
     def __str__(self):
@@ -912,7 +910,7 @@ class Contact(DNSAPIObject):
         self._post_code = post_code
         self._state = state
         self._website = website
-        response = DynectSession.get_session().execute(self.uri, 'POST', self)
+        response = DynectSession.post(self.uri, self)
         self._build(response['data'])
 
     def _build(self, data):

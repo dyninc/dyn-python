@@ -127,8 +127,7 @@ class ActiveFailover(APIService):
         self._syslog_facility = syslog_facility
         self._ttl = ttl
 
-        response = DynectSession.get_session().execute(self.uri, 'POST',
-                                                       self.api_args)
+        response = DynectSession.post(self.uri, self.api_args)
         self._build(response['data'])
 
     def _update(self, **api_args):

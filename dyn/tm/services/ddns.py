@@ -69,7 +69,7 @@ class DynamicDNS(APIService):
         if user:
             api_args['user'] = user
             api_args['full_setup'] = True
-        resp = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        resp = DynectSession.post(self.uri, api_args)
         self._build(resp['data'])
 
     def reset(self):

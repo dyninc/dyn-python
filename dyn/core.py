@@ -355,6 +355,26 @@ class SessionEngine(Singleton):
         return cls._instances.get(key, {}).get(cur_thread, None)
 
     @classmethod
+    def get(cls, url, api_args=None):
+        """Wrap a raw session execute call with a GET convenience method"""
+        return cls.get_session().execute(url, 'GET', api_args)
+
+    @classmethod
+    def post(cls, url, api_args=None):
+        """Wrap a raw session execute call with a POST convenience method"""
+        return cls.get_session().execute(url, 'POST', api_args)
+
+    @classmethod
+    def put(cls, url, api_args=None):
+        """Wrap a raw session execute call with a PUT convenience method"""
+        return cls.get_session().execute(url, 'PUT', api_args)
+
+    @classmethod
+    def delete(cls, url, api_args=None):
+        """Wrap a raw session execute call with a DELETE convenience method"""
+        return cls.get_session().execute(url, 'DELETE', api_args)
+
+    @classmethod
     def close_session(cls):
         """Remove the current session from the dict of instances and return it.
         If there was not currently a session being stored, return None. If,

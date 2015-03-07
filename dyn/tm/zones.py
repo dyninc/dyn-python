@@ -290,7 +290,7 @@ class Zone(APIObject):
             this :class:`Zone`
         :param service_type: The type of the service you would like to create.
             Valid service_type arguments are: 'ActiveFailover', 'DDNS',
-            'DNSSEC', 'DSF', 'GSLB', 'RDNS', 'RTTM'
+            'DNSSEC', 'DSF', 'GSLB', 'RDNS', 'RTTM', 'HTTPRedirect'
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
@@ -300,7 +300,8 @@ class Zone(APIObject):
                         'DSF': TrafficDirector,
                         'GSLB': GSLB,
                         'RDNS': ReverseDNS,
-                        'RTTM': RTTM}
+                        'RTTM': RTTM,
+                        'HTTPRedirect': HTTPRedirect}
         fqdn = self.name + '.'
         if name:
             fqdn = name + '.' + fqdn
@@ -459,6 +460,22 @@ class Zone(APIObject):
             ddnses.append(
                 DynamicDNS(self.name, self._fqdn, api=False, **ddns))
         return ddnses
+
+    def get_all_httpredirect(self):
+        """Retrieve a list of all :class:`HTTPRedirect` services associated with this
+        :class:`Zone`
+
+        :return: A :class:`List` of :class:`HTTPRedirect` Services
+        """
+        uri = '/HTTPRedirect/{}/'.format(self._name)
+        api_args = {'detail': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        httpredirs = []
+        for httpredir in response['data']:
+            del httpredir['zone']
+            del httpredir['fqdn']
+            httpredirs.append(HTTPRedirect(self._name, self._fqdn, api=False, **httpredir))
+        return httpredirs
 
     def get_all_gslb(self):
         """Retrieve a list of all :class:`GSLB` services associated with this
@@ -658,13 +675,19 @@ class Node(object):
 
         :param service_type: The type of the service you would like to create.
             Valid service_type arguments are: 'ActiveFailover', 'DDNS',
-            'DNSSEC', 'DSF', 'GSLB', 'RDNS', 'RTTM'
+            'DNSSEC', 'DSF', 'GSLB', 'RDNS', 'RTTM', 'HTTPRedirect'
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
-        objects = {'ActiveFailover': ActiveFailover, 'DDNS': DynamicDNS,
-                   'DNSSEC': DNSSEC, 'DSF': TrafficDirector, 'GSLB': GSLB,
-                   'RDNS': ReverseDNS, 'RTTM': RTTM}
+        objects = {'ActiveFailover': ActiveFailover,
+                   'DDNS': DynamicDNS,
+                   'DNSSEC': DNSSEC,
+                   'DSF': TrafficDirector,
+                   'GSLB': GSLB,
+                   'RDNS': ReverseDNS,
+                   'RTTM': RTTM,
+                   'HTTPRedirect': HTTPRedirect}
+
         # noinspection PyCallingNonCallable
         service = objects[service_type](self.zone, self.fqdn, *args, **kwargs)
         self.services.append(service)

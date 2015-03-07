@@ -99,7 +99,18 @@ class TypedAttribute(APIDescriptor):
     """Type enforced descriptor"""
     ty = object
 
+    def __get__(self, instance, owner):
+        """Force our returned value to be returned as our specified type, but
+        don't choke and die if something goes wrong
+        """
+        calculated = super(TypedAttribute, self).__get__(instance, owner)
+        try:
+            return self.ty(calculated)
+        except (TypeError, ValueError):
+            return calculated
+
     def __set__(self, instance, value):
+        """Before overwriting *value*, ensure that it is of the correct type"""
         if not isinstance(value, self.ty):
             raise TypeError('Expected %s' % self.ty)
         super(TypedAttribute, self).__set__(instance, value)

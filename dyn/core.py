@@ -8,12 +8,29 @@ import copy
 import time
 import locale
 import logging
+import warnings
 import threading
 from datetime import datetime
+from functools import wraps
 
 from . import __version__
 from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
                      prepare_to_send, force_unicode, string_types)
+
+
+def deprecation_warning(f):
+    """Log a deprecation warning when a decorated method is called. This
+    decorator is used to encourage users to steer away from currently supported
+    deprecated services
+    """
+    @wraps(f)
+    def inner(*args, **kwargs):
+        msg = ('WARNING: This DynECT service is now deprecated and will be '
+               'removed in a future version of this library. For information '
+               'on upgrading, please visit http://help.dyn.com/')
+        warnings.warn(msg, DeprecationWarning, stacklevel=2)
+        return f(*args, **kwargs)
+    return inner
 
 
 def cleared_class_dict(dict_obj):

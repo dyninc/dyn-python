@@ -75,8 +75,10 @@ class _DSFRecord(DNSAPIObject):
         """
         if 'api' not in kwargs:
             kwargs['api'] = False
-        super(_DSFRecord, self).__init__(label, weight, automation, endpoints,
-                                         endpoint_up_count, eligible, **kwargs)
+        DNSAPIObject.__init__(self, label=label, weight=weight,
+                              automation=automation, endpoints=endpoints,
+                              endpoint_up_count=endpoint_up_count,
+                              eligible=eligible, **kwargs)
 
     def _post(self, dsf_id, record_set_id):
         """Create a new :class:`DSFRecord` on the DynECT System
@@ -126,7 +128,8 @@ class _DSFRecord(DNSAPIObject):
                 'eligible': self.eligible,
                 'endpoint_up_count': self.endpoint_up_count}
         json_blob = {x: json[x] for x in json if json[x] is not None}
-        if hasattr(self, '_record_type') and hasattr(self, 'rdata'):
+
+        if hasattr(self, 'rdata'):
             # We don't need to worry about rdata() throwing an error since if
             # we have a record type, then we know we're a subclass of a
             # DNSRecord
@@ -150,6 +153,7 @@ class DSFARecord(_DSFRecord, ARecord):
     """An :class:`ARecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, address, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -176,6 +180,7 @@ class DSFAAAARecord(_DSFRecord, AAAARecord):
     """An :class:`AAAARecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, address, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -203,6 +208,7 @@ class DSFCERTRecord(_DSFRecord, CERTRecord):
     """An :class:`CERTRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, format, tag, algorithm, certificate, ttl=0, label=None,
                  weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -235,6 +241,7 @@ class DSFCNAMERecord(_DSFRecord, CNAMERecord):
     """An :class:`CNAMERecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, cname, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -262,6 +269,7 @@ class DSFDHCIDRecord(_DSFRecord, DHCIDRecord):
     """An :class:`DHCIDRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, digest, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -289,6 +297,7 @@ class DSFDNAMERecord(_DSFRecord, DNAMERecord):
     """An :class:`DNAMERecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, dname, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -316,6 +325,7 @@ class DSFDNSKEYRecord(_DSFRecord, DNSKEYRecord):
     """An :class:`DNSKEYRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, protocol, public_key, algorithm=5, flags=256, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -350,6 +360,7 @@ class DSFDSRecord(_DSFRecord, DSRecord):
     """An :class:`DSRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, digest, keytag, algorithm=5, digtype=1, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -387,6 +398,7 @@ class DSFKEYRecord(_DSFRecord, KEYRecord):
     """An :class:`KEYRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, algorithm, flags, protocol, public_key, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -421,6 +433,7 @@ class DSFKXRecord(_DSFRecord, KXRecord):
     """An :class:`KXRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, exchange, preference, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -453,6 +466,7 @@ class DSFLOCRecord(_DSFRecord, LOCRecord):
     """An :class:`LOCRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, altitude, latitude, longitude, horiz_pre=10000, size=1,
                  vert_pre=10, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -491,6 +505,7 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
     """An :class:`IPSECKEYRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, precedence, gatetype, algorithm, gateway, public_key,
                  ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -529,6 +544,7 @@ class DSFMXRecord(_DSFRecord, MXRecord):
     """An :class:`MXRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, exchange, preference=10, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -560,6 +576,7 @@ class DSFNAPTRRecord(_DSFRecord, NAPTRRecord):
     """An :class:`NAPTRRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, order, preference, services, regexp, replacement,
                  flags='U', ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -601,6 +618,7 @@ class DSFPTRRecord(_DSFRecord, PTRRecord):
     """An :class:`PTRRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, ptrdname, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -628,6 +646,7 @@ class DSFPXRecord(_DSFRecord, PXRecord):
     """An :class:`PXRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, preference, map822, mapx400, ttl=0, label=None,
                  weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -659,6 +678,7 @@ class DSFNSAPRecord(_DSFRecord, NSAPRecord):
     """An :class:`NSAPRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, nsap, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -685,6 +705,7 @@ class DSFRPRecord(_DSFRecord, RPRecord):
     """An :class:`RPRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, mbox, txtdname, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -714,8 +735,9 @@ class DSFNSRecord(_DSFRecord, NSRecord):
     """An :class:`NSRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, nsdname, service_class='', ttl=0, label=None, weight=1, 
-                 automation='auto', endpoints=None, endpoint_up_count=None, 
+
+    def __init__(self, nsdname, service_class='', ttl=0, label=None, weight=1,
+                 automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
         """Create a :class:`DSFNSRecord` object
 
@@ -743,8 +765,9 @@ class DSFSPFRecord(_DSFRecord, SPFRecord):
     """An :class:`SPFRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto', 
-                 endpoints=None, endpoint_up_count=None, eligible=True, 
+
+    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
         """Create a :class:`DSFSPFRecord` object
 
@@ -770,8 +793,9 @@ class DSFSRVRecord(_DSFRecord, SRVRecord):
     """An :class:`SRVRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, port, priority, target, rr_weight, ttl=0, label=None, 
-                 weight=1, automation='auto', endpoints=None, 
+
+    def __init__(self, port, priority, target, rr_weight, ttl=0, label=None,
+                 weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
         """Create a :class:`DSFSRVRecord` object
 
@@ -806,8 +830,9 @@ class DSFTXTRecord(_DSFRecord, TXTRecord):
     """An :class:`TXTRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto', 
-                 endpoints=None, endpoint_up_count=None, eligible=True, 
+
+    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
         """Create a :class:`DSFTXTRecord` object
 
@@ -1000,7 +1025,7 @@ class DSFRecordSet(DNSAPIObject):
                      'eligible': self.eligible,
                      'dsf_monitor_id': self.dsf_monitor_id,
                      'records': [rec.to_json() for rec in self.records]}
-        return {json_blob[key] for key in json_blob if json_blob[key]}
+        return {key: json_blob[key] for key in json_blob if json_blob[key]}
 
     def delete(self):
         """Delete this :class:`DSFRecordSet` from the Dynect System"""
@@ -1154,7 +1179,7 @@ class DSFResponsePool(DNSAPIObject):
     #: DFS Response Pool belongs to
     dsf_id = ImmutableAttribute('dsf_id')
 
-    def __init__(self, label, dsf_id, core_set_count=1, eligible=True,
+    def __init__(self, label, dsf_id=None, core_set_count=1, eligible=True,
                  automation='auto', dsf_ruleset_id=None, index=None,
                  rs_chains=None, **kwargs):
         """Create a :class:`DSFResponsePool` object
@@ -1174,6 +1199,8 @@ class DSFResponsePool(DNSAPIObject):
             for this :class:`DSFResponsePool`
         """
         self._label, self._dsf_id = label, dsf_id
+        if dsf_id is None:
+            kwargs['api'] = False
 
         if isinstance(rs_chains, list) and len(rs_chains) > 0 and \
                 isinstance(rs_chains[0], dict):
@@ -1335,6 +1362,7 @@ class DSFRuleset(DNSAPIObject):
 
 class DSFMonitorEndpoint(object):
     """An Endpoint object to be passed to a :class:`DSFMonitor`"""
+
     def __init__(self, address, label, active='Y', site_prefs=None):
         """Create a :class:`DSFMonitorEndpoint` object
 
@@ -1365,8 +1393,7 @@ class DSFMonitorEndpoint(object):
                     args_list.append(api_args)
                 else:
                     args_list.append(endpoint.to_json())
-            api_args = {'endpoints': args_list}
-            self._monitor._update(api_args)
+            self._monitor._update(endpoints=args_list)
 
     def to_json(self):
         """Get the JSON representation of this :class:`DSFMonitorEndpoint`
@@ -1387,6 +1414,7 @@ class DSFMonitorEndpoint(object):
             this :class:`DSFMonitorEndpoint`
         """
         return self._active
+
     @active.setter
     def active(self, value):
         valid_input = ('Y', 'N', True, False)
@@ -1399,6 +1427,7 @@ class DSFMonitorEndpoint(object):
     @property
     def label(self):
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = self.to_json()
@@ -1408,6 +1437,7 @@ class DSFMonitorEndpoint(object):
     @property
     def address(self):
         return self._address
+
     @address.setter
     def address(self, value):
         api_args = self.to_json()
@@ -1417,6 +1447,7 @@ class DSFMonitorEndpoint(object):
     @property
     def site_prefs(self):
         return self._site_prefs
+
     @site_prefs.setter
     def site_prefs(self, value):
         api_args = self.to_json()
@@ -1462,6 +1493,42 @@ class DSFMonitor(DNSAPIObject):
     #: DSFMonitor
     endpoints = ListAttribute('endpoints')
 
+    def __init__(self, label=None, monitor_id=None, protocol=None,
+                 response_count=None, probe_interval=None, retries=None,
+                 active='Y', timeout=None, port=None, path=None, host=None,
+                 header=None, expected=None, endpoints=None):
+        """
+
+        :param label:
+        :param monitor_id:
+        :param protocol:
+        :param response_count:
+        :param probe_interval:
+        :param retries:
+        :param active:
+        :param timeout:
+        :param port:
+        :param path:
+        :param host:
+        :param header:
+        :param expected:
+        :param endpoints:
+        :return:
+        """
+        if monitor_id is not None:
+            super(DSFMonitor, self).__init__(monitor_id=monitor_id)
+        else:
+            self._monitor_id = None
+            super(DSFMonitor, self).__init__(label=label, protocol=protocol,
+                                             response_count=response_count,
+                                             probe_interval=probe_interval,
+                                             retries=retries, active=active,
+                                             timeout=timeout, port=port,
+                                             path=path,
+                                             host=host, header=header,
+                                             expected=expected,
+                                             endpoints=endpoints)
+
     def _get(self, monitor_id):
         """Get an existing :class:`DSFMonitor` from the DynECT System"""
         self.uri = '/DSFMonitor/{0}/'.format(monitor_id)
@@ -1490,8 +1557,13 @@ class DSFMonitor(DNSAPIObject):
                     'probe_interval': probe_interval,
                     'retries': retries, 'active': str(self._active),
                     'options': self._options}
-        if self._endpoints is not None:
-            api_args['endpoints'] = [x.to_json() for x in self._endpoints]
+
+        if self.endpoints is None and endpoints is not None:
+            self._endpoints = endpoints
+
+        if self.endpoints is not None:
+            api_args['endpoints'] = [x.to_json() for x in self.endpoints]
+
         response = DynectSession.post(self.uri, api_args)
         self._build(response['data'])
 
@@ -1559,6 +1631,9 @@ class TrafficDirector(DNSAPIObject):
         self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
         super(TrafficDirector, self).__init__(*args, **kwargs)
 
+        self.uri = '/DSF/{service_id}'.format(service_id=self.service_id)
+        self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+
     def _post(self, label, ttl=None, publish='Y', nodes=None, notifiers=None,
               rulesets=None):
         """Create a new :class:`TrafficDirector` on the DynECT System"""
@@ -1604,12 +1679,6 @@ class TrafficDirector(DNSAPIObject):
         api_args = {'pending_changes': 'Y'}
         resp = DynectSession.get(self.uri, api_args)
         self._build(resp['data'])
-
-    def _update(self, **api_args):
-        """Private update method"""
-        if 'publish' not in api_args:
-            api_args['publish'] = 'Y'
-        super(TrafficDirector, self)._update(**api_args)
 
     def revert_changes(self):
         """Clears the changeset for this service and reverts all non-published

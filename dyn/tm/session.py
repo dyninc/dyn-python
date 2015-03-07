@@ -10,6 +10,8 @@ from ..core import SessionEngine, APIObject
 from ..compat import force_unicode
 from ..encrypt import AESCipher
 
+__all__ = ['DynectSession', 'DNSAPIObject']
+
 
 class DynectSession(SessionEngine):
     """Base object representing a DynectSession Session"""

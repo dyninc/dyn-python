@@ -440,7 +440,7 @@ class ActiveFailover(object):
             if val not in self.valid_notify_events:
                 raise DynectInvalidArgumentError('notify_events', val,
                                                  self.valid_notify_events)
-        value = ', '.join(value)
+        value = ','.join(value)
         api_args = self.api_args
         api_args['notify_events'] = value
         self._update(api_args)

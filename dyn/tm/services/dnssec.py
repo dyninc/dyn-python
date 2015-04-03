@@ -135,7 +135,7 @@ class DNSSEC(object):
                     api_args[key[1:]] = val
         # Need to cast to CSV for API
         if self._notify_events is not None:
-            api_args['notify_events'] = ', '.join(self._notify_events)
+            api_args['notify_events'] = ','.join(self._notify_events)
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -225,7 +225,7 @@ class DNSSEC(object):
             if val not in self.valid_notify_events:
                 raise DynectInvalidArgumentError('notify_events', val,
                                                  self.valid_notify_events)
-        value = ', '.join(value)
+        value = ','.join(value)
         api_args = {'notify_events': value}
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)

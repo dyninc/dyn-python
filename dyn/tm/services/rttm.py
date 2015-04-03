@@ -744,7 +744,7 @@ class RTTM(object):
 
         # API expects a CSV string, not a list
         if isinstance(self.notify_events, list):
-            api_args['notify_events'] = ', '.join(self.notify_events)
+            api_args['notify_events'] = ','.join(self.notify_events)
 
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
@@ -920,7 +920,7 @@ class RTTM(object):
             if val not in self.valid_notify_events:
                 raise DynectInvalidArgumentError('notify_events', val,
                                                  self.valid_notify_events)
-        value = ', '.join(value)
+        value = ','.join(value)
         api_args = {'notify_events': value}
         self._update(api_args)
 

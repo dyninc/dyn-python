@@ -109,7 +109,7 @@ class DynectSession(SessionEngine):
 
         :param new_password: The new password to use
         """
-        uri = '/PASSWORD/'
+        uri = '/Password/'
         api_args = {'password': new_password}
         self.execute(uri, 'PUT', api_args)
         self.password = self.__cipher.encrypt(new_password)

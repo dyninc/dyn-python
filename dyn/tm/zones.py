@@ -422,13 +422,13 @@ class Zone(object):
             list_records = []
             for record in record_list:
                 del record['zone']
+                fqdn = record['fqdn']
                 del record['fqdn']
                 # Unpack rdata
                 for r_key, r_val in record['rdata'].items():
                     record[r_key] = r_val
                 record['create'] = False
-                list_records.append(constructor(self._name, self.fqdn,
-                                                **record))
+                list_records.append(constructor(self._name, fqdn, **record))
             records[key] = list_records
         return records
 
@@ -458,6 +458,7 @@ class Zone(object):
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         records = []
         for record in response['data']:
+            fqdn = record['fqdn']
             del record['fqdn']
             del record['zone']
             # Unpack rdata
@@ -465,7 +466,7 @@ class Zone(object):
                 record[key] = val
             del record['rdata']
             record['create'] = False
-            records.append(constructor(self._name, self.fqdn, **record))
+            records.append(constructor(self._name, fqdn, **record))
         return records
 
     def get_any_records(self):

@@ -50,7 +50,7 @@ objects both by using a :class:`Zone` as a proxy, and by creating a
     >>> # Assuming the :class:`Zone` from the above example still exists
     >>> new_node = Node('myzone.com', 'NewNode.myzone.com')
     >>> new_node.get_any_records()
-    {u'ns_records': [<dyn.tm.records.NSRecord object at 0x10bbcf050>,...}
+    {u'a_records': [<ARecord>: 127.0.0.1, <ARecord>: 127.0.1.1]}
 
 Getting an Existing Node
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -72,7 +72,7 @@ existing :class:`Node` objects is via a :class:`Zone` object.
     >>> from dyn.tm.zones import Node
     >>> # Create a dyn.tmSession
     >>> # Assuming the :class:`Zone` from the above example still exists
-    >>> new_node = Node('myzone.com', 'example.myzone.com')
+    >>> new_node = Node('myzone.com', 'NewNode.myzone.com')
     >>> new_node.get_any_records()
     {u'a_records': ['127.0.0.1'], ...}
 

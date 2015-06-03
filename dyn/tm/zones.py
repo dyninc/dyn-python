@@ -785,6 +785,28 @@ class SecondaryZone(object):
         uri = '/Zone/{}/'.format(self._zone)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
+    @property
+    def active(self):
+        """Reports the status of :class:`SecondaryZone` Y, L or N"""
+        api_args = {}
+        uri = '/Secondary/{}/'.format(self._zone)
+        response = DynectSession.get_session().execute(uri,'GET',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+        return self._active
+
+    @property
+    def serial(self):
+        """Reports the serial of :class:`SecondaryZone`"""
+        api_args = {}
+        uri = '/Zone/{}/'.format(self._zone)
+        response = DynectSession.get_session().execute(uri,'GET',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+        return self._serial
+
     def __str__(self):
         """str override"""
         return force_unicode('<SecondaryZone>: {}').format(self._zone)

@@ -1572,14 +1572,15 @@ class DSFResponsePool(object):
 
 class DSFRuleset(object):
     """docstring for DSFRuleset"""
-    def __init__(self, label, criteria_type, response_pools, criteria=None,
-                 **kwargs):
+    def __init__(self, label, criteria_type, response_pools, criteria=None, failover=None,
+                **kwargs):
         """Create a :class:`DSFRuleset` object
 
         :param label: A unique label for this :class:`DSFRuleset`
         :param criteria_type: A set of rules describing what traffic is applied
             to the :class:`DSFRuleset`
         :param criteria: Varied depending on the specified criteria_type
+        :param failover: IP address or Hostname for a last resort failover.
         :param response_pools: A list of :class:`DSFResponsePool`'s for this
             :class:`DSFRuleset`
         """
@@ -1590,6 +1591,7 @@ class DSFRuleset(object):
         self._label = label
         self._criteria_type = criteria_type
         self._criteria = criteria
+        self._failover = failover
         if isinstance(response_pools, list) and len(response_pools) > 0 and \
                 isinstance(response_pools[0], dict):
             self._response_pools = []
@@ -1700,6 +1702,8 @@ class DSFRuleset(object):
     def _json(self):
         """JSON-ified version of this DSFRuleset Object"""
         pool_json = [pool.to_json() for pool in self._response_pools]
+        if self._failover:
+            pool_json.append({'failover': self._failover})
         json_blob = {'label': self._label, 'criteria_type': self._criteria_type,
                      'criteria': self._criteria,
                      'response_pools': pool_json}

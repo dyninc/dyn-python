@@ -1956,8 +1956,7 @@ class DSFMonitor(object):
 
     @property
     def response_count(self):
-        """The number of responses to determine whether or not the endpoint is
-        'up' or 'down'
+        """The minimum number of agents reporting the host as up for failover not to occur. Must be 0, 1 or 2
         """
         return self._response_count
     @response_count.setter

@@ -6,7 +6,7 @@ Monitor
 .. autoclass:: dyn.tm.services.gslb.Monitor
     :members:
     :undoc-members:
-    
+
 GSLBRegionPoolEntry
 ===================
 
@@ -41,8 +41,8 @@ dyn.tm System and how to edit some of the fields using the returned
 :class:`GSLB` object.
 ::
 
-    >>> from dyn.tm.services.gslb import Monitor, RegionPoolEntry, GSLBRegion, \
-    ...    GSLB
+    >>> from dyn.tm.services.gslb import Monitor, GSLBRegionPoolEntry, \
+    ...    GSLBRegion, GSLB
     >>> # Create a dyn.tmSession
     >>> # Assuming you own the zone 'example.com'
     >>> zone = 'example.com'

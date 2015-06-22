@@ -39,7 +39,7 @@ the dyn.tm System.
     >>> my_zone = SecondaryZone('myzone.com')
     >>> my_zone.serial
     5
-    >>> my_zone.contact
+    >>> my_zone.contact_nickname
     u'mynickname'
     >>> my_zone.deactivate()
     >>> my_zone.active

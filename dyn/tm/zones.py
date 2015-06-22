@@ -247,7 +247,9 @@ class Zone(object):
     @property
     def serial(self):
         """The current serial of this :class:`Zone`"""
+        self._get()
         return self._serial
+
     @serial.setter
     def serial(self, value):
         pass
@@ -255,6 +257,7 @@ class Zone(object):
     @property
     def serial_style(self):
         """The current serial style of this :class:`Zone`"""
+        self._get()
         return self._serial_style
     @serial_style.setter
     def serial_style(self, value):
@@ -272,6 +275,7 @@ class Zone(object):
         will be a few cases where this status will be `None` in order to avoid
         guessing what the current status actually is.
         """
+        self._get()
         return self._status
     @status.setter
     def status(self, value):
@@ -383,6 +387,15 @@ class Zone(object):
         else:
             self.services[service_type] = [service]
         return service
+
+    def get_all_nodes(self):
+        """Returns a list of Node Objects for all subnodes in Zone (Excluding the Zone itself.)"""
+        api_args = {}
+        uri = '/NodeList/{}/'.format(self._name)
+        response = DynectSession.get_session().execute(uri, 'GET',
+                                                       api_args)
+        nodes = [Node(self._name, fqdn) for fqdn in response['data'] if fqdn != self._name]
+        return nodes
 
     def get_node(self, node=None):
         """Returns all DNS Records for that particular node
@@ -713,6 +726,7 @@ class SecondaryZone(object):
         """A list of IPv4 or IPv6 addresses of the master nameserver(s) for this
          zone.
          """
+        self._get()
         return self._masters
     @masters.setter
     def masters(self, value):
@@ -728,6 +742,7 @@ class SecondaryZone(object):
         """Name of the :class:`Contact` that will receive notifications for this
          zone
          """
+        self._get()
         return self._contact_nickname
     @contact_nickname.setter
     def contact_nickname(self, value):
@@ -743,6 +758,7 @@ class SecondaryZone(object):
         """Name of the TSIG key that will be used to sign transfer requests to
         this zone's master
         """
+        self._get()
         return self._tsig_key_name
     @tsig_key_name.setter
     def tsig_key_name(self, value):
@@ -788,10 +804,7 @@ class SecondaryZone(object):
     @property
     def active(self):
         """Reports the status of :class:`SecondaryZone` Y, L or N"""
-        api_args = {}
-        uri = '/Secondary/{}/'.format(self._zone)
-        response = DynectSession.get_session().execute(uri,'GET',
-                                                       api_args)
+        self._get()
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
         return self._active

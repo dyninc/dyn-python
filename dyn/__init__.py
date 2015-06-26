@@ -5,7 +5,7 @@ services.
 
 Requires Python 2.6 or higher, or the "simplejson" package.
 """
-version_info = (1, 3, 14)
+version_info = (1, 4, 0)
 __name__       = 'dyn'
 __doc__        = 'A python wrapper for the DynDNS and DynEmail APIs'
 __author__     = 'Jonathan Nappi, Cole Tuininga'

@@ -149,6 +149,7 @@ dyn.tm System and how to edit some of the fields using the returned
     >>> from dyn.tm.records import ARecord
     >>> from dyn.tm.services.dsf import DSFRecord, DSFRecordSet, \
     ...     DSFFailoverChain, DSFResponsePool, DSFRuleset, DSFMonitor, TrafficDirector
+    >>> from dyn.tm.zones import Node
     >>> # Create a dyn.tmSession
     >>> # Assuming you own the zone 'example.com'
     >>> zone = 'example.com'
@@ -161,7 +162,9 @@ dyn.tm System and how to edit some of the fields using the returned
     >>> ruleset = DSFRuleset(label='RSLabel', criteria_type='geoip',
     ...                      criteria=criteria, response_pools=[rp])
     >>> monitor = DSFMonitor('MonLabel', 'HTTP', 1, 60, 1, port=8080)
-    >>> dsf = TrafficDirector('DSFLabel', rulesets=[ruleset])
+    >>> node = Node(zone)
+    >>> dsf = TrafficDirector('DSFLabel', rulesets=[ruleset], nodes=node)
+
 
 Getting an Existing Traffic Director Service
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

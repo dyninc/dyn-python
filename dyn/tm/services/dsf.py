@@ -2060,7 +2060,7 @@ class TrafficDirector(object):
         else:
             self._post(*args, **kwargs)
         self.uri = '/DSF/{}/'.format(self._service_id)
-        self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+        self._notifiers.uri = self._rulesets.uri = self.uri
 
     def _post(self, label, ttl=None, publish='Y', nodes=None, notifiers=None,
               rulesets=None):
@@ -2115,13 +2115,12 @@ class TrafficDirector(object):
                 for ruleset in val:
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
-                # Don't do anything special with these dicts for now
-                self._nodes = APIList(DynectSession.get_session, 'nodes', None,
-                                      val)
+                # nodes are now returned as Node Objects
+                self._nodes = [Node(node['zone'], node['fqdn']) for node in val]
             else:
                 setattr(self, '_' + key, val)
         self.uri = '/DSF/{}/'.format(self._service_id)
-        self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+        self._notifiers.uri = self._rulesets.uri = self.uri
 
     def _get(self, service_id):
         """Get an existing :class:`TrafficDirector` from the DynECT System"""

@@ -1043,7 +1043,6 @@ class TSIG(object):
         self._get()
         return self._secret
 
-
     @secret.setter
     def secret(self, secret):
         """
@@ -1055,7 +1054,6 @@ class TSIG(object):
                                                        api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
-
 
     @property
     def algorithm(self):
@@ -1085,8 +1083,3 @@ class TSIG(object):
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE',
                                                        api_args)
-
-
-
-
-

@@ -2249,7 +2249,7 @@ class TrafficDirector(object):
 
     @property
     def nodes(self):
-        """A list of Node Objects that are linked
+        """A list of :class:`Node` Objects that are linked
         to this :class:`TrafficDirector` service"""
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {}
@@ -2260,7 +2260,7 @@ class TrafficDirector(object):
 
     @nodes.setter
     def nodes(self, nodes):
-        """A Node Object, a zone, FQDN pair in a hash, or a list
+        """A :class:`Node` Object, a zone, FQDN pair in a hash, or a list
         containing those two things (can be mixed) that are to be
         linked to this :class:`TrafficDirector` service. This overwrites
         whatever nodes are already on the system."""
@@ -2281,8 +2281,8 @@ class TrafficDirector(object):
                                                        api_args)
         self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
 
-    def addnode(self, node):
-        """A Node object, or a zone, FQDN pair in a hash
+    def add_node(self, node):
+        """A :class:`Node` object, or a zone, FQDN pair in a hash
         to be added to this :class:`TrafficDirector` service:"""
         if isinstance(node, Node):
             _node = {'zone':node.zone, 'fqdn':node.fqdn}
@@ -2295,7 +2295,7 @@ class TrafficDirector(object):
         self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
 
     def remove_node(self, node):
-        """A Node object, or a zone, FQDN pair in a hash
+        """A :class:`Node` object, or a zone, FQDN pair in a hash
         to be removed to this :class:`TrafficDirector` service:"""
         if isinstance(node, Node):
             _node = {'zone':node.zone, 'fqdn':node.fqdn}

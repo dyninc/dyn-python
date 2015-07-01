@@ -2248,7 +2248,7 @@ class TrafficDirector(object):
         self._rulesets.uri = self.uri
 
     @property
-    def nodes(self):
+    def nodeObjects(self):
         """A list of :class:`Node` Objects that are linked
         to this :class:`TrafficDirector` service"""
         uri = '/DSFNode/{}'.format(self._service_id)
@@ -2258,12 +2258,23 @@ class TrafficDirector(object):
         self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
         return self._nodes
 
+    @property
+    def nodes(self):
+        """A list of hashes of zones, fqdn for each DSF node that is linked
+        to this :class:`TrafficDirector` service"""
+        uri = '/DSFNode/{}'.format(self._service_id)
+        api_args = {}
+        response = DynectSession.get_session().execute(uri, 'GET',
+                                                       api_args)
+        self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
+        return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in response['data']]
+
     @nodes.setter
     def nodes(self, nodes):
         """A :class:`Node` Object, a zone, FQDN pair in a hash, or a list
         containing those two things (can be mixed) that are to be
         linked to this :class:`TrafficDirector` service. This overwrites
-        whatever nodes are already on the system."""
+        whatever nodes are already linked to this :class:`TrafficDirector` service ."""
         _nodeList=[]
         if isinstance(nodes, list):
             for node in nodes:

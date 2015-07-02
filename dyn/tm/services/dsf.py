@@ -7,7 +7,7 @@ from ..errors import DynectInvalidArgumentError
 from ..records import *
 from ..session import DynectSession
 from ...compat import force_unicode
-from ..zones import Node
+from ..zones import *
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',

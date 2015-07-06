@@ -1417,23 +1417,23 @@ class DSFResponsePool(object):
                 self._rs_chains.append(DSFFailoverChain(**chain))
         else:
             self._rs_chains = rs_chains
-        self._dsf_id = self._dsf_response_pool_id = self.uri = None
+        self._service_id = self._dsf_response_pool_id = self.uri = None
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._dsf_id is not None and self._dsf_response_pool_id is not None:
+        if self._service_id is not None and self._dsf_response_pool_id is not None:
             r_pid = self._dsf_response_pool_id
-            self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
+            self.uri = '/DSFResponsePool/{}/{}/'.format(self._service_id,
                                                         r_pid)
 
-    def _post(self, dsf_id):
+    def _post(self, service_id):
         """Create a new :class:`DSFResponsePool` on the DynECT System
 
         :param dsf_id: the id of the DSF service this :class:`DSFResponsePool`
             is attached to
         """
-        self._dsf_id = dsf_id
-        uri = '/DSFResponsePool/{}/'.format(self._dsf_id)
+        self.service_id = service_id
+        uri = '/DSFResponsePool/{}/'.format(self.service_id)
         api_args = {'publish': 'Y', 'label': self._label,
                     'core_set_count': self._core_set_count,
                     'eligible': self._eligible, 'automation': self._automation}
@@ -1447,19 +1447,19 @@ class DSFResponsePool(object):
         for key, val in response['data'].items():
             if key != 'rs_chains':
                 setattr(self, '_' + key, val)
-        self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
+        self.uri = '/DSFResponsePool/{}/{}/'.format(self.service_id,
                                                     self._dsf_response_pool_id)
 
-    def _get(self, dsf_id, dsf_response_pool_id):
+    def _get(self, service_id, dsf_response_pool_id):
         """Get an existing :class:`DSFResponsePool` from the DynECT System
 
         :param dsf_id: the id of the DSF service this :class:`DSFResponsePool`
             is attached to
         :param dsf_response_pool_id: the id of this :class:`DSFResponsePool`
         """
-        self._dsf_id = dsf_id
+        self.service_id = service_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
+        self.uri = '/DSFResponsePool/{}/{}/'.format(self.service_id,
                                                     self._dsf_response_pool_id)
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
@@ -1528,20 +1528,23 @@ class DSFResponsePool(object):
                 setattr(self, '_' + key, val)
 
     @property
-    def dsf_ruleset_id(self):
-        """Unique system id of the Ruleset this :class:`DSFResponsePool` is
+    def dsf_ruleset_ids(self):
+        """List of Unique system ids of the Rulesets this :class:`DSFResponsePool` is
         attached to
         """
-        return self._dsf_ruleset_id
-    @dsf_ruleset_id.setter
-    def dsf_ruleset_id(self, value):
-        self._dsf_ruleset_id = value
-        api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._get(self._service_id, self._dsf_response_pool_id)
+        return [ruleset['dsf_ruleset_id'] for ruleset in self._rulesets]
+
+    @dsf_ruleset_ids.setter
+    def dsf_ruleset_ids(self, value):
+        #self._dsf_ruleset_id = value
+        #api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
+        #response = DynectSession.get_session().execute(self.uri, 'PUT',
+        #                                               api_args)
+        #for key, val in response['data'].items():
+        #    if key != 'record_sets':
+        #        setattr(self, '_' + key, val)
+        pass
 
     @property
     def rs_chains(self):

@@ -2,12 +2,13 @@
 """This module contains wrappers for interfacing with every element of a Traffic
 Director (DSF) service.
 """
+import dyn.tm.zones
 from ..utils import APIList, Active
 from ..errors import DynectInvalidArgumentError
 from ..records import *
 from ..session import DynectSession
 from ...compat import force_unicode
-from ..zones import Node
+
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
@@ -2082,13 +2083,13 @@ class TrafficDirector(object):
             _nodeList=[]
             if isinstance(nodes, list):
                 for node in nodes:
-                    if isinstance(node, Node):
+                    if isinstance(node, dyn.tm.zones.Node):
                         _nodeList.append({'zone':node.zone, 'fqdn':node.fqdn})
                     elif isinstance(node, dict):
                         _nodeList.append(node)
             elif isinstance(nodes,dict):
                 _nodeList.append(nodes)
-            elif isinstance(nodes, Node):
+            elif isinstance(nodes, dyn.tm.zones.Node):
                 _nodeList.append({'zone':nodes.zone, 'fqdn':nodes.fqdn})
             self._nodes=_nodeList
             api_args['nodes'] = self._nodes
@@ -2119,7 +2120,7 @@ class TrafficDirector(object):
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
                 # nodes are now returned as Node Objects
-                self._nodes = [Node(node['zone'], node['fqdn']) for node in val]
+                self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in val]
             else:
                 setattr(self, '_' + key, val)
         self.uri = '/DSF/{}/'.format(self._service_id)
@@ -2258,7 +2259,7 @@ class TrafficDirector(object):
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
         return self._nodes
 
     @property
@@ -2269,7 +2270,7 @@ class TrafficDirector(object):
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
         return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in response['data']]
 
     @nodes.setter
@@ -2281,24 +2282,24 @@ class TrafficDirector(object):
         _nodeList=[]
         if isinstance(nodes, list):
             for node in nodes:
-                if isinstance(node, Node):
+                if isinstance(node, dyn.tm.zones.Node):
                     _nodeList.append({'zone':node.zone, 'fqdn':node.fqdn})
                 elif isinstance(node, dict):
                     _nodeList.append(node)
         elif isinstance(nodes,dict):
             _nodeList.append(nodes)
-        elif isinstance(nodes, Node):
+        elif isinstance(nodes, dyn.tm.zones.Node):
             _nodeList.append({'zone':nodes.zone, 'fqdn':nodes.fqdn})
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'nodes': _nodeList, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'PUT',
                                                        api_args)
-        self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
 
     def add_node(self, node):
         """A :class:`Node` object, or a zone, FQDN pair in a hash
         to be added to this :class:`TrafficDirector` service:"""
-        if isinstance(node, Node):
+        if isinstance(node, dyn.tm.zones.Node):
             _node = {'zone':node.zone, 'fqdn':node.fqdn}
         elif isinstance(node, dict):
             _node = node
@@ -2306,12 +2307,12 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
-        self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
 
     def remove_node(self, node):
         """A :class:`Node` object, or a zone, FQDN pair in a hash
         to be removed to this :class:`TrafficDirector` service:"""
-        if isinstance(node, Node):
+        if isinstance(node, dyn.tm.zones.Node):
             _node = {'zone':node.zone, 'fqdn':node.fqdn}
         elif isinstance(node, dict):
             _node = node
@@ -2319,7 +2320,7 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)
-        self._nodes = [Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
 
     @property
     def label(self):

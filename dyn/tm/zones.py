@@ -1001,3 +1001,85 @@ class Node(object):
     def __bytes__(self):
         """bytes override"""
         return bytes(self.__str__())
+
+
+class TSIG(object):
+    """A class representing DynECT TSIG Records"""
+    def __init__(self, name, *args, **kwargs):
+        """Create a :class:`TSIG` object
+
+        :param name: The name of the TSIG key for :class:`TSIG` object
+        :param algorithm: Algorithm used for :class:`TSIG` object. Valid options: hmac-sha1, hmac-md5,
+            hmac-sha224,hmac-sha256, hmac-sha384, hmac-sha512
+        :param secret: Secret key used by :class:`TSIG` object
+        """
+        self._name = name
+        self.uri = '/TSIGKey/{}/'.format(self._name)
+        self._secret = None
+        self._algorithm = None
+        if len(args) == 0 and len(kwargs) == 0:
+            self._get()
+        else:
+            self._post(*args, **kwargs)
+
+    def _get(self):
+        """Get a :class:`TSIG` object from the DynECT System"""
+        api_args = {'name' : self._name}
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+
+    def _post(self, *args, **kwargs):
+        """Create a new :class:`TSIG` object on the DynECT System"""
+        api_args = {'name':self._name, 'secret': kwargs['secret'], 'algorithm': kwargs['algorithm']}
+        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+
+    @property
+    def secret(self):
+        """Gets Secret key of :class:`TSIG` object"""
+        self._get()
+        return self._secret
+
+    @secret.setter
+    def secret(self, secret):
+        """
+        Sets secret key of :class:`TSIG` object
+        :param secret: key
+        """
+        api_args = {'name': self._name, 'secret': secret}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+
+    @property
+    def algorithm(self):
+        """Gets Algorithm of :class:`TSIG` object. """
+        self._get()
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, algorithm):
+        """
+        Sets Algorithm of :class:`TSIG` object.
+        :param algorithm: hmac-sha1, hmac-md5, hmac-sha224,
+        hmac-sha256, hmac-sha384, hmac-sha512
+        """
+        api_args = {'name': self._name, 'algorithm': algorithm}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+
+    @property
+    def name(self):
+        """Gets name of TSIG Key in :class:`TSIG`"""
+        return self._name
+
+    def delete(self):
+        api_args = {}
+        DynectSession.get_session().execute(self.uri, 'DELETE',
+                                                       api_args)

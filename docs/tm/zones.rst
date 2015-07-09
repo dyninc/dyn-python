@@ -16,9 +16,10 @@ The following function is primarily a helper function which performs an API
 Classes
 -------
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
 
    zones/zone.rst
    zones/secondary.rst
    zones/node.rst
+   zones/Tsig.rst
 

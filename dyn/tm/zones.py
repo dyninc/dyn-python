@@ -805,8 +805,6 @@ class SecondaryZone(object):
     def active(self):
         """Reports the status of :class:`SecondaryZone` Y, L or N"""
         self._get()
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
         return self._active
 
     @property

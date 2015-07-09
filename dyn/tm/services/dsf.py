@@ -2,11 +2,13 @@
 """This module contains wrappers for interfacing with every element of a Traffic
 Director (DSF) service.
 """
+import dyn.tm.zones
 from ..utils import APIList, Active
 from ..errors import DynectInvalidArgumentError
 from ..records import *
 from ..session import DynectSession
 from ...compat import force_unicode
+
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
@@ -1416,23 +1418,23 @@ class DSFResponsePool(object):
                 self._rs_chains.append(DSFFailoverChain(**chain))
         else:
             self._rs_chains = rs_chains
-        self._dsf_id = self._dsf_response_pool_id = self.uri = None
+        self._service_id = self._dsf_response_pool_id = self.uri = None
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._dsf_id is not None and self._dsf_response_pool_id is not None:
+        if self._service_id is not None and self._dsf_response_pool_id is not None:
             r_pid = self._dsf_response_pool_id
-            self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
+            self.uri = '/DSFResponsePool/{}/{}/'.format(self._service_id,
                                                         r_pid)
 
-    def _post(self, dsf_id):
+    def _post(self, service_id):
         """Create a new :class:`DSFResponsePool` on the DynECT System
 
         :param dsf_id: the id of the DSF service this :class:`DSFResponsePool`
             is attached to
         """
-        self._dsf_id = dsf_id
-        uri = '/DSFResponsePool/{}/'.format(self._dsf_id)
+        self.service_id = service_id
+        uri = '/DSFResponsePool/{}/'.format(self.service_id)
         api_args = {'publish': 'Y', 'label': self._label,
                     'core_set_count': self._core_set_count,
                     'eligible': self._eligible, 'automation': self._automation}
@@ -1446,19 +1448,19 @@ class DSFResponsePool(object):
         for key, val in response['data'].items():
             if key != 'rs_chains':
                 setattr(self, '_' + key, val)
-        self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
+        self.uri = '/DSFResponsePool/{}/{}/'.format(self.service_id,
                                                     self._dsf_response_pool_id)
 
-    def _get(self, dsf_id, dsf_response_pool_id):
+    def _get(self, service_id, dsf_response_pool_id):
         """Get an existing :class:`DSFResponsePool` from the DynECT System
 
         :param dsf_id: the id of the DSF service this :class:`DSFResponsePool`
             is attached to
         :param dsf_response_pool_id: the id of this :class:`DSFResponsePool`
         """
-        self._dsf_id = dsf_id
+        self.service_id = service_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFResponsePool/{}/{}/'.format(self._dsf_id,
+        self.uri = '/DSFResponsePool/{}/{}/'.format(self.service_id,
                                                     self._dsf_response_pool_id)
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
@@ -1527,20 +1529,23 @@ class DSFResponsePool(object):
                 setattr(self, '_' + key, val)
 
     @property
-    def dsf_ruleset_id(self):
-        """Unique system id of the Ruleset this :class:`DSFResponsePool` is
+    def dsf_ruleset_ids(self):
+        """List of Unique system ids of the Rulesets this :class:`DSFResponsePool` is
         attached to
         """
-        return self._dsf_ruleset_id
-    @dsf_ruleset_id.setter
-    def dsf_ruleset_id(self, value):
-        self._dsf_ruleset_id = value
-        api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._get(self._service_id, self._dsf_response_pool_id)
+        return [ruleset['dsf_ruleset_id'] for ruleset in self._rulesets]
+
+    @dsf_ruleset_ids.setter
+    def dsf_ruleset_ids(self, value):
+        #self._dsf_ruleset_id = value
+        #api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
+        #response = DynectSession.get_session().execute(self.uri, 'PUT',
+        #                                               api_args)
+        #for key, val in response['data'].items():
+        #    if key != 'record_sets':
+        #        setattr(self, '_' + key, val)
+        pass
 
     @property
     def rs_chains(self):
@@ -2037,7 +2042,8 @@ class TrafficDirector(object):
         :param label: A unique label for this :class:`TrafficDirector` service
         :param ttl: The default TTL to be used across this service
         :param publish: If Y, service will be published on creation
-        :param nodes: A list of zone, FQDN pairs in a hash that are to be
+        :param nodes: A Node Object, a zone, FQDN pair in a hash, or a list
+            containing those two things (can be mixed) that are to be
             linked to this :class:`TrafficDirector` service:
         :param notifiers: A list of names of notifiers associated with this
             :class:`TrafficDirector` service
@@ -2058,7 +2064,7 @@ class TrafficDirector(object):
         else:
             self._post(*args, **kwargs)
         self.uri = '/DSF/{}/'.format(self._service_id)
-        self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+        self._notifiers.uri = self._rulesets.uri = self.uri
 
     def _post(self, label, ttl=None, publish='Y', nodes=None, notifiers=None,
               rulesets=None):
@@ -2074,6 +2080,18 @@ class TrafficDirector(object):
         if ttl:
             api_args['ttl'] = self._ttl
         if nodes:
+            _nodeList=[]
+            if isinstance(nodes, list):
+                for node in nodes:
+                    if isinstance(node, dyn.tm.zones.Node):
+                        _nodeList.append({'zone':node.zone, 'fqdn':node.fqdn})
+                    elif isinstance(node, dict):
+                        _nodeList.append(node)
+            elif isinstance(nodes,dict):
+                _nodeList.append(nodes)
+            elif isinstance(nodes, dyn.tm.zones.Node):
+                _nodeList.append({'zone':nodes.zone, 'fqdn':nodes.fqdn})
+            self._nodes=_nodeList
             api_args['nodes'] = self._nodes
         if notifiers:
             if isinstance(notifiers[0], dict):
@@ -2101,13 +2119,12 @@ class TrafficDirector(object):
                 for ruleset in val:
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
-                # Don't do anything special with these dicts for now
-                self._nodes = APIList(DynectSession.get_session, 'nodes', None,
-                                      val)
+                # nodes are now returned as Node Objects
+                self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in val]
             else:
                 setattr(self, '_' + key, val)
         self.uri = '/DSF/{}/'.format(self._service_id)
-        self._notifiers.uri = self._nodes.uri = self._rulesets.uri = self.uri
+        self._notifiers.uri = self._rulesets.uri = self.uri
 
     def _get(self, service_id):
         """Get an existing :class:`TrafficDirector` from the DynECT System"""
@@ -2235,18 +2252,75 @@ class TrafficDirector(object):
         self._rulesets.uri = self.uri
 
     @property
-    def nodes(self):
-        """A list of zone, FQDN pairs in a hash that are linked, or to be linked
+    def nodeObjects(self):
+        """A list of :class:`Node` Objects that are linked
         to this :class:`TrafficDirector` service"""
+        uri = '/DSFNode/{}'.format(self._service_id)
+        api_args = {}
+        response = DynectSession.get_session().execute(uri, 'GET',
+                                                       api_args)
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
         return self._nodes
+
+    @property
+    def nodes(self):
+        """A list of hashes of zones, fqdn for each DSF node that is linked
+        to this :class:`TrafficDirector` service"""
+        uri = '/DSFNode/{}'.format(self._service_id)
+        api_args = {}
+        response = DynectSession.get_session().execute(uri, 'GET',
+                                                       api_args)
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+        return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in response['data']]
+
     @nodes.setter
-    def nodes(self, value):
-        if isinstance(value, list) and not isinstance(value, APIList):
-            self._nodes = APIList(DynectSession.get_session, 'nodes', None,
-                                  value)
-        elif isinstance(value, APIList):
-            self._nodes = value
-        self._nodes.uri = self.uri
+    def nodes(self, nodes):
+        """A :class:`Node` Object, a zone, FQDN pair in a hash, or a list
+        containing those two things (can be mixed) that are to be
+        linked to this :class:`TrafficDirector` service. This overwrites
+        whatever nodes are already linked to this :class:`TrafficDirector` service ."""
+        _nodeList=[]
+        if isinstance(nodes, list):
+            for node in nodes:
+                if isinstance(node, dyn.tm.zones.Node):
+                    _nodeList.append({'zone':node.zone, 'fqdn':node.fqdn})
+                elif isinstance(node, dict):
+                    _nodeList.append(node)
+        elif isinstance(nodes,dict):
+            _nodeList.append(nodes)
+        elif isinstance(nodes, dyn.tm.zones.Node):
+            _nodeList.append({'zone':nodes.zone, 'fqdn':nodes.fqdn})
+        uri = '/DSFNode/{}'.format(self._service_id)
+        api_args = {'nodes': _nodeList, 'publish': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'PUT',
+                                                       api_args)
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+
+    def add_node(self, node):
+        """A :class:`Node` object, or a zone, FQDN pair in a hash
+        to be added to this :class:`TrafficDirector` service:"""
+        if isinstance(node, dyn.tm.zones.Node):
+            _node = {'zone':node.zone, 'fqdn':node.fqdn}
+        elif isinstance(node, dict):
+            _node = node
+        uri = '/DSFNode/{}'.format(self._service_id)
+        api_args = {'node': _node, 'publish': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'POST',
+                                                       api_args)
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+
+    def remove_node(self, node):
+        """A :class:`Node` object, or a zone, FQDN pair in a hash
+        to be removed to this :class:`TrafficDirector` service:"""
+        if isinstance(node, dyn.tm.zones.Node):
+            _node = {'zone':node.zone, 'fqdn':node.fqdn}
+        elif isinstance(node, dict):
+            _node = node
+        uri = '/DSFNode/{}'.format(self._service_id)
+        api_args = {'node': _node, 'publish': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'DELETE',
+                                                       api_args)
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
 
     @property
     def label(self):

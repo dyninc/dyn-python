@@ -119,7 +119,7 @@ class DNSRecord(object):
         uri = '/{}/{}/{}/'
         values = (self._record_type, self.zone, self.fqdn)
         if self._record_id:
-            uri.join('{}/')
+            uri += ('{}/')
             values += (self._record_id,)
         uri = uri.format(*values)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)

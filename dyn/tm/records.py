@@ -116,8 +116,12 @@ class DNSRecord(object):
             self._fqdn += '.'
         if not self._record_type.endswith('Record'):
             self._record_type += 'Record'
-        uri = '/{}/{}/{}/{}/'.format(self._record_type, self.zone, self.fqdn,
-                                     self._record_id)
+        uri = '/{}/{}/{}/'
+        values = (self._record_type, self.zone, self.fqdn)
+        if self._record_id:
+            uri.join('{}/')
+            values += (self._record_id,)
+        uri = uri.format(*values)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
     @property

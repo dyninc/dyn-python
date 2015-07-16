@@ -303,12 +303,14 @@ class Zone(object):
         if response['status'] == 'success':
             self._status = 'active'
 
-    def publish(self):
+    def publish(self, notes=None):
         """Causes all pending changes to become part of the zone. The serial
         number increments based on its serial style and the data is pushed out 
         to the nameservers.
         """
         api_args = {'publish': True}
+        if notes:
+            api_args['notes'] = notes
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])

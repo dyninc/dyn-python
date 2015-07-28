@@ -366,10 +366,11 @@ class Zone(object):
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
+        import services.dsf
         constructors = {'ActiveFailover': ActiveFailover,
                         'DDNS': DynamicDNS,
                         'DNSSEC': DNSSEC,
-                        'DSF': TrafficDirector,
+                        'DSF': services.dsf.TrafficDirector,
                         'GSLB': GSLB,
                         'RDNS': ReverseDNS,
                         'RTTM': RTTM,

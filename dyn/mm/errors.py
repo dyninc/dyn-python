@@ -9,7 +9,7 @@ __all__ = ['EmailKeyError', 'DynInvalidArgumentError',
 __author__ = 'jnappi'
 
 
-class EmailError(BaseException):
+class EmailError(Exception):
     """Base Dynect Error class"""
     def __init__(self, reason):
         """Create the error message based on the response in the raw JSON

@@ -11,9 +11,9 @@ from .active_failover import *
 from .ddns import DynamicDNS
 from .httpredirect import HTTPRedirect
 from .dnssec import *
-from .dsf import *
 from .gslb import *
 from .reversedns import ReverseDNS
 from .rttm import *
+from .dsf import *
 
 __author__ = 'jnappi'

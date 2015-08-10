@@ -29,3 +29,16 @@ to get a specific record, assuming you don't have the id readily available.
     >>> for record in all_records:
     ...     # Find your record, more info coming soon...
 
+
+
+Delete all Records
+------------------
+As of v1.4.2 you can also delete all records of a certain type on a specific node
+
+::
+
+    >>> from dyn.tm.records import ARecord
+    >>> my_node = ARecord('myzone.com', 'fqdn.myzone.com.', create=False)
+    >>> my_node.delete()  # Warning, this will delete ALL ARecords on fqdn.myzone.com.
+
+

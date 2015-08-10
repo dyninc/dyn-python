@@ -190,6 +190,7 @@ class SessionEngine(Singleton):
     def _handle_response(self, response, uri, method, raw_args, final):
         """Handle the processing of the API's response"""
         body = response.read()
+        self.logger.debug('RESPONSE: {0}'.format(body))
         self._last_response = response
 
         if self.poll_incomplete:

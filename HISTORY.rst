@@ -1,5 +1,13 @@
 Release History
 ---------------
+1.4.2 (2015-08-10)
+++++++++++++++++++
+
+* Added support for deleting all records of a certain type per #47. Thanks @tarokkk
+* Exception classes are now based on `Exception` per #51. Thanks @thedebugger
+* Fixed potential circular dependency in `dyn.tm.services`
+* Added HTTP response debug logging
+
 1.3.4 (2014-11-11)
 ++++++++++++++++++
 

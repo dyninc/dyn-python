@@ -653,6 +653,7 @@ class GSLB(object):
         self._auto_recover = self._ttl = self._notify_events = None
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._contact_nickname = None
+        self._syslog_probe_fmt = self._syslog_status_fmt = None
         self._active = self._status = self.active = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
@@ -666,7 +667,8 @@ class GSLB(object):
 
     def _post(self, contact_nickname, region, auto_recover=None, ttl=None,
               notify_events=None, syslog_server=None, syslog_port=514,
-              syslog_ident='dynect', syslog_facility='daemon', monitor=None):
+              syslog_ident='dynect', syslog_facility='daemon', syslog_probe_fmt = None,
+              syslog_status_fmt = None, monitor=None):
         """Create a new :class:`GSLB` service object on the DynECT System"""
         self._auto_recover = auto_recover
         self._ttl = ttl
@@ -675,6 +677,8 @@ class GSLB(object):
         self._syslog_port = syslog_port
         self._syslog_ident = syslog_ident
         self._syslog_facility = syslog_facility
+        self._syslog_probe_fmt = syslog_probe_fmt
+        self._syslog_status_fmt = syslog_status_fmt
         self._region += region
         self._monitor = monitor
         self._contact_nickname = contact_nickname
@@ -694,6 +698,10 @@ class GSLB(object):
             api_args['syslog_ident'] = self._syslog_ident
         if syslog_facility:
             api_args['syslog_facility'] = self._syslog_facility
+        if syslog_probe_fmt:
+            api_args['syslog_probe_fmt'] = self._syslog_probe_fmt
+        if syslog_status_fmt:
+            api_args['syslog_status_fmt'] = self._syslog_status_fmt
         if monitor:
             api_args['monitor'] = self._monitor.to_json()
             self._monitor.zone = self._zone
@@ -856,6 +864,7 @@ class GSLB(object):
         """The Hostname or IP address of a server to receive syslog
         notifications on monitoring events
         """
+        self._get()
         return self._syslog_server
     @syslog_server.setter
     def syslog_server(self, value):
@@ -868,6 +877,7 @@ class GSLB(object):
     @property
     def syslog_port(self):
         """The port where the remote syslog server listens for notifications"""
+        self._get()
         return self._syslog_port
     @syslog_port.setter
     def syslog_port(self, value):
@@ -880,6 +890,7 @@ class GSLB(object):
     @property
     def syslog_ident(self):
         """The ident to use when sending syslog notifications"""
+        self._get()
         return self._syslog_ident
     @syslog_ident.setter
     def syslog_ident(self, value):
@@ -897,6 +908,7 @@ class GSLB(object):
         'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', or
         'local7'
         """
+        self._get()
         return self._syslog_facility
     @syslog_facility.setter
     def syslog_facility(self, value):
@@ -905,6 +917,30 @@ class GSLB(object):
                                              self.valid_syslog_facility)
         self._syslog_facility = value
         api_args = {'syslog_facility': self._syslog_facility}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'], region=False)
+
+    @property
+    def syslog_probe_format(self):
+        self._get()
+        return self._syslog_probe_fmt
+
+    @syslog_probe_format.setter
+    def syslog_probe_format(self, value):
+        api_args = {'syslog_probe_fmt': value}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'], region=False)
+
+    @property
+    def syslog_status_format(self):
+        self._get()
+        return self._syslog_status_fmt
+
+    @syslog_status_format.setter
+    def syslog_status_format(self, value):
+        api_args = {'syslog_status_fmt': value}
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'], region=False)

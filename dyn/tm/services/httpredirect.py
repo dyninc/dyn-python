@@ -25,7 +25,7 @@ class HTTPRedirect(object):
         super(HTTPRedirect, self).__init__()
         self._zone = zone
         self._fqdn = fqdn
-        self._code = self._url = self.keep_uri = None
+        self._code = self._url = self._keep_uri = None
         if 'api' in kwargs:
             del kwargs['api']
             for key, val in kwargs.items():
@@ -56,11 +56,11 @@ class HTTPRedirect(object):
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
-    def _update(self, code, keep_uri, url):
+    def _update(self, **kwargs):
         """Update an existing HTTPRedirect Service on the DynECT System"""
-        self._code = code
-        self._keep_uri = keep_uri
-        self._url = url
+        self._code = kwargs.get('code',self._code)
+        self._keep_uri = kwargs.get('keep_uri',self.keep_uri)
+        self._url = kwargs.get('url',self._url)
         self.uri = '/HTTPRedirect/{}/{}/'.format(self._zone, self._fqdn)
         api_args = {'code': self._code, 'keep_uri': self._keep_uri, 'url': self._url}
         response = DynectSession.get_session().execute(self.uri, 'PUT',
@@ -75,6 +75,7 @@ class HTTPRedirect(object):
         """The zone that this HTTPRedirect Service is attached to is a read-only
         attribute
         """
+        self._get()
         return self._zone
     @zone.setter
     def zone(self, value):
@@ -85,6 +86,7 @@ class HTTPRedirect(object):
         """The fqdn that this HTTPRedirect Service is attached to is a read-only
         attribute
         """
+        self._get()
         return self._fqdn
     @fqdn.setter
     def fqdn(self, value):
@@ -97,33 +99,39 @@ class HTTPRedirect(object):
             301 – Permanent redirect
             302 – Temporary redirect
         """
+        self._get()
         return self._code
     @code.setter
     def code(self, value):
-        pass
+        self._update(code=value)
 
     @property
     def keep_uri(self):
         """A flag indicating whether the redirection should include the originally requested URI.
            Valid values: Y, N
         """
+        self._get()
         return self._keep_uri
     @keep_uri.setter
     def keep_uri(self, value):
-        pass
+        self._update(keep_uri=value)
 
     @property
     def url(self):
         """The target URL where the client is sent. Must begin with either http:// or https://"""
+        self._get()
         return self._url
     @url.setter
     def url(self, value):
-        pass
+        self._update(url=value)
 
 
-    def delete(self):
-        """Delete this HTTPRedirect service from the DynECT System"""
-        api_args = {}
+    def delete(self, publish='Y'):
+        """Delete this HTTPRedirect service from the DynECT System
+        publish='N' can be passed into this function to do a soft-delete which will be
+        acted upon during a zone publish.
+        """
+        api_args = {'publish' :publish}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
     def __str__(self):

@@ -247,6 +247,7 @@ class ActiveFailover(object):
         self._monitor = self._active = None
         self._contact_nickname = self._auto_recover = self._notify_events = None
         self._syslog_server = self._syslog_port = self._syslog_ident = None
+        self._syslog_probe_fmt = self._syslog_status_fmt = None
         self._syslog_facility = self._ttl = None
         self.uri = '/Failover/{}/{}/'.format(self._zone, self._fqdn)
         self.api_args = {}
@@ -268,7 +269,8 @@ class ActiveFailover(object):
     def _post(self, address, failover_mode, failover_data, monitor,
               contact_nickname, auto_recover=None, notify_events=None,
               syslog_server=None, syslog_port=None, syslog_ident=None,
-              syslog_facility=None, ttl=None):
+              syslog_facility=None, ttl=None, syslog_probe_fmt = None,
+              syslog_status_fmt = None):
         """Create a new Active Failover Service on the DynECT System"""
         self._address = address
         self._failover_mode = failover_mode
@@ -283,20 +285,33 @@ class ActiveFailover(object):
         self._syslog_port = syslog_port
         self._syslog_ident = syslog_ident
         self._syslog_facility = syslog_facility
+        self._syslog_probe_fmt = syslog_probe_fmt
+        self._syslog_status_fmt = syslog_status_fmt
         self._ttl = ttl
         api_args = {'address': self._address,
                     'failover_mode': self._failover_mode,
                     'failover_data': self._failover_data}
-        for key, val in self.__dict__.items():
-            if val is not None and not hasattr(val, '__call__') and \
-                    key.startswith('_'):
-                if key != '_user_name':
-                    api_args[key] = val
         self.api_args = {'address': self._address,
                          'failover_mode': self._failover_mode,
                          'failover_data': self._failover_data,
                          'monitor': self.monitor.to_json(),
                          'contact_nickname': self._contact_nickname}
+        if syslog_probe_fmt:
+            self.api_args['syslog_probe_fmt'] = self._syslog_probe_fmt
+        if syslog_status_fmt:
+            self.api_args['syslog_status_fmt'] = self._syslog_status_fmt
+        if syslog_facility:
+            self.api_args['syslog_facility'] = self._syslog_facility
+        if syslog_ident:
+            self.api_args['syslog_ident'] = self._syslog_ident
+        if notify_events:
+            self.api_args['notify_events'] = self._notify_events
+        if syslog_server:
+            self.api_args['syslog_server'] = self._syslog_server
+        if syslog_port:
+            self.api_args['syslog_port'] = self._syslog_port
+
+
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        self.api_args)
         self._build(response['data'])
@@ -450,6 +465,7 @@ class ActiveFailover(object):
         """The Hostname or IP address of a server to receive syslog
         notifications on monitoring events
         """
+        self._get()
         return self._syslog_server
     @syslog_server.setter
     def syslog_server(self, value):
@@ -461,6 +477,7 @@ class ActiveFailover(object):
     @property
     def syslog_port(self):
         """The port where the remote syslog server listens"""
+        self._get()
         return self._syslog_port
     @syslog_port.setter
     def syslog_port(self, value):
@@ -472,6 +489,7 @@ class ActiveFailover(object):
     @property
     def syslog_ident(self):
         """The ident to use when sending syslog notifications"""
+        self._get()
         return self._syslog_ident
     @syslog_ident.setter
     def syslog_ident(self, value):
@@ -483,6 +501,7 @@ class ActiveFailover(object):
     @property
     def syslog_facility(self):
         """The syslog facility to use when sending syslog notifications"""
+        self._get()
         return self._syslog_facility
     @syslog_facility.setter
     def syslog_facility(self, value):
@@ -490,6 +509,27 @@ class ActiveFailover(object):
         api_args = self.api_args
         api_args['syslog_facility'] = self._syslog_facility
         self._update(api_args)
+
+    @property
+    def syslog_probe_format(self):
+        self._get()
+        return self._syslog_probe_fmt
+
+    @syslog_probe_format.setter
+    def syslog_probe_format(self, value):
+        api_args = {'syslog_probe_fmt': value}
+        self._update(api_args)
+
+    @property
+    def syslog_status_format(self):
+        self._get()
+        return self._syslog_status_fmt
+
+    @syslog_status_format.setter
+    def syslog_status_format(self, value):
+        api_args = {'syslog_status_fmt': value}
+        self._update(api_args)
+
 
     @property
     def ttl(self):

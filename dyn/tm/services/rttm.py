@@ -678,7 +678,7 @@ class RTTM(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._performance_monitor = None
         self._contact_nickname = self._active = None
-        self._probe_fmt = self._status_fmt = self._rttm_fmt = None
+        self._syslog_probe_fmt = self._syslog_status_fmt = self._syslog_rttm_fmt = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
@@ -692,7 +692,7 @@ class RTTM(object):
     def _post(self, contact_nickname, performance_monitor, region, ttl=None,
               auto_recover=None, notify_events=None, syslog_server=None,
               syslog_port=514, syslog_ident='dynect', syslog_facility='daemon',
-              probe_fmt = None, status_fmt = None, rttm_fmt = None,
+              syslog_probe_fmt = None, syslog_status_fmt = None, syslog_rttm_fmt = None,
               monitor=None):
         """Create a new RTTM Service on the DynECT System"""
         self._auto_recover = auto_recover
@@ -706,9 +706,9 @@ class RTTM(object):
         self._monitor = monitor
         self._performance_monitor = performance_monitor
         self._contact_nickname = contact_nickname
-        self._probe_fmt = probe_fmt
-        self._status_fmt = status_fmt
-        self._rttm_fmt = rttm_fmt
+        self._syslog_probe_fmt = syslog_probe_fmt
+        self._syslog_status_fmt = syslog_status_fmt
+        self._syslog_rttm_fmt = syslog_rttm_fmt
         api_args = {}
         if auto_recover:
             if auto_recover not in ('Y', 'N'):
@@ -737,13 +737,12 @@ class RTTM(object):
                                                  syslog_facility,
                                                  self.valid_syslog_facilities)
             api_args['syslog_facility'] = self._syslog_facility
-        if probe_fmt:
-            api_args['probe_fmt'] = self._probe_fmt
-        if status_fmt:
-            api_args['status_fmt'] = self._status_fmt
-        if rttm_fmt:
-            api_args['rttm_fmt'] = self._rttm_fmt
-
+        if syslog_probe_fmt:
+            api_args['syslog_probe_fmt'] = self._syslog_probe_fmt
+        if syslog_status_fmt:
+            api_args['syslog_status_fmt'] = self._syslog_status_fmt
+        if syslog_rttm_fmt:
+            api_args['syslog_rttm_fmt'] = self._syslog_rttm_fmt
         if region:
             api_args['region'] = [region._json for region in self._region]
         if monitor:
@@ -808,12 +807,6 @@ class RTTM(object):
                 self._notify_events = [item.strip() for item in val.split(',')]
             elif key == 'active':
                 self._active = Active(val)
-            elif key == 'probe_fmt':
-                self._probe_fmt = val
-            elif key == 'status_fmt':
-                self._status_fmt = val
-            elif key == 'rttm_fmt':
-                self._rttm_fmt = val
             else:
                 setattr(self, '_' + key, val)
         self._region.uri = self.uri
@@ -947,6 +940,7 @@ class RTTM(object):
         """The Hostname or IP address of a server to receive syslog
         notifications on monitoring events
         """
+        self._get()
         return self._syslog_server
     @syslog_server.setter
     def syslog_server(self, value):
@@ -956,6 +950,7 @@ class RTTM(object):
     @property
     def syslog_port(self):
         """The port where the remote syslog server listens for notifications"""
+        self._get()
         return self._syslog_port
     @syslog_port.setter
     def syslog_port(self, value):
@@ -965,6 +960,7 @@ class RTTM(object):
     @property
     def syslog_ident(self):
         """The ident to use when sending syslog notifications"""
+        self._get()
         return self._syslog_ident
     @syslog_ident.setter
     def syslog_ident(self, value):
@@ -978,6 +974,7 @@ class RTTM(object):
         authpriv, ftp, ntp, security, console, local0, local1, local2, local3,
         local4, local5, local6, or local7
         """
+        self._get()
         return self._syslog_facility
     @syslog_facility.setter
     def syslog_facility(self, value):
@@ -989,29 +986,32 @@ class RTTM(object):
 
     @property
     def syslog_probe_format(self):
-        return self._probe_fmt
+        self._get()
+        return self._syslog_probe_fmt
 
     @syslog_probe_format.setter
     def syslog_probe_format(self, value):
-        api_args = {'probe_fmt': value}
+        api_args = {'syslog_probe_fmt': value}
         self._update(api_args)
 
     @property
     def syslog_status_format(self):
-        return self._probe_fmt
+        self._get()
+        return self._syslog_status_fmt
 
     @syslog_status_format.setter
     def syslog_status_format(self, value):
-        api_args = {'status_fmt': value}
+        api_args = {'syslog_status_fmt': value}
         self._update(api_args)
 
     @property
     def syslog_rttm_format(self):
-        return self._rttm_fmt
+        self._get()
+        return self._syslog_rttm_fmt
 
     @syslog_rttm_format.setter
     def syslog_rttm_format(self, value):
-        api_args = {'rttm_fmt': value}
+        api_args = {'syslog_rttm_fmt': value}
         self._update(api_args)
 
     @property

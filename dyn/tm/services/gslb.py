@@ -636,7 +636,23 @@ class GSLB(object):
         :param region: A list of :class:`GSLBRegion`'s
         :param monitor: The health :class:`Monitor` for this service
         :param contact_nickname: Name of contact to receive notifications
+        :param syslog_probe_fmt: see below for format:
+        :param syslog_status_fmt: see below for format:
+            Use the following format for syslog_xxxx_fmt paramaters.
+            %hos	hostname
+            %tim	current timestamp or monitored interval
+            %reg	region code
+            %sta	status
+            %ser	record serial
+            %rda	rdata
+            %sit	monitoring site
+            %rti	response time
+            %msg	message from monitoring
+            %adr	address of monitored node
+            %med	median value
+            %rts	response times (RTTM)
         """
+
         super(GSLB, self).__init__()
         self.valid_auto_recover = ('Y', 'N')
         self.valid_ttls = (30, 60, 150, 300, 450)

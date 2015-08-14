@@ -238,6 +238,21 @@ class ActiveFailover(object):
             this :class:`ActiveFailover` service
         :param ttl: Time To Live in seconds of records in the service. Must be
             less than 1/2 of the Health Probe's monitoring interval
+        :param syslog_probe_fmt: see below for format:
+        :param syslog_status_fmt: see below for format:
+            Use the following format for syslog_xxxx_fmt paramaters.
+            %hos	hostname
+            %tim	current timestamp or monitored interval
+            %reg	region code
+            %sta	status
+            %ser	record serial
+            %rda	rdata
+            %sit	monitoring site
+            %rti	response time
+            %msg	message from monitoring
+            %adr	address of monitored node
+            %med	median value
+            %rts	response times (RTTM)
         """
         super(ActiveFailover, self).__init__()
         self.valid_notify_events = ('ip', 'svc', 'nosrv')

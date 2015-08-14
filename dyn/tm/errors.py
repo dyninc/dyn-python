@@ -10,7 +10,7 @@ __all__ = ['DynectAuthError', 'DynectInvalidArgumentError', 'DynectCreateError',
 __author__ = 'jnappi'
 
 
-class DynectError(BaseException):
+class DynectError(Exception):
     """Base Dynect Error class"""
     def __init__(self, json_response_messages, api_type=None):
         """Create the error message based on the response in the raw JSON

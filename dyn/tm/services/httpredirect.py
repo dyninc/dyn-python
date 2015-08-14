@@ -56,11 +56,11 @@ class HTTPRedirect(object):
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
-    def _update(self, code, keep_uri, url):
+    def _update(self, **kwargs):
         """Update an existing HTTPRedirect Service on the DynECT System"""
-        self._code = code
-        self._keep_uri = keep_uri
-        self._url = url
+        self._code = kwargs.get('code',self._code)
+        self._keep_uri = kwargs.get('keep_uri',self.keep_uri)
+        self._url = kwargs.get('url',self._url)
         self.uri = '/HTTPRedirect/{}/{}/'.format(self._zone, self._fqdn)
         api_args = {'code': self._code, 'keep_uri': self._keep_uri, 'url': self._url}
         response = DynectSession.get_session().execute(self.uri, 'PUT',
@@ -100,7 +100,7 @@ class HTTPRedirect(object):
         return self._code
     @code.setter
     def code(self, value):
-        pass
+        self._update(code=value)
 
     @property
     def keep_uri(self):
@@ -110,7 +110,7 @@ class HTTPRedirect(object):
         return self._keep_uri
     @keep_uri.setter
     def keep_uri(self, value):
-        pass
+        self._update(keep_uri=value)
 
     @property
     def url(self):
@@ -118,7 +118,7 @@ class HTTPRedirect(object):
         return self._url
     @url.setter
     def url(self, value):
-        pass
+        self._update(url=value)
 
 
     def delete(self):

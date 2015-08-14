@@ -127,7 +127,10 @@ class HTTPRedirect(object):
 
 
     def delete(self, publish='Y'):
-        """Delete this HTTPRedirect service from the DynECT System"""
+        """Delete this HTTPRedirect service from the DynECT System
+        publish='N' can be passed into this function to do a soft-delete which will be
+        acted upon during a zone publish.
+        """
         api_args = {'publish' :publish}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 

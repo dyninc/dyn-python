@@ -14,7 +14,7 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
            'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TLSARecord',
-           'TXTRecord']
+           'TXTRecord', 'SSHFPRecord']
 
 
 class DNSRecord(object):
@@ -2164,6 +2164,102 @@ class SRVRecord(DNSRecord):
         self.api_args['rdata']['weight'] = self._weight
         self._update_record(self.api_args)
 
+
+class SSHFPRecord(DNSRecord):
+    """"SSHFP Record
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create a :class:`~dyn.tm.records.SSHFPRecord` object
+
+        :param zone: Name of zone where the record will be added
+        :param fqdn: Name of node where the record will be added
+        :param algorithm: Numeric value representing the public key encryption
+            algorithm which will sign the zone.
+        :param fp_type: 1
+        :param fingerprint: fingerprint
+
+        :param ttl: TTL for the record in seconds
+        """
+        if 'create' in kwargs:
+            super(SSHFPRecord, self).__init__(zone, fqdn, kwargs['create'])
+            del kwargs['create']
+            self._build(kwargs)
+            self._record_type = 'SSHFPRecord'
+        else:
+            super(SSHFPRecord, self).__init__(zone, fqdn)
+            self._record_type = 'SSHFPRecord'
+            self._algorithm = self._flags = self._protocol = None
+            self._public_key = None
+            if 'record_id' in kwargs:
+                self._get_record(kwargs['record_id'])
+            elif len(args) + len(kwargs) == 1:
+                self._get_record(*args, **kwargs)
+            elif 'algorithm' in kwargs or 'fp_type' in kwargs or 'fingerprint' in \
+                   kwargs or 'ttl' in kwargs:
+                self._post(*args, **kwargs)
+            elif len(args) + len(kwargs) > 1:
+                self._post(*args, **kwargs)
+
+    def _post(self, algorithm, fp_type, fingerprint, ttl=0):
+        """Create a new :class:`~dyn.tm.records.SSHFPRecord` on the DynECT System
+        """
+        valid = range(1, 2)
+        if algorithm not in valid:
+            raise DynectInvalidArgumentError('algorthim', algorithm, valid)
+        validfp = [1]
+        if fp_type not in validfp:
+            raise DynectInvalidArgumentError('fp_type', fp_type, valid)
+        self._algorithm = algorithm
+        self._fp_type = fp_type
+        self._fingerprint = fingerprint
+        self._ttl = ttl
+        self.api_args = {'rdata': {'algorithm': self._algorithm,
+                                   'fptype': self._fp_type,
+                                   'fingerprint': self._fingerprint},
+                         'ttl': self._ttl}
+        self._create_record(self.api_args)
+
+    def rdata(self):
+        """Return this :class:`~dyn.tm.records.SSHFPRecord`'s rdata as a JSON
+        blob
+        """
+        guts = super(SSHFPRecord, self).rdata()
+        shell = {'sshfp_rdata': guts}
+        return shell
+
+    @property
+    def algorithm(self):
+        """Numeric identifier for algorithm used"""
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, value):
+        self._algorithm = value
+        self.api_args['rdata']['algorithm'] = self._algorithm
+        self._update_record(self.api_args)
+
+    @property
+    def fp_type(self):
+        """FP Type"""
+        return self._fp_type
+
+    @fp_type.setter
+    def fp_type(self, value):
+        self._flags = value
+        self.api_args['rdata']['fp_type'] = self._fp_type
+        self._update_record(self.api_args)
+
+    @property
+    def fingerprint(self):
+        """Fingerprint"""
+        return self._fingerprint
+
+    @fingerprint.setter
+    def fingerprint(self, value):
+        self._protocol = value
+        self.api_args['rdata']['protocol'] = self._fingerprint
+        self._update_record(self.api_args)
 
 class TLSARecord(DNSRecord):
     """The TLSA record is used to associate a TLS server

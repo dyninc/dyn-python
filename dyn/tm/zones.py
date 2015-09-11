@@ -22,7 +22,7 @@ RECS = {'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord,
         'MX': MXRecord, 'NAPTR': NAPTRRecord, 'PTR': PTRRecord, 'PX': PXRecord,
         'NSAP': NSAPRecord, 'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord,
         'SPF': SPFRecord, 'SRV': SRVRecord, 'TLSA': TLSARecord,
-        'TXT': TXTRecord, 'SSHFP': SSHFPRecord}
+        'TXT': TXTRecord, 'SSHFP': SSHFPRecord, 'ALIAS': ALIASRecord}
 
 
 def get_all_zones():
@@ -466,7 +466,7 @@ class Zone(object):
                  'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TLSA': 'TLSARecord', 'TXT': 'TXTRecord',
-                 'SSHFP': 'SSHFPRecord'}
+                 'SSHFP': 'SSHFPRecord', 'ALIAS': 'ALIASRecord'}
         constructor = RECS[record_type]
         uri = '/{}/{}/{}/'.format(names[record_type], self._name, self.fqdn)
         api_args = {'detail': 'Y'}
@@ -944,7 +944,7 @@ class Node(object):
                  'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TLSA': 'TLSARecord', 'TXT': 'TXTRecord',
-                 'SSHFP': 'SSHFPRecord'}
+                 'SSHFP': 'SSHFPRecord', 'ALIAS': 'ALIASRecord'}
         constructor = RECS[record_type]
         uri = '/{}/{}/{}/'.format(names[record_type], self.zone,
                                   self.fqdn)

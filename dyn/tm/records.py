@@ -14,7 +14,7 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
            'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TLSARecord',
-           'TXTRecord', 'SSHFPRecord']
+           'TXTRecord', 'SSHFPRecord', 'ALIASRecord']
 
 
 class DNSRecord(object):
@@ -303,6 +303,71 @@ class AAAARecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return '<AAAARecord>: {}'.format(self._address)
+
+class ALIASRecord(DNSRecord):
+    """The ALIAS Records map an alias (CNAME) to the real or canonical
+    name that may lie inside or outside the current zone.
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create an :class:`~dyn.tm.records.ALIASRecord` object
+
+        :param zone: Name of zone where the record will be added
+        :param fqdn: Name of node where the record will be added
+        :param alias: Hostname
+        :param ttl: TTL for this record
+        """
+        if 'create' in kwargs:
+            super(ALIASRecord, self).__init__(zone, fqdn, kwargs['create'])
+            del kwargs['create']
+            self._build(kwargs)
+            self._record_type = 'ALIASRecord'
+        else:
+            super(ALIASRecord, self).__init__(zone, fqdn)
+            self._record_type = 'ALIASRecord'
+            self._alias = None
+            if 'record_id' in kwargs:
+                self._get_record(kwargs['record_id'])
+            else:
+                self._post(*args, **kwargs)
+
+    def _post(self, alias, ttl=0):
+        """Create a new :class:`~dyn.tm.records.ALIASRecord` on the DynECT
+        System
+        """
+        self._alias = alias
+        self._ttl = ttl
+        self.api_args = {'rdata': {'alias': self._alias},
+                         'ttl': self._ttl}
+        self._create_record(self.api_args)
+
+    def rdata(self):
+        """Return this :class:`~dyn.tm.records.ALIASRecord`'s rdata as a JSON
+        blob
+        """
+        guts = super(ALIASRecord, self).rdata()
+        shell = {'alias_rdata': guts}
+        return shell
+
+    @property
+    def alias(self):
+        """Hostname"""
+        return self._alias
+
+    @alias.setter
+    def alias(self, value):
+        self._alias = value
+        self.api_args['rdata']['alias'] = self._alias
+        self._update_record(self.api_args)
+
+    def __eq__(self, other):
+        """Equivalence override"""
+        if isinstance(other, ALIASRecord):
+            return self.alias == other.alias
+        elif isinstance(other, str):
+            return self.alias == other
+        return False
+
 
 
 class CERTRecord(DNSRecord):

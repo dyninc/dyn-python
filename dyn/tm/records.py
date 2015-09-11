@@ -2246,7 +2246,7 @@ class SSHFPRecord(DNSRecord):
 
     @fp_type.setter
     def fp_type(self, value):
-        self._flags = value
+        self._fp_type = value
         self.api_args['rdata']['fp_type'] = self._fp_type
         self._update_record(self.api_args)
 
@@ -2257,8 +2257,8 @@ class SSHFPRecord(DNSRecord):
 
     @fingerprint.setter
     def fingerprint(self, value):
-        self._protocol = value
-        self.api_args['rdata']['protocol'] = self._fingerprint
+        self._fingerprint = value
+        self.api_args['rdata']['fingerprint'] = self._fingerprint
         self._update_record(self.api_args)
 
 class TLSARecord(DNSRecord):

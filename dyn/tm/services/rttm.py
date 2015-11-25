@@ -657,6 +657,9 @@ class RTTM(object):
             syslog, lpr, news, uucp, cron, authpriv, ftp, ntp, security,
             console, local0, local1, local2, local3, local4, local5, local6, or
             local7
+        :param syslog_delivery: The syslog delivery action type. 'all' will deliver
+            notifications no matter what the endpoint state. 'change' (default) will
+            deliver only on change in the detected endpoint state
         :param region: A list of :class:`RTTMRegion`'s
         :param monitor: The :class:`Monitor` for this service
         :param performance_monitor: The performance monitor for the service
@@ -693,7 +696,7 @@ class RTTM(object):
         self._auto_recover = self._ttl = self._notify_events = None
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_facility = self._monitor = self._performance_monitor = None
-        self._contact_nickname = self._active = None
+        self._contact_nickname = self._active = self._syslog_delivery = None
         self._syslog_probe_fmt = self._syslog_status_fmt = self._syslog_rttm_fmt = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
@@ -707,7 +710,7 @@ class RTTM(object):
 
     def _post(self, contact_nickname, performance_monitor, region, ttl=None,
               auto_recover=None, notify_events=None, syslog_server=None,
-              syslog_port=514, syslog_ident='dynect', syslog_facility='daemon',
+              syslog_port=514, syslog_ident='dynect', syslog_facility='daemon', syslog_delivery='change',
               syslog_probe_fmt = None, syslog_status_fmt = None, syslog_rttm_fmt = None,
               monitor=None):
         """Create a new RTTM Service on the DynECT System"""
@@ -718,6 +721,7 @@ class RTTM(object):
         self._syslog_port = syslog_port
         self._syslog_ident = syslog_ident
         self._syslog_facility = syslog_facility
+        self._syslog_delivery = syslog_delivery
         self._region += region
         self._monitor = monitor
         self._performance_monitor = performance_monitor
@@ -753,6 +757,8 @@ class RTTM(object):
                                                  syslog_facility,
                                                  self.valid_syslog_facilities)
             api_args['syslog_facility'] = self._syslog_facility
+        if syslog_delivery:
+            api_args['syslog_delivery'] = self._syslog_delivery
         if syslog_probe_fmt:
             api_args['syslog_probe_fmt'] = self._syslog_probe_fmt
         if syslog_status_fmt:
@@ -998,6 +1004,16 @@ class RTTM(object):
             raise DynectInvalidArgumentError('syslog_facility', value,
                                              self.valid_syslog_facilities)
         api_args = {'syslog_facility': value}
+        self._update(api_args)
+
+    @property
+    def syslog_delivery(self):
+        self._get()
+        return self._syslog_delivery
+
+    @syslog_delivery.setter
+    def syslog_delivery(self, value):
+        api_args = {'syslog_delivery': value}
         self._update(api_args)
 
     @property

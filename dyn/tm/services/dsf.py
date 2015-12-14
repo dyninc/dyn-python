@@ -12,12 +12,12 @@ from ...compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_dsf_monitors', 'DSFARecord',
-           'DSFAAAARecord', 'DSFCERTRecord', 'DSFCNAMERecord', 'DSFDHCIDRecord',
-           'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord', 'DSFKEYRecord',
-           'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord', 'DSFMXRecord',
-           'DSFNAPTRRecord', 'DSFPTRRecord', 'DSFPXRecord', 'DSFNSAPRecord',
-           'DSFRPRecord', 'DSFNSRecord', 'DSFSPFRecord', 'DSFSRVRecord',
-           'DSFTXTRecord', 'DSFRecordSet', 'DSFFailoverChain',
+           'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
+           'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
+           'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord',
+           'DSFMXRecord', 'DSFNAPTRRecord', 'DSFPTRRecord', 'DSFPXRecord',
+           'DSFNSAPRecord', 'DSFRPRecord', 'DSFNSRecord', 'DSFSPFRecord',
+           'DSFSRVRecord', 'DSFTXTRecord', 'DSFRecordSet', 'DSFFailoverChain',
            'DSFResponsePool', 'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor',
            'TrafficDirector']
 
@@ -300,6 +300,32 @@ class DSFAAAARecord(_DSFRecord, AAAARecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
 
+
+class DSFALIASRecord(_DSFRecord, ALIASRecord):
+    """An :class:`AliasRecord` object which is able to store additional data for
+    use by a :class:`TrafficDirector` service.
+    """
+    def __init__(self, alias, ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None, endpoint_up_count=None, eligible=True,
+                 **kwargs):
+        """Create a :class:`DSFALIASRecord` object
+
+        :param alias: alias target name
+        :param ttl: TTL for this record
+        :param label: A unique label for this :class:`DSFALIASRecord`
+        :param weight: Weight for this :class:`DSFALIASRecord`
+        :param automation: Defines how eligible can be changed in response to
+            monitoring. Must be one of 'auto', 'auto_down', or 'manual'
+        :param endpoints: Endpoints are used to determine status, torpidity,
+            and eligible in response to monitor data
+        :param endpoint_up_count: Number of endpoints that must be up for the
+            Record status to be 'up'
+        :param eligible: Indicates whether or not the Record can be served
+        """
+        ALIASRecord.__init__(self, None, None, alias=alias, ttl=ttl,
+                            create=False)
+        _DSFRecord.__init__(self, label, weight, automation, endpoints,
+                            endpoint_up_count, eligible, **kwargs)
 
 class DSFCERTRecord(_DSFRecord, CERTRecord):
     """An :class:`CERTRecord` object which is able to store additional data for
@@ -976,8 +1002,8 @@ class DSFRecordSet(object):
             self._records = []
             for record in records:
                 constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
-                                'cert': DSFCERTRecord, 'cname': DSFCNAMERecord,
-                                'dhcid': DSFDHCIDRecord,
+                                'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
+                                'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
                                 'dname': DSFDNAMERecord,
                                 'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
                                 'key': DSFKEYRecord, 'kx': DSFKXRecord,

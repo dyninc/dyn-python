@@ -1,13 +1,27 @@
 Release History
 ---------------
+
+1.5.0 (2015-12-14)
+++++++++++++++++++
+*Alias Traffic Director Support, coincides with ALIAS product release.
+
+
+
 1.4.5 (2015-12-9)
 +++++++++++++++++
+
 * Added support for new syslog delivery type. `syslog_delivery` where `all` delivers messages no matter what the state and `change` only does so upon a detected change.
 
 
 1.4.4 (2015-11-25)
 ++++++++++++++++++
+
 * Added support for ALIAS records.
+
+1.4.3 (2015-08-14)
+++++++++++++++++++
+
+*Added support for configurable Syslog Messages
 
 
 1.4.2 (2015-08-10)
@@ -17,6 +31,34 @@ Release History
 * Exception classes are now based on `Exception` per #51. Thanks @thedebugger
 * Fixed potential circular dependency in `dyn.tm.services`
 * Added HTTP response debug logging
+
+1.4.1 (2015-07-23)
+++++++++++++++++++
+
+*added zone notes at publish capabilities.
+*added TSIG support
+
+1.4.0 (2015-06-26)
+++++++++++++++++++
+
+*Added better coverage for passing Node Objects
+*New way of handling DSFNodes with new API call
+
+1.3.14 (2015-06-22)
++++++++++++++++++++
+
+* Internal fixes with zone.
+
+1.3.13 (2015-06-15)
++++++++++++++++++++
+
+*DSF Ruleset Feature enhancement
+
+1.3.12 (2015-06-03)
++++++++++++++++++++
+
+*Added active properties for secondary zones.
+
 
 1.3.4 (2014-11-11)
 ++++++++++++++++++

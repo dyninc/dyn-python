@@ -1,5 +1,12 @@
 Release History
 ---------------
+
+1.5.0 (2015-12-14)
+++++++++++++++++++
+*Alias Traffic Director Support, coincides with ALIAS product release.
+
+
+
 1.4.5 (2015-12-9)
 +++++++++++++++++
 * Added support for new syslog delivery type. `syslog_delivery` where `all` delivers messages no matter what the state and `change` only does so upon a detected change.

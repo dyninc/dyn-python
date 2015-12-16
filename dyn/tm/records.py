@@ -9,12 +9,13 @@ from .session import DynectSession
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
-__all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'CERTRecord', 'CNAMERecord',
+__all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'ALIASRecord', 'CDSRecord',
+           'CDNSKEYRecord', 'CERTRecord', 'CNAMERecord',
            'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord', 'DSRecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
            'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TLSARecord',
-           'TXTRecord', 'SSHFPRecord', 'ALIASRecord']
+           'TXTRecord', 'SSHFPRecord']
 
 
 class DNSRecord(object):
@@ -368,6 +369,229 @@ class ALIASRecord(DNSRecord):
             return self.alias == other
         return False
 
+class CDNSKEYRecord(DNSRecord):
+    """The DNSKEY Record describes the public key of a public key (asymmetric)
+    cryptographic algorithm used with DNSSEC.nis. It is typically used to
+    authenticate signed keys or zones.
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create a :class:`~dyn.tm.records.DNSKEYRecord` object
+
+        :param zone: Name of zone where the record will be added
+        :param fqdn: Name of node where the record will be added
+        :param protocol: Numeric value for protocol
+        :param public_key: The public key for the DNSSEC signed zone
+        :param algorithm: Numeric value representing the public key encryption
+            algorithm which will sign the zone. Must be one of 1 (RSA-MD5), 2
+            (Diffie-Hellman), 3 (DSA/SHA-1), 4 (Elliptic Curve), or
+            5 (RSA-SHA-1)
+        :param flags: Numeric value confirming this is the zone's DNSKEY
+        :param ttl: TTL for this record. Use 0 for zone default
+        """
+        if 'create' in kwargs:
+            super(CDNSKEYRecord, self).__init__(zone, fqdn, kwargs['create'])
+            del kwargs['create']
+            self._build(kwargs)
+            self._record_type = 'CDNSKEYRecord'
+        else:
+            super(CDNSKEYRecord, self).__init__(zone, fqdn)
+            self._record_type = 'CDNSKEYRecord'
+            self._algorithm = self._flags = self._protocol = None
+            self._public_key = None
+            if 'record_id' in kwargs:
+                self._get_record(kwargs['record_id'])
+            elif len(args) + len(kwargs) == 1:
+                self._get_record(*args, **kwargs)
+            elif 'protocol' in kwargs or 'public_key' in kwargs:
+                self._post(*args, **kwargs)
+            elif len(args) + len(kwargs) > 1:
+                self._post(*args, **kwargs)
+
+    def _post(self, protocol, public_key, algorithm=5, flags=256,
+              ttl=0):
+        """Create a new :class:`~dyn.tm.records.DNSKEYRecord` on the DynECT
+        System
+        """
+        valid = range(1, 6)
+        if algorithm not in valid:
+            raise DynectInvalidArgumentError('algorthim', algorithm, valid)
+        self._algorithm = algorithm
+        self._flags = flags
+        self._protocol = protocol
+        self._public_key = public_key
+        self._ttl = ttl
+        self.api_args = {'rdata': {'algorithm': self._algorithm,
+                                   'flags': self._flags,
+                                   'protocol': self._protocol,
+                                   'public_key': self._public_key},
+                         'ttl': self._ttl}
+        self._create_record(self.api_args)
+
+    def rdata(self):
+        """Return this :class:`~dyn.tm.records.DNSKEYRecord`'s rdata as a JSON
+        blob
+        """
+        guts = super(CDNSKEYRecord, self).rdata()
+        shell = {'cdnskey_rdata': guts}
+        return shell
+
+    @property
+    def algorithm(self):
+        """Public key encryption algorithm will sign the zone"""
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, value):
+        self._algorithm = value
+        self.api_args['rdata']['algorithm'] = self._algorithm
+        self._update_record(self.api_args)
+
+    @property
+    def flags(self):
+        """Numeric value confirming this is the zone's DNSKEY"""
+        return self._flags
+
+    @flags.setter
+    def flags(self, value):
+        self._flags = value
+        self.api_args['rdata']['flags'] = self._flags
+        self._update_record(self.api_args)
+
+    @property
+    def protocol(self):
+        """Numeric value for protocol. Set to 3 for DNSSEC"""
+        return self._protocol
+
+    @protocol.setter
+    def protocol(self, value):
+        self._protocol = value
+        self.api_args['rdata']['protocol'] = self._protocol
+        self._update_record(self.api_args)
+
+    @property
+    def public_key(self):
+        """The public key for the DNSSEC signed zone"""
+        return self._public_key
+
+    @public_key.setter
+    def public_key(self, value):
+        self._public_key = value
+        self.api_args['rdata']['public_key'] = self._public_key
+        self._update_record(self.api_args)
+
+
+class CDSRecord(DNSRecord):
+    """The Child Delegation Signer (CDS) record type is used in DNSSEC to create the
+    chain of trust or authority from a signed parent zone to a signed child
+    zone.
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create a :class:`~dyn.tm.records.DSRecord` object
+
+        :param zone: Name of zone where the record will be added
+        :param fqdn: Name of node where the record will be added
+        :param digest: The digest in hexadecimal form. 20-byte,
+            hexadecimal-encoded, one-way hash of the DNSKEY record surrounded
+            by parenthesis characters '(' & ')'
+        :param keytag: The digest mechanism to use to verify the digest
+        :param algorithm: Numeric value representing the public key encryption
+            algorithm which will sign the zone. Must be one of 1 (RSA-MD5), 2
+            (Diffie-Hellman), 3 (DSA/SHA-1), 4 (Elliptic Curve), or
+            5 (RSA-SHA-1)
+        :param digtype: the digest mechanism to use to verify the digest. Valid
+            values are SHA1, SHA256
+        :param ttl: TTL for this record. Use 0 for zone default
+        """
+        if 'create' in kwargs:
+            super(CDSRecord, self).__init__(zone, fqdn, kwargs['create'])
+            del kwargs['create']
+            self._build(kwargs)
+            self._record_type = 'CDSRecord'
+        else:
+            super(CDSRecord, self).__init__(zone, fqdn)
+            self._record_type = 'CDSRecord'
+            self._algorithm = self._digest = self._digtype = self._keytag = None
+            if 'record_id' in kwargs:
+                self._get_record(kwargs['record_id'])
+            elif len(args) + len(kwargs) == 1:
+                self._get_record(*args, **kwargs)
+            elif 'digest' in kwargs or 'keytag' in kwargs:
+                self._post(*args, **kwargs)
+            elif len(args) + len(kwargs) > 1:
+                self._post(*args, **kwargs)
+
+    def _post(self, digest, keytag, algorithm=5, digtype=1, ttl=0):
+        """Create a new :class:`~dyn.tm.records.DSRecord` on the DynECT System
+        """
+        self._digest = digest
+        self._keytag = keytag
+        valid = range(1, 6)
+        if algorithm not in valid:
+            raise DynectInvalidArgumentError('algorthim', algorithm, valid)
+        self._algorithm = algorithm
+        self._digtype = digtype
+        self._ttl = ttl
+        self.api_args = {'rdata': {'algorithm': self._algorithm,
+                                   'digest': self._digest,
+                                   'digtype': self._digtype,
+                                   'keytag': self._keytag},
+                         'ttl': self._ttl}
+        self._create_record(self.api_args)
+
+    def rdata(self):
+        """Return this :class:`~dyn.tm.records.DSRecord`'s rdata as a JSON blob
+        """
+        guts = super(CDSRecord, self).rdata()
+        shell = {'cds_rdata': guts}
+        return shell
+
+    @property
+    def algorithm(self):
+        """Identifies the encoding algorithm"""
+        return self._algorithm
+
+    @algorithm.setter
+    def algorithm(self, value):
+        self._algorithm = value
+        self.api_args['rdata']['algorithm'] = self._algorithm
+        self._update_record(self.api_args)
+
+    @property
+    def digest(self):
+        """The digest in hexadecimal form. 20-byte, hexadecimal-encoded,
+        one-way hash of the DNSKEY record surrounded by parenthesis characters
+        """
+        return self._digest
+
+    @digest.setter
+    def digest(self, value):
+        self._digest = value
+        self.api_args['rdata']['digest'] = self._digest
+        self._update_record(self.api_args)
+
+    @property
+    def digtype(self):
+        """Identifies which digest mechanism to use to verify the digest"""
+        return self._digtype
+
+    @digtype.setter
+    def digtype(self, value):
+        self._digtype = value
+        self.api_args['rdata']['digtype'] = self._digtype
+        self._update_record(self.api_args)
+
+    @property
+    def keytag(self):
+        """Identifies which digest mechanism to use to verify the digest"""
+        return self._keytag
+
+    @keytag.setter
+    def keytag(self, value):
+        self._keytag = value
+        self.api_args['rdata']['keytag'] = self._keytag
+        self._update_record(self.api_args)
 
 
 class CERTRecord(DNSRecord):
@@ -471,7 +695,6 @@ class CERTRecord(DNSRecord):
         self._certificate = value
         self.api_args['rdata']['certificate'] = self._certificate
         self._update_record(self.api_args)
-
 
 class CNAMERecord(DNSRecord):
     """The Canonical Name (CNAME) Records map an alias to the real or canonical

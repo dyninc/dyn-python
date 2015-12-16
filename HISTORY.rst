@@ -4,7 +4,7 @@ Release History
 1.5.0 (2015-12-14)
 ++++++++++++++++++
 *Alias Traffic Director Support, coincides with ALIAS product release.
-
+*Addition of CDS and CDNSKEY records.
 
 
 1.4.5 (2015-12-9)

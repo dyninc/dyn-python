@@ -15,14 +15,16 @@ from .services import *
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
 
-RECS = {'A': ARecord, 'AAAA': AAAARecord, 'CERT': CERTRecord,
-        'CNAME': CNAMERecord, 'DHCID': DHCIDRecord, 'DNAME': DNAMERecord,
-        'DNSKEY': DNSKEYRecord, 'DS': DSRecord, 'KEY': KEYRecord,
-        'KX': KXRecord, 'LOC': LOCRecord, 'IPSECKEY': IPSECKEYRecord,
-        'MX': MXRecord, 'NAPTR': NAPTRRecord, 'PTR': PTRRecord, 'PX': PXRecord,
-        'NSAP': NSAPRecord, 'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord,
+RECS = {'A': ARecord, 'AAAA': AAAARecord, 'ALIAS': ALIASRecord,
+        'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord,
+        'CERT': CERTRecord,'CNAME': CNAMERecord, 'DHCID': DHCIDRecord,
+        'DNAME': DNAMERecord, 'DNSKEY': DNSKEYRecord, 'DS': DSRecord,
+        'KEY': KEYRecord,'KX': KXRecord, 'LOC': LOCRecord,
+        'IPSECKEY': IPSECKEYRecord,'MX': MXRecord, 'NAPTR': NAPTRRecord,
+        'PTR': PTRRecord, 'PX': PXRecord, 'NSAP': NSAPRecord,
+        'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord,
         'SPF': SPFRecord, 'SRV': SRVRecord, 'TLSA': TLSARecord,
-        'TXT': TXTRecord, 'SSHFP': SSHFPRecord, 'ALIAS': ALIASRecord}
+        'TXT': TXTRecord, 'SSHFP': SSHFPRecord }
 
 
 def get_all_zones():
@@ -457,7 +459,9 @@ class Zone(object):
             and 'TXT'.
         :return: A :class:`List` of :class:`DNSRecord`'s
         """
-        names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'CERT': 'CERTRecord',
+        names = {'A': 'ARecord', 'AAAA': 'AAAARecord','ALIAS': 'ALIASRecord',
+                 'CDS': 'CDSRecord', 'CDNSKEY': 'CDNSKEYRecord',
+                 'CERT': 'CERTRecord',
                  'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
                  'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
                  'DS': 'DSRecord', 'KEY': 'KEYRecord', 'KX': 'KXRecord',
@@ -466,7 +470,8 @@ class Zone(object):
                  'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
                  'SRV': 'SRVRecord', 'TLSA': 'TLSARecord', 'TXT': 'TXTRecord',
-                 'SSHFP': 'SSHFPRecord', 'ALIAS': 'ALIASRecord'}
+                 'SSHFP': 'SSHFPRecord',}
+
         constructor = RECS[record_type]
         uri = '/{}/{}/{}/'.format(names[record_type], self._name, self.fqdn)
         api_args = {'detail': 'Y'}

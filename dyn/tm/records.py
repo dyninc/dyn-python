@@ -370,9 +370,8 @@ class ALIASRecord(DNSRecord):
         return False
 
 class CDNSKEYRecord(DNSRecord):
-    """The DNSKEY Record describes the public key of a public key (asymmetric)
-    cryptographic algorithm used with DNSSEC.nis. It is typically used to
-    authenticate signed keys or zones.
+    """The CDNSKEY Record, or "Child DNSKEY", describes the public key of a public key (asymmetric)
+    cryptographic algorithm used with DNSSEC.nis. This is the DNSKEY for a Child Zone
     """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -483,8 +482,7 @@ class CDNSKEYRecord(DNSRecord):
 
 class CDSRecord(DNSRecord):
     """The Child Delegation Signer (CDS) record type is used in DNSSEC to create the
-    chain of trust or authority from a signed parent zone to a signed child
-    zone.
+    chain of trust or authority from a signed child zone to a signed parent zone.
     """
 
     def __init__(self, zone, fqdn, *args, **kwargs):

@@ -12,9 +12,27 @@ AAAARecord
     :members:
     :undoc-members:
 
+ALIASRecord
+==========
+.. autoclass:: dyn.tm.records.ALIASRecord
+    :members:
+    :undoc-members:    
+
 CERTRecord
 ==========
 .. autoclass:: dyn.tm.records.CERTRecord
+    :members:
+    :undoc-members:
+
+CDNSKEYRecord
+===========
+.. autoclass:: dyn.tm.records.CDNSKEYRecord
+    :members:
+    :undoc-members:
+
+CDSRecord
+===========
+.. autoclass:: dyn.tm.records.CDSRecord
     :members:
     :undoc-members:
 

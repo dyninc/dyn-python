@@ -1,6 +1,10 @@
 Release History
 ---------------
 
+1.5.1 (2015-12-17)
+++++++++++++++++++
+*Addition of CSYNC records
+
 1.5.0 (2015-12-14)
 ++++++++++++++++++
 *Alias Traffic Director Support, coincides with ALIAS product release.

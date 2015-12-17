@@ -16,7 +16,7 @@ __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
 
 RECS = {'A': ARecord, 'AAAA': AAAARecord, 'ALIAS': ALIASRecord,
-        'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord,
+        'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord, 'CSYNC': CSYNCRecord,
         'CERT': CERTRecord,'CNAME': CNAMERecord, 'DHCID': DHCIDRecord,
         'DNAME': DNAMERecord, 'DNSKEY': DNSKEYRecord, 'DS': DSRecord,
         'KEY': KEYRecord,'KX': KXRecord, 'LOC': LOCRecord,
@@ -461,7 +461,7 @@ class Zone(object):
         """
         names = {'A': 'ARecord', 'AAAA': 'AAAARecord','ALIAS': 'ALIASRecord',
                  'CDS': 'CDSRecord', 'CDNSKEY': 'CDNSKEYRecord',
-                 'CERT': 'CERTRecord',
+                 'CERT': 'CERTRecord', 'CSYNC': 'CSYNCRecord',
                  'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
                  'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
                  'DS': 'DSRecord', 'KEY': 'KEYRecord', 'KX': 'KXRecord',

@@ -30,6 +30,12 @@ CDNSKEYRecord
     :members:
     :undoc-members:
 
+CSYNCRecord
+===========
+.. autoclass:: dyn.tm.records.CSYNCRecord
+    :members:
+    :undoc-members:    
+
 CDSRecord
 ===========
 .. autoclass:: dyn.tm.records.CDSRecord

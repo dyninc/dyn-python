@@ -10,7 +10,7 @@ from ..compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'ALIASRecord', 'CDSRecord',
-           'CDNSKEYRecord', 'CERTRecord', 'CNAMERecord',
+           'CDNSKEYRecord', 'CERTRecord', 'CNAMERecord', 'CSYNCRecord',
            'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord', 'DSRecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
            'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
@@ -758,6 +758,117 @@ class CNAMERecord(DNSRecord):
             return self.cname == other
         return False
 
+class CSYNCRecord(DNSRecord):
+    """ The CSYNC RRType contains, in its RDATA component, these parts: an
+    SOA serial number, a set of flags, and a simple bit-list indicating
+    the DNS RRTypes in the child that should be processed by the parental
+    agent in order to modify the DNS delegation records within the
+    parent's zone for the child DNS operator.
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create a :class:`~dyn.tm.records.DSRecord` object
+
+        :param zone: Name of zone where the record will be added
+        :param fqdn: Name of node where the record will be added
+        :param soa_serial: SOA serial to bind to this record.
+        :param flags: list of flags ('soaminimum', 'immediate')
+        :param rectypes: list of record types to bind to this record.
+        :param ttl: TTL for this record
+        """
+        if 'create' in kwargs:
+            super(CSYNCRecord, self).__init__(zone, fqdn, kwargs['create'])
+            del kwargs['create']
+            self._build(kwargs)
+            self._record_type = 'CSYNCRecord'
+        else:
+            super(CSYNCRecord, self).__init__(zone, fqdn)
+            self._record_type = 'CSYNCRecord'
+            self._soa_serial = self._flags = self._rectypes = None
+            if 'record_id' in kwargs:
+                self._get_record(kwargs['record_id'])
+            elif len(args) + len(kwargs) > 1:
+                self._post(*args, **kwargs)
+
+    def _post(self, soa_serial, flags, rectypes, ttl=0):
+        """Create a new :class:`~dyn.tm.records.CSYNCRecord` on the DynECT System
+        """
+        self._soa_serial = soa_serial
+
+        validFlags = ['soaminimum', 'immediate']
+        validRectypes = ['A', 'AAAA',  'CDS', 'CDNSKEY', 'CERT', 'CNAME', 'DHCID', 'DNAME',
+                         'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY', 'MX', 'NAPTR',
+                         'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF', 'SRV', 'TLSA',
+                         'TXT', 'SSHFP']
+
+        for flag in flags:
+            if flag not in validFlags:
+                raise DynectInvalidArgumentError('flags', flag, validFlags)
+        self._flags = flags
+
+        for record in rectypes:
+            if record not in validRectypes:
+                raise DynectInvalidArgumentError('rectypes', record, validRectypes)
+        self._rectypes = rectypes
+
+
+        self.api_args = {'rdata': {'soa_serial': self._soa_serial,
+                                   'flags': ','.join(self._flags),
+                                   'types': ','.join(self._rectypes)},
+                         'ttl': self._ttl}
+        self._create_record(self.api_args)
+
+    def rdata(self):
+        """Return this :class:`~dyn.tm.records.DSRecord`'s rdata as a JSON blob
+        """
+        guts = super(CSYNCRecord, self).rdata()
+        shell = {'csync_rdata': guts}
+        return shell
+
+    def _format(self):
+        """cleans up Flags and record types"""
+        if not isinstance(self._flags, (list,tuple)):
+            self._flags = self._flags.split(',')
+        if not isinstance(self._rectypes, (list,tuple)):
+            self._rectypes = self._rectypes.split(',')
+
+
+    @property
+    def soa_serial(self):
+        """SOA Serial"""
+        return self._soa_serial
+
+    @soa_serial.setter
+    def soa_serial(self, value):
+        self._soa_serial = value
+        self.api_args['rdata']['soa_serial'] = self._soa_serial
+        self._update_record(self.api_args)
+        self._format()
+
+    @property
+    def flags(self):
+        """The flags, in list form
+        """
+        return self._flags
+
+    @flags.setter
+    def flags(self, value):
+        self._flags = value
+        self.api_args['rdata']['flags'] = ','.join(self._flags)
+        self._update_record(self.api_args)
+        self._format()
+
+    @property
+    def rectypes(self):
+        """list of record types"""
+        return self._rectypes
+
+    @rectypes.setter
+    def rectypes(self, value):
+        self._rectypes = value
+        self.api_args['rdata']['types'] = ','.join(self._rectypes)
+        self._update_record(self.api_args)
+        self._format()
 
 class DHCIDRecord(DNSRecord):
     """The :class:`~dyn.tm.records.DHCIDRecord` provides a means by which DHCP

@@ -958,12 +958,19 @@ class RTTM(object):
         self._update(api_args)
 
     @property
+    def status(self):
+        """Status"""
+        self._get()
+        return self._status
+
+    @property
     def syslog_server(self):
         """The Hostname or IP address of a server to receive syslog
         notifications on monitoring events
         """
         self._get()
         return self._syslog_server
+
     @syslog_server.setter
     def syslog_server(self, value):
         api_args = {'syslog_server': value}

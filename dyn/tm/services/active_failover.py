@@ -256,6 +256,7 @@ class ActiveFailover(object):
             %adr	address of monitored node
             %med	median value
             %rts	response times (RTTM)
+        :param recovery_delay: number of up status polling intervals to consider service up
         """
         super(ActiveFailover, self).__init__()
         self.valid_notify_events = ('ip', 'svc', 'nosrv')
@@ -267,6 +268,7 @@ class ActiveFailover(object):
         self._syslog_server = self._syslog_port = self._syslog_ident = None
         self._syslog_probe_fmt = self._syslog_status_fmt = None
         self._syslog_facility = self._ttl = self._syslog_delivery = None
+        self._recovery_delay = None
         self.uri = '/Failover/{}/{}/'.format(self._zone, self._fqdn)
         self.api_args = {}
         if 'api' in kwargs:
@@ -288,7 +290,8 @@ class ActiveFailover(object):
               contact_nickname, auto_recover=None, notify_events=None,
               syslog_server=None, syslog_port=None, syslog_ident=None,
               syslog_facility=None, ttl=None, syslog_probe_fmt = None,
-              syslog_status_fmt = None, syslog_delivery = None):
+              syslog_status_fmt = None, syslog_delivery = None,
+              recovery_delay = None):
         """Create a new Active Failover Service on the DynECT System"""
         self._address = address
         self._failover_mode = failover_mode
@@ -306,6 +309,7 @@ class ActiveFailover(object):
         self._syslog_delivery = syslog_delivery
         self._syslog_probe_fmt = syslog_probe_fmt
         self._syslog_status_fmt = syslog_status_fmt
+        self._recovery_delay = recovery_delay
         self._ttl = ttl
         api_args = {'address': self._address,
                     'failover_mode': self._failover_mode,
@@ -319,6 +323,8 @@ class ActiveFailover(object):
             self.api_args['syslog_probe_fmt'] = self._syslog_probe_fmt
         if syslog_status_fmt:
             self.api_args['syslog_status_fmt'] = self._syslog_status_fmt
+        if recovery_delay:
+            self.api_args['recovery_delay'] = self._recovery_delay
         if syslog_facility:
             self.api_args['syslog_facility'] = self._syslog_facility
         if syslog_delivery:
@@ -561,6 +567,15 @@ class ActiveFailover(object):
         api_args = {'syslog_status_fmt': value}
         self._update(api_args)
 
+    @property
+    def recovery_delay(self):
+        self._get()
+        return self._recovery_delay
+
+    @recovery_delay.setter
+    def recovery_delay(self, value):
+        api_args = {'recovery_delay': value}
+        self._update(api_args)
 
     @property
     def ttl(self):

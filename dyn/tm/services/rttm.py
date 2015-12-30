@@ -680,6 +680,7 @@ class RTTM(object):
             %adr	address of monitored node
             %med	median value
             %rts	response times (RTTM)
+        :param recovery_delay: number of up status polling intervals to consider service up
         """
         super(RTTM, self).__init__()
         self.valid_ttls = (30, 60, 150, 300, 450)
@@ -698,6 +699,7 @@ class RTTM(object):
         self._syslog_facility = self._monitor = self._performance_monitor = None
         self._contact_nickname = self._active = self._syslog_delivery = None
         self._syslog_probe_fmt = self._syslog_status_fmt = self._syslog_rttm_fmt = None
+        self._recovery_delay = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
@@ -711,7 +713,7 @@ class RTTM(object):
     def _post(self, contact_nickname, performance_monitor, region, ttl=None,
               auto_recover=None, notify_events=None, syslog_server=None,
               syslog_port=514, syslog_ident='dynect', syslog_facility='daemon', syslog_delivery='change',
-              syslog_probe_fmt = None, syslog_status_fmt = None, syslog_rttm_fmt = None,
+              syslog_probe_fmt = None, syslog_status_fmt = None, syslog_rttm_fmt = None, recovery_delay = None,
               monitor=None):
         """Create a new RTTM Service on the DynECT System"""
         self._auto_recover = auto_recover
@@ -729,6 +731,7 @@ class RTTM(object):
         self._syslog_probe_fmt = syslog_probe_fmt
         self._syslog_status_fmt = syslog_status_fmt
         self._syslog_rttm_fmt = syslog_rttm_fmt
+        self._recovery_delay = recovery_delay
         api_args = {}
         if auto_recover:
             if auto_recover not in ('Y', 'N'):
@@ -765,6 +768,8 @@ class RTTM(object):
             api_args['syslog_status_fmt'] = self._syslog_status_fmt
         if syslog_rttm_fmt:
             api_args['syslog_rttm_fmt'] = self._syslog_rttm_fmt
+        if recovery_delay:
+            api_args['recovery_delay'] = self._recovery_delay
         if region:
             api_args['region'] = [region._json for region in self._region]
         if monitor:
@@ -1051,6 +1056,16 @@ class RTTM(object):
     @syslog_rttm_format.setter
     def syslog_rttm_format(self, value):
         api_args = {'syslog_rttm_fmt': value}
+        self._update(api_args)
+
+    @property
+    def recovery_delay(self):
+        self._get()
+        return self._recovery_delay
+
+    @recovery_delay.setter
+    def recovery_delay(self, value):
+        api_args = {'recovery_delay': value}
         self._update(api_args)
 
     @property

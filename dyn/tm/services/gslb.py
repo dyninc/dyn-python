@@ -654,6 +654,7 @@ class GSLB(object):
             %adr	address of monitored node
             %med	median value
             %rts	response times (RTTM)
+        :param recovery_delay: number of up status polling intervals to consider service up
         """
 
         super(GSLB, self).__init__()
@@ -674,6 +675,7 @@ class GSLB(object):
         self._syslog_facility = self._monitor = self._contact_nickname = None
         self._syslog_probe_fmt = self._syslog_status_fmt = None
         self._active = self._status = self._syslog_delivery = None
+        self._recovery_delay = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
             del kwargs['api']
@@ -687,7 +689,8 @@ class GSLB(object):
     def _post(self, contact_nickname, region, auto_recover=None, ttl=None,
               notify_events=None, syslog_server=None, syslog_port=514,
               syslog_ident='dynect', syslog_facility='daemon', syslog_probe_fmt = None,
-              syslog_status_fmt = None, monitor=None, syslog_delivery='change'):
+              syslog_status_fmt = None, monitor=None, syslog_delivery='change',
+              recovery_delay = None):
         """Create a new :class:`GSLB` service object on the DynECT System"""
         self._auto_recover = auto_recover
         self._ttl = ttl
@@ -699,6 +702,7 @@ class GSLB(object):
         self._syslog_delivery = syslog_delivery
         self._syslog_probe_fmt = syslog_probe_fmt
         self._syslog_status_fmt = syslog_status_fmt
+        self._recovery_delay = recovery_delay
         self._region += region
         self._monitor = monitor
         self._contact_nickname = contact_nickname
@@ -724,6 +728,8 @@ class GSLB(object):
             api_args['syslog_probe_fmt'] = self._syslog_probe_fmt
         if syslog_status_fmt:
             api_args['syslog_status_fmt'] = self._syslog_status_fmt
+        if recovery_delay:
+            api_args['recovery_delay'] = self._recovery_delay
         if monitor:
             api_args['monitor'] = self._monitor.to_json()
             self._monitor.zone = self._zone
@@ -975,6 +981,18 @@ class GSLB(object):
     @syslog_status_format.setter
     def syslog_status_format(self, value):
         api_args = {'syslog_status_fmt': value}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'], region=False)
+
+    @property
+    def recovery_delay(self):
+        self._get()
+        return self._recovery_delay
+
+    @recovery_delay.setter
+    def recovery_delay(self, value):
+        api_args = {'recovery_delay': value}
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'], region=False)

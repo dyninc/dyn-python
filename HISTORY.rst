@@ -1,6 +1,11 @@
 Release History
 ---------------
 
+1.5.2 (2016-1-11)
++++++++++++++++++
+*Addition of Delay feature to GSLB Services
+*Minor Improvements to GSLB features.
+
 1.5.1 (2015-12-17)
 ++++++++++++++++++
 *Addition of CSYNC records

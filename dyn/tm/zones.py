@@ -56,6 +56,24 @@ def get_all_secondary_zones():
         zones.append(SecondaryZone(zone.pop('zone'), api=False, **zone))
     return zones
 
+def get_apex(node_name, fullDetails=False):
+    """Accessor function to retireve the apex zone name of a given node
+    available to logged in user.
+
+    :param node_name: name of the node to search for apex for.
+    :param fullDetails: if true, returns zone_type, serial_type, and serial along with apex zone name
+
+    :return: if fullDetails = False: a *string* containing apex zone name.
+    :return: if fullDetails = True: a *dict* containing apex zone name, zone_type, serial_type, and serial.
+    """
+
+    uri = '/Apex/{}'.format(node_name)
+    api_args = {}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    if fullDetails:
+        return response['data']
+    else:
+        return response['data']['zone']
 
 class Zone(object):
     """A class representing a DynECT Zone"""

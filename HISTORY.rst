@@ -5,6 +5,7 @@ Release History
 +++++++++++++++++
 *Addition of Delay feature to GSLB Services
 *Minor Improvements to GSLB features.
+*Addition of Apex Finder
 
 1.5.1 (2015-12-17)
 ++++++++++++++++++

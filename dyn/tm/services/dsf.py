@@ -229,8 +229,9 @@ class _DSFRecord(object):
 
         json = {'label': self._label, 'weight': self._weight,
                 'automation': self._automation, 'endpoints': self._endpoints,
-                'eligible': self._eligible, 'service_id': svc_id,
+                'eligible': self._eligible,
                 'endpoint_up_count': self._endpoint_up_count}
+
         json_blob = {x: json[x] for x in json if json[x] is not None}
         if hasattr(self, '_record_type'):
             # label = self._record_type.split('Record')[0].lower() + '_rdata'
@@ -245,6 +246,9 @@ class _DSFRecord(object):
                          x[1:] not in self.__dict__ and
                          inner_data[x] is not None}
             json_blob['rdata'] = {outer_key: real_data}
+        if svc_id:
+            json_blob['service_id'] = svc_id
+
         return json_blob
 
     def delete(self):
@@ -1311,7 +1315,9 @@ class DSFRecordSet(object):
         if self._service_id and not svc_id:
             svc_id = self._service_id
 
-        json_blob = {'rdata_class': self._rdata_class, 'service_id': svc_id}
+        json_blob = {'rdata_class': self._rdata_class}
+        if svc_id:
+            json_blob['service_id'] = svc_id
         if self._label:
             json_blob['label'] = self._label
         if self._ttl:
@@ -1465,8 +1471,10 @@ class DSFFailoverChain(object):
         if self._service_id and not svc_id:
             svc_id = self._service_id
 
-        json_blob = {'service_id': svc_id}
+        json_blob = {}
 
+        if svc_id:
+            json_blob['service_id'] = svc_id
         if self._label:
             json_blob['label'] = self._label
         if self._dsf_record_set_failover_chain_id:
@@ -1667,12 +1675,14 @@ class DSFResponsePool(object):
 
         rs_json = [rs.to_json(svc_id) for rs in self._rs_chains]
         json_blob = {'label': self._label, 'eligible': self._eligible,
-                     'core_set_count': self._core_set_count, 'service_id' : svc_id,
+                     'core_set_count': self._core_set_count,
                      'automation': self._automation, 'rs_chains': rs_json}
         if self._index:
             json_blob['index'] = self._index
         if self._dsf_ruleset_id:
             json_blob['dsf_ruleset_id'] = self._dsf_ruleset_id
+        if svc_id:
+            json_blob['service_id'] = svc_id
         return json_blob
 
     def delete(self):
@@ -1820,8 +1830,10 @@ class DSFRuleset(object):
         if self._failover:
             pool_json.append({'failover': self._failover})
         json_blob = {'label': self._label, 'criteria_type': self._criteria_type,
-                     'criteria': self._criteria, 'service_id': svc_id,
+                     'criteria': self._criteria,
                      'response_pools': pool_json}
+        if svc_id:
+            json_blob['service_id'] = svc_id
 
         return json_blob
 

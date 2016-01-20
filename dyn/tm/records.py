@@ -79,6 +79,10 @@ class DNSRecord(object):
         response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._build(response['data'])
 
+    def _pull(self):
+        if self.record_id is not None:
+            self._get_record(record_id=self.record_id)
+
     def _build(self, data):
         for key, val in data.items():
             if key == 'rdata':
@@ -220,6 +224,7 @@ class ARecord(DNSRecord):
     @property
     def address(self):
         """Return the value of this record's address property"""
+        self._pull()
         return self._address
 
     @address.setter
@@ -288,6 +293,7 @@ class AAAARecord(DNSRecord):
     @property
     def address(self):
         """Return the value of this record's address property"""
+        self._pull()
         return self._address
 
     @address.setter
@@ -353,6 +359,7 @@ class ALIASRecord(DNSRecord):
     @property
     def alias(self):
         """Hostname"""
+        self._pull()
         return self._alias
 
     @alias.setter
@@ -438,6 +445,7 @@ class CDNSKEYRecord(DNSRecord):
     @property
     def algorithm(self):
         """Public key encryption algorithm will sign the zone"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -449,6 +457,7 @@ class CDNSKEYRecord(DNSRecord):
     @property
     def flags(self):
         """Numeric value confirming this is the zone's DNSKEY"""
+        self._pull()
         return self._flags
 
     @flags.setter
@@ -460,6 +469,7 @@ class CDNSKEYRecord(DNSRecord):
     @property
     def protocol(self):
         """Numeric value for protocol. Set to 3 for DNSSEC"""
+        self._pull()
         return self._protocol
 
     @protocol.setter
@@ -471,6 +481,7 @@ class CDNSKEYRecord(DNSRecord):
     @property
     def public_key(self):
         """The public key for the DNSSEC signed zone"""
+        self._pull()
         return self._public_key
 
     @public_key.setter
@@ -548,6 +559,7 @@ class CDSRecord(DNSRecord):
     @property
     def algorithm(self):
         """Identifies the encoding algorithm"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -561,6 +573,7 @@ class CDSRecord(DNSRecord):
         """The digest in hexadecimal form. 20-byte, hexadecimal-encoded,
         one-way hash of the DNSKEY record surrounded by parenthesis characters
         """
+        self._pull()
         return self._digest
 
     @digest.setter
@@ -572,6 +585,7 @@ class CDSRecord(DNSRecord):
     @property
     def digtype(self):
         """Identifies which digest mechanism to use to verify the digest"""
+        self._pull()
         return self._digtype
 
     @digtype.setter
@@ -583,6 +597,7 @@ class CDSRecord(DNSRecord):
     @property
     def keytag(self):
         """Identifies which digest mechanism to use to verify the digest"""
+        self._pull()
         return self._keytag
 
     @keytag.setter
@@ -653,6 +668,7 @@ class CERTRecord(DNSRecord):
     @property
     def format(self):
         """Numeric value for the certificate type."""
+        self._pull()
         return self._format
 
     @format.setter
@@ -664,6 +680,7 @@ class CERTRecord(DNSRecord):
     @property
     def tag(self):
         """Numeric value for the public key certificate"""
+        self._pull()
         return self._tag
 
     @tag.setter
@@ -675,6 +692,7 @@ class CERTRecord(DNSRecord):
     @property
     def algorithm(self):
         """Public key algorithm number used to generate the certificate"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -686,6 +704,7 @@ class CERTRecord(DNSRecord):
     @property
     def certificate(self):
         """The public key certificate"""
+        self._pull()
         return self._certificate
 
     @certificate.setter
@@ -742,6 +761,7 @@ class CNAMERecord(DNSRecord):
     @property
     def cname(self):
         """Hostname"""
+        self._pull()
         return self._cname
 
     @cname.setter
@@ -836,6 +856,7 @@ class CSYNCRecord(DNSRecord):
     @property
     def soa_serial(self):
         """SOA Serial"""
+        self._pull()
         return self._soa_serial
 
     @soa_serial.setter
@@ -849,6 +870,7 @@ class CSYNCRecord(DNSRecord):
     def flags(self):
         """The flags, in list form
         """
+        self._pull()
         return self._flags
 
     @flags.setter
@@ -861,6 +883,7 @@ class CSYNCRecord(DNSRecord):
     @property
     def rectypes(self):
         """list of record types"""
+        self._pull()
         return self._rectypes
 
     @rectypes.setter
@@ -924,6 +947,7 @@ class DHCIDRecord(DNSRecord):
     @property
     def digest(self):
         """Base-64 encoded digest of DHCP data"""
+        self._pull()
         return self._digest
 
     @digest.setter
@@ -986,6 +1010,7 @@ class DNAMERecord(DNSRecord):
     @property
     def dname(self):
         """Target hostname"""
+        self._pull()
         return self._dname
 
     @dname.setter
@@ -1065,6 +1090,7 @@ class DNSKEYRecord(DNSRecord):
     @property
     def algorithm(self):
         """Public key encryption algorithm will sign the zone"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -1076,6 +1102,7 @@ class DNSKEYRecord(DNSRecord):
     @property
     def flags(self):
         """Numeric value confirming this is the zone's DNSKEY"""
+        self._pull()
         return self._flags
 
     @flags.setter
@@ -1087,6 +1114,7 @@ class DNSKEYRecord(DNSRecord):
     @property
     def protocol(self):
         """Numeric value for protocol. Set to 3 for DNSSEC"""
+        self._pull()
         return self._protocol
 
     @protocol.setter
@@ -1098,6 +1126,7 @@ class DNSKEYRecord(DNSRecord):
     @property
     def public_key(self):
         """The public key for the DNSSEC signed zone"""
+        self._pull()
         return self._public_key
 
     @public_key.setter
@@ -1176,6 +1205,7 @@ class DSRecord(DNSRecord):
     @property
     def algorithm(self):
         """Identifies the encoding algorithm"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -1189,6 +1219,7 @@ class DSRecord(DNSRecord):
         """The digest in hexadecimal form. 20-byte, hexadecimal-encoded, 
         one-way hash of the DNSKEY record surrounded by parenthesis characters
         """
+        self._pull()
         return self._digest
 
     @digest.setter
@@ -1200,6 +1231,7 @@ class DSRecord(DNSRecord):
     @property
     def digtype(self):
         """Identifies which digest mechanism to use to verify the digest"""
+        self._pull()
         return self._digtype
 
     @digtype.setter
@@ -1211,6 +1243,7 @@ class DSRecord(DNSRecord):
     @property
     def keytag(self):
         """Identifies which digest mechanism to use to verify the digest"""
+        self._pull()
         return self._keytag
 
     @keytag.setter
@@ -1292,6 +1325,7 @@ class KEYRecord(DNSRecord):
     @property
     def algorithm(self):
         """Numeric identifier for algorithm used"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -1303,6 +1337,7 @@ class KEYRecord(DNSRecord):
     @property
     def flags(self):
         """See RFC 2535 for information about Key record flags"""
+        self._pull()
         return self._flags
 
     @flags.setter
@@ -1314,6 +1349,7 @@ class KEYRecord(DNSRecord):
     @property
     def protocol(self):
         """Numeric identifier of the protocol for this KEY record"""
+        self._pull()
         return self._protocol
 
     @protocol.setter
@@ -1325,6 +1361,7 @@ class KEYRecord(DNSRecord):
     @property
     def public_key(self):
         """The public key for this record"""
+        self._pull()
         return self._public_key
 
     @public_key.setter
@@ -1395,6 +1432,7 @@ class KXRecord(DNSRecord):
         """Hostname that will act as the Key Exchanger. The hostname must have 
         a CNAME record, an A Record and/or an AAAA record associated with it
         """
+        self._pull()
         return self._exchange
 
     @exchange.setter
@@ -1408,6 +1446,7 @@ class KXRecord(DNSRecord):
         """Numeric value for priority usage. Lower value takes precedence over 
         higher value where two records of the same type exist on the zone/node
         """
+        self._pull()
         return self._preference
 
     @preference.setter
@@ -1492,6 +1531,7 @@ class LOCRecord(DNSRecord):
     @property
     def altitude(self):
         """Measured in meters above sea level"""
+        self._pull()
         return self._altitude
 
     @altitude.setter
@@ -1506,6 +1546,7 @@ class LOCRecord(DNSRecord):
         North and South. Example: 45 24 15 N, where 45 = degrees, 24 = minutes, 
         15 = seconds
         """
+        self._pull()
         return self._latitude
 
     @latitude.setter
@@ -1520,6 +1561,7 @@ class LOCRecord(DNSRecord):
         East and West. Example 89 23 18 W, where 89 = degrees, 23 = minutes, 
         18 = seconds
         """
+        self._pull()
         return self._longitude
 
     @longitude.setter
@@ -1531,6 +1573,7 @@ class LOCRecord(DNSRecord):
     @property
     def horiz_pre(self):
         """Defaults to 10,000 meters"""
+        self._pull()
         return self._horiz_pre
 
     @horiz_pre.setter
@@ -1542,6 +1585,7 @@ class LOCRecord(DNSRecord):
     @property
     def size(self):
         """Defaults to 1 meter"""
+        self._pull()
         return self._size
 
     @size.setter
@@ -1552,6 +1596,7 @@ class LOCRecord(DNSRecord):
 
     @property
     def vert_pre(self):
+        self._pull()
         return self._vert_pre
 
     @vert_pre.setter
@@ -1565,6 +1610,7 @@ class LOCRecord(DNSRecord):
         """Number of the representation. Must be zero (0)
         NOTE: Version has no setter, because it will never not be 0
         """
+        self._pull()
         return self._version
 
 
@@ -1648,6 +1694,7 @@ class IPSECKEYRecord(DNSRecord):
         """Indicates priority among multiple IPSECKEYS. Lower numbers are
         higher priority
         """
+        self._pull()
         return self._precedence
 
     @precedence.setter
@@ -1659,6 +1706,7 @@ class IPSECKEYRecord(DNSRecord):
     @property
     def gatetype(self):
         """Gateway type. Must be one of 0, 1, 2, or 3"""
+        self._pull()
         return self._gatetype
 
     @gatetype.setter
@@ -1670,6 +1718,7 @@ class IPSECKEYRecord(DNSRecord):
     @property
     def algorithm(self):
         """Public key's cryptographic algorithm and format"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -1681,6 +1730,7 @@ class IPSECKEYRecord(DNSRecord):
     @property
     def gateway(self):
         """Gateway used to create IPsec tunnel. Based on Gateway type"""
+        self._pull()
         return self._gateway
 
     @gateway.setter
@@ -1692,6 +1742,7 @@ class IPSECKEYRecord(DNSRecord):
     @property
     def public_key(self):
         """Base64 encoding of the public key. Whitespace is allowed"""
+        self._pull()
         return self._public_key
 
     @public_key.setter
@@ -1758,6 +1809,7 @@ class MXRecord(DNSRecord):
         """Hostname of the server responsible for accepting mail messages in 
         the zone
         """
+        self._pull()
         return self._exchange
 
     @exchange.setter
@@ -1771,6 +1823,7 @@ class MXRecord(DNSRecord):
         """Numeric value for priority usage. Lower value takes precedence over 
         higher value where two records of the same type exist on the zone/node
         """
+        self._pull()
         return self._preference
 
     @preference.setter
@@ -1858,6 +1911,7 @@ class NAPTRRecord(DNSRecord):
         """Indicates the required priority for processing NAPTR records. Lowest 
         value is used first
         """
+        self._pull()
         return self._order
 
     @order.setter
@@ -1871,6 +1925,7 @@ class NAPTRRecord(DNSRecord):
         """Indicates priority where two or more NAPTR records have identical 
         order values. Lowest value is used first.
         """
+        self._pull()
         return self._preference
 
     @preference.setter
@@ -1884,6 +1939,7 @@ class NAPTRRecord(DNSRecord):
         """Should be the letter "U". This indicates that this NAPTR record 
         terminal (E.164 number that maps directly to a URI)
         """
+        self._pull()
         return self._flags
 
     @flags.setter
@@ -1898,6 +1954,7 @@ class NAPTRRecord(DNSRecord):
         string that defines the type and optionally the subtype of the URI 
         where this NAPTR record points
         """
+        self._pull()
         return self._services
 
     @services.setter
@@ -1909,6 +1966,7 @@ class NAPTRRecord(DNSRecord):
     @property
     def regexp(self):
         """The NAPTR record accepts regular expressions"""
+        self._pull()
         return self._regexp
 
     @regexp.setter
@@ -1922,6 +1980,7 @@ class NAPTRRecord(DNSRecord):
         """The next domain name to find. Only applies if this NAPTR record is 
         non-terminal
         """
+        self._pull()
         return self._replacement
 
     @replacement.setter
@@ -1980,6 +2039,7 @@ class PTRRecord(DNSRecord):
     @property
     def ptrdname(self):
         """Hostname where the IP address should be directed"""
+        self._pull()
         return self._ptrdname
 
     @ptrdname.setter
@@ -2049,6 +2109,7 @@ class PXRecord(DNSRecord):
         """Sets priority for processing records of the same type. Lowest value 
         is processed first
         """
+        self._pull()
         return self._preference
 
     @preference.setter
@@ -2060,6 +2121,7 @@ class PXRecord(DNSRecord):
     @property
     def map822(self):
         """mail hostname"""
+        self._pull()
         return self._map822
 
     @map822.setter
@@ -2071,6 +2133,7 @@ class PXRecord(DNSRecord):
     @property
     def mapx400(self):
         """Enter the domain name derived from the X.400 part of MCGAM"""
+        self._pull()
         return self._mapx400
 
     @mapx400.setter
@@ -2131,6 +2194,7 @@ class NSAPRecord(DNSRecord):
     @property
     def nsap(self):
         """Hex-encoded NSAP identifier"""
+        self._pull()
         return self._nsap
 
     @nsap.setter
@@ -2199,6 +2263,7 @@ class RPRecord(DNSRecord):
         """Email address of the Responsible Person. Data format: Replace @ 
         symbol with a dot '.' in the address
         """
+        self._pull()
         return self._mbox
 
     @mbox.setter
@@ -2212,6 +2277,7 @@ class RPRecord(DNSRecord):
         """Hostname where a TXT record exists with more information on the 
         responsible person
         """
+        self._pull()
         return self._txtdname
 
     @txtdname.setter
@@ -2275,6 +2341,7 @@ class NSRecord(DNSRecord):
     @property
     def nsdname(self):
         """Hostname of the authoritative Nameserver for the zone"""
+        self._pull()
         return self._nsdname
 
     @nsdname.setter
@@ -2286,6 +2353,7 @@ class NSRecord(DNSRecord):
     @property
     def service_class(self):
         """Hostname of the authoritative Nameserver for the zone"""
+        self._pull()
         return self._service_class
 
     @service_class.setter
@@ -2340,6 +2408,7 @@ class SOARecord(DNSRecord):
         """Domain name which specifies the mailbox of the person responsible 
         for this zone
         """
+        self._pull()
         return self._rname
 
     @rname.setter
@@ -2351,6 +2420,7 @@ class SOARecord(DNSRecord):
     @property
     def serial_style(self):
         """The style of the zone's serial"""
+        self._pull()
         return self._serial_style
 
     @serial_style.setter
@@ -2363,6 +2433,7 @@ class SOARecord(DNSRecord):
     @property
     def minimum(self):
         """The minimum TTL for this :class:`~dyn.tm.records.SOARecord`"""
+        self._pull()
         return self._minimum
 
     @minimum.setter
@@ -2374,6 +2445,7 @@ class SOARecord(DNSRecord):
     @property
     def ttl(self):
         """The TTL for this record"""
+        self._pull()
         return self._ttl
 
     @ttl.setter
@@ -2439,6 +2511,7 @@ class SPFRecord(DNSRecord):
     @property
     def txtdata(self):
         """Free text box containing SPF record information"""
+        self._pull()
         return self._txtdata
 
     @txtdata.setter
@@ -2513,6 +2586,7 @@ class SRVRecord(DNSRecord):
     @property
     def port(self):
         """Indicates the port where the service is running"""
+        self._pull()
         return self._port
 
     @port.setter
@@ -2526,6 +2600,7 @@ class SRVRecord(DNSRecord):
         """Numeric value for priority usage. Lower value takes precedence over 
         higher value where two records of the same type exist on the zone/node
         """
+        self._pull()
         return self._priority
 
     @priority.setter
@@ -2539,6 +2614,7 @@ class SRVRecord(DNSRecord):
         """The domain name of a host where the service is running on the 
         specified `port`
         """
+        self._pull()
         return self._target
 
     @target.setter
@@ -2553,6 +2629,7 @@ class SRVRecord(DNSRecord):
         priority should be served based on their weight. Higher values are 
         served more often
         """
+        self._pull()
         return self._weight
 
     @weight.setter
@@ -2628,6 +2705,7 @@ class SSHFPRecord(DNSRecord):
     @property
     def algorithm(self):
         """Numeric identifier for algorithm used"""
+        self._pull()
         return self._algorithm
 
     @algorithm.setter
@@ -2639,6 +2717,7 @@ class SSHFPRecord(DNSRecord):
     @property
     def fp_type(self):
         """FP Type"""
+        self._pull()
         return self._fp_type
 
     @fp_type.setter
@@ -2650,6 +2729,7 @@ class SSHFPRecord(DNSRecord):
     @property
     def fingerprint(self):
         """Fingerprint"""
+        self._pull()
         return self._fingerprint
 
     @fingerprint.setter
@@ -2731,6 +2811,7 @@ class TLSARecord(DNSRecord):
         """Specifies the provided association that will be used
         to match the certificate presented in the TLS handshake
         """
+        self._pull()
         return self._cert_usage
 
     @cert_usage.setter
@@ -2744,6 +2825,7 @@ class TLSARecord(DNSRecord):
         """Specifies which part of the TLS certificate presented
         by the server will be matched against the association data.
         """
+        self._pull()
         return self._selector
 
     @selector.setter
@@ -2756,6 +2838,7 @@ class TLSARecord(DNSRecord):
     def match_type(self):
         """Specifies how the certificate association is presented.
         """
+        self._pull()
         return self._match_type
 
     @match_type.setter
@@ -2769,6 +2852,7 @@ class TLSARecord(DNSRecord):
         """Full certificate or its SubjectPublicKeyInfo, or
         hash based on the matching type
         """
+        self._pull()
         return self._certificate
 
     @certificate.setter
@@ -2829,6 +2913,7 @@ class TXTRecord(DNSRecord):
     @property
     def txtdata(self):
         """Free form text"""
+        self._pull()
         return self._txtdata
 
     @txtdata.setter

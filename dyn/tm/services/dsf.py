@@ -70,7 +70,7 @@ class _DSFRecord(object):
         self._endpoints = endpoints
         self._endpoint_up_count = endpoint_up_count
         self._eligible = eligible
-        self._dsf_id = self._record_set_id = self.uri = None
+        self._service_id = self._record_set_id = self.uri = None
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
 
@@ -82,15 +82,17 @@ class _DSFRecord(object):
         :param record_set_id: The unique system id for the record set associated
             with this :class:`DSFRecord`
         """
-        self._dsf_id = dsf_id
+        self._service_id = dsf_id
         self._record_set_id = record_set_id
-        self.uri = '/DSFRecord/{}/{}/'.format(self._dsf_id, self._record_set_id)
+        self.uri = '/DSFRecord/{}/{}/'.format(self._service_id, self._record_set_id)
         api_args = {}
-        for key, val in self.__dict__.items():
-            if val is not None and not hasattr(val, '__call__') and \
-                    key.startswith('_'):
-                if key != '_dsf_id' and key != '_record_set_id':
-                    api_args[key[1:]] = val
+        #for key, val in self.__dict__.items():
+        #    if val is not None and not hasattr(val, '__call__') and \
+        #            key.startswith('_'):
+        #        if key != '_service_id' and key != '_record_set_id':
+        #            api_args[key[1:]] = val
+        api_args = self.to_json()
+        api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -103,9 +105,9 @@ class _DSFRecord(object):
         :param record_set_id: The unique system id for the record set associated
             with this :class:`DSFRecord`
         """
-        self._dsf_id = dsf_id
+        self._service_id = dsf_id
         self._record_set_id = record_set_id
-        self.uri = '/DSFRecord/{}/{}/'.format(self._dsf_id, self._record_set_id)
+        self.uri = '/DSFRecord/{}/{}/'.format(self._service_id, self._record_set_id)
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
@@ -127,7 +129,7 @@ class _DSFRecord(object):
         """The unique system id for the DSF service associated with this
         :class:`DSFRecord`
         """
-        return self._dsf_id
+        return self._service_id
     @dsf_id.setter
     def dsf_id(self, value):
         pass
@@ -219,11 +221,15 @@ class _DSFRecord(object):
                                                        api_args)
         self._build(response['data'])
 
-    def to_json(self):
+    def to_json(self, svc_id=None):
         """Convert this DSFRecord to a json blob"""
+
+        if self._service_id and not svc_id:
+            svc_id = self._service_id
+
         json = {'label': self._label, 'weight': self._weight,
                 'automation': self._automation, 'endpoints': self._endpoints,
-                'eligible': self._eligible,
+                'eligible': self._eligible, 'service_id': svc_id,
                 'endpoint_up_count': self._endpoint_up_count}
         json_blob = {x: json[x] for x in json if json[x] is not None}
         if hasattr(self, '_record_type'):
@@ -244,7 +250,8 @@ class _DSFRecord(object):
     def delete(self):
         """Delete this :class:`DSFRecord`"""
         api_args = {'publish': 'Y'}
-        DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+        uri = '/DSFRecord/{}/{}'.format(self._service_id,self._dsf_record_id)
+        DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
 
 class DSFARecord(_DSFRecord, ARecord):
@@ -1001,7 +1008,7 @@ class DSFRecordSet(object):
                                                                    dict):
             self._records = []
             for record in records:
-                constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
+                '''constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
                                 'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
                                 'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
                                 'dname': DSFDNAMERecord,
@@ -1027,6 +1034,8 @@ class DSFRecordSet(object):
                     if constructor is DSFSRVRecord:
                         record_data['rr_weight'] = record_data.pop('weight')
                     self._records.append(constructor(**record_data))
+                '''
+                self._records += self._constructor(record)
         else:
             self._records = records or []
         self.uri = self._master_line = self._rdata = self._status = None
@@ -1038,6 +1047,38 @@ class DSFRecordSet(object):
         if self._service_id is not None and self._dsf_record_set_id is not None:
             self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
                                                      self._dsf_record_set_id)
+
+    def _constructor(self, record):
+        returnRecords = []
+        constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
+                                'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
+                                'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
+                                'dname': DSFDNAMERecord,
+                                'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
+                                'key': DSFKEYRecord, 'kx': DSFKXRecord,
+                                'loc': DSFLOCRecord,
+                                'ipseckey': DSFIPSECKEYRecord,
+                                'mx': DSFMXRecord, 'naptr': DSFNAPTRRecord,
+                                'ptr': DSFPTRRecord, 'px': DSFPXRecord,
+                                'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
+                                'ns': DSFNSRecord, 'spf': DSFSPFRecord,
+                                'srv': DSFSRVRecord, 'txt': DSFTXTRecord}
+        rec_type = record['rdata_class'].lower()
+        constructor = constructors[rec_type]
+        rdata_key = 'rdata_{}'.format(rec_type)
+        kws = ('ttl', 'label', 'weight', 'automation', 'endpoints',
+               'endpoint_up_count', 'eligible', 'dsf_record_id',
+               'dsf_record_set_id', 'status', 'torpidity', 'service_id')
+        for data in record['rdata']:
+            record_data = data['data'][rdata_key]
+            for kw in kws:
+                record_data[kw] = record[kw]
+            if constructor is DSFSRVRecord:
+                record_data['rr_weight'] = record_data.pop('weight')
+
+            returnRecords.append(constructor(**record_data))
+        return returnRecords
+
 
     def _post(self, dsf_id):
         """Create a new :class:`DSFRecordSet` on the DynECT System
@@ -1076,6 +1117,13 @@ class DSFRecordSet(object):
                                                        api_args)
         self._build(response['data'])
 
+    def _update(self, api_args):
+        """Private update method"""
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'])
+
+
     def _build(self, data):
         """Private build method"""
         for key, val in data.items():
@@ -1091,6 +1139,16 @@ class DSFRecordSet(object):
     @records.setter
     def records(self, value):
         pass
+
+    def add_record(self, record_object):
+        """Pass in record object"""
+        record_object._post(self._service_id, self._dsf_record_set_id)
+        #api_args = dict()
+        #api_args['data'] = record_object.to_json()
+        #api_args['publish'] = 'Y'
+        #self._update(api_args)
+
+
 
     @property
     def status(self):
@@ -1240,9 +1298,20 @@ class DSFRecordSet(object):
                                                        api_args)
         self._build(response['data'])
 
-    def to_json(self):
+    @property
+    def dsf_record_set_id(self):
+        """The unique system id of the DSF Monitor attached to this
+        :class:`DSFRecordSet`
+        """
+        return self._dsf_record_set_id
+
+    def to_json(self, svc_id=None):
         """Convert this :class:`DSFRecordSet` to a JSON blob"""
-        json_blob = {'rdata_class': self._rdata_class}
+
+        if self._service_id and not svc_id:
+            svc_id = self._service_id
+
+        json_blob = {'rdata_class': self._rdata_class, 'service_id': svc_id}
         if self._label:
             json_blob['label'] = self._label
         if self._ttl:
@@ -1260,7 +1329,7 @@ class DSFRecordSet(object):
         if self._dsf_monitor_id:
             json_blob['dsf_monitor_id'] = self._dsf_monitor_id
         if self._records:
-            json_blob['records'] = [rec.to_json() for rec in self._records]
+            json_blob['records'] = [rec.to_json(svc_id) for rec in self._records]
         else:
             json_blob['records'] = []
         return json_blob
@@ -1297,13 +1366,14 @@ class DSFFailoverChain(object):
                 self._record_sets.append(DSFRecordSet(**record_set))
         else:
             self._record_sets = record_sets
-        self._dsf_id = self._dsf_response_pool_id = self.uri = None
+        self._service_id = self._dsf_response_pool_id = self.uri = None
+        self._dsf_record_set_failover_chain_id = None
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._dsf_id is not None and self._dsf_response_pool_id is not None:
-            r_pid = self._dsf_response_pool_id
-            self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
+        if self._service_id is not None and self._dsf_response_pool_id is not None:
+            r_pid = self._dsf_record_set_failover_chain_id
+            self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
                                                                   r_pid)
 
     def _post(self, dsf_id, dsf_response_pool_id):
@@ -1314,9 +1384,9 @@ class DSFFailoverChain(object):
         :param dsf_response_pool_id: The unique system is of the DSF response
             pool this :class:`DSFFailoverChain` is attached to
         """
-        self._dsf_id = dsf_id
+        self._service_id = dsf_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
+        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
                                                               self._dsf_response_pool_id)
         api_args = {'publish': 'Y'}
         if self._label:
@@ -1339,9 +1409,9 @@ class DSFFailoverChain(object):
         :param dsf_response_pool_id: The unique system is of the DSF response
             pool this :class:`DSFFailoverChain` is attached to
         """
-        self._dsf_id = dsf_id
+        self._service_id = dsf_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._dsf_id,
+        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
                                                               self._dsf_response_pool_id)
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
@@ -1390,15 +1460,21 @@ class DSFFailoverChain(object):
     def record_sets(self, value):
         pass
 
-    def to_json(self):
+    def to_json(self, svc_id=None):
         """Convert this :class:`DSFFailoverChain` to a JSON blob"""
-        json_blob = {}
+        if self._service_id and not svc_id:
+            svc_id = self._service_id
+
+        json_blob = {'service_id': svc_id}
+
         if self._label:
             json_blob['label'] = self._label
+        if self._dsf_record_set_failover_chain_id:
+            json_blob['dsf_record_set_failover_chain_id'] = self._dsf_record_set_failover_chain_id
         if self._core:
             json_blob['core'] = self._core
         if self.record_sets:
-            json_blob['record_sets'] = [rs.to_json() for rs in self.record_sets]
+            json_blob['record_sets'] = [rs.to_json(svc_id) for rs in self.record_sets]
         return json_blob
 
     def delete(self):
@@ -1583,11 +1659,15 @@ class DSFResponsePool(object):
     def rs_chains(self, value):
         pass
 
-    def to_json(self):
+    def to_json(self, svc_id=None):
         """Convert this :class:`DSFResponsePool` to a JSON blob"""
-        rs_json = [rs.to_json() for rs in self._rs_chains]
+
+        if self._service_id and not svc_id:
+            svc_id = self._service_id
+
+        rs_json = [rs.to_json(svc_id) for rs in self._rs_chains]
         json_blob = {'label': self._label, 'eligible': self._eligible,
-                     'core_set_count': self._core_set_count,
+                     'core_set_count': self._core_set_count, 'service_id' : svc_id,
                      'automation': self._automation, 'rs_chains': rs_json}
         if self._index:
             json_blob['index'] = self._index
@@ -1730,14 +1810,19 @@ class DSFRuleset(object):
         pass
 
     @property
-    def _json(self):
+    def _json(self, svc_id = None):
         """JSON-ified version of this DSFRuleset Object"""
-        pool_json = [pool.to_json() for pool in self._response_pools]
+
+        if self._service_id and not svc_id:
+            svc_id = self._service_id
+
+        pool_json = [pool.to_json(svc_id) for pool in self._response_pools]
         if self._failover:
             pool_json.append({'failover': self._failover})
         json_blob = {'label': self._label, 'criteria_type': self._criteria_type,
-                     'criteria': self._criteria,
+                     'criteria': self._criteria, 'service_id': svc_id,
                      'response_pools': pool_json}
+
         return json_blob
 
     def delete(self):
@@ -2202,6 +2287,7 @@ class TrafficDirector(object):
     @property
     def records(self):
         """A list of this :class:`TrafficDirector` Services' DSFRecords"""
+        self._get(self._service_id)
         return [record for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains
@@ -2216,6 +2302,7 @@ class TrafficDirector(object):
         """A list of this :class:`TrafficDirector` Services
         :class:`DSFRecordSet`'s
         """
+        self._get(self._service_id)
         return [record_set for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains
@@ -2229,6 +2316,7 @@ class TrafficDirector(object):
         """A list of this :class:`TrafficDirector` Services
         :class:`DSFResponsePool`'s
         """
+        self._get(self._service_id)
         return [response_pool for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools]
     @response_pools.setter
@@ -2240,6 +2328,7 @@ class TrafficDirector(object):
         """A list of this :class:`TrafficDirector` Services
         :class:`DSFFailoverChain`'s
         """
+        self._get(self._service_id)
         return [rs_chains for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains]
@@ -2267,6 +2356,7 @@ class TrafficDirector(object):
         """A list of :class:`DSFRulesets` that are defined for this
         :class:`TrafficDirector` service
         """
+        self._get(self._service_id)
         return self._rulesets
     @rulesets.setter
     def rulesets(self, value):

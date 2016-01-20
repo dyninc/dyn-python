@@ -1,5 +1,9 @@
 Release History
 ---------------
+1.5.3 
++++++++++++++++++
+*Record getters now automatically pull data from system instead of storing them locally.
+
 
 1.5.2 (2016-1-11)
 +++++++++++++++++

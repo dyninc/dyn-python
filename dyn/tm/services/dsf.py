@@ -284,9 +284,11 @@ class _DSFRecord(object):
         """A unique label for this :class:`DSFRecord`"""
         return self._label
     @label.setter
-    def label(self, value):
+    def label(self, value, publish = True):
         self._label = value
         api_args = {'label': self._label}
+        if publish:
+            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -294,9 +296,11 @@ class _DSFRecord(object):
         """Weight for this :class:`DSFRecord`"""
         return self._weight
     @weight.setter
-    def weight(self, value):
+    def weight(self, value, publish = True):
         self._weight = value
         api_args = {'weight': self._weight}
+        if publish:
+            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -306,9 +310,11 @@ class _DSFRecord(object):
         """
         return self._automation
     @automation.setter
-    def automation(self, value):
+    def automation(self, value, publish = True):
         self._automation = value
         api_args = {'automation': self._automation}
+        if publish:
+            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -318,9 +324,11 @@ class _DSFRecord(object):
         """
         return self._endpoints
     @endpoints.setter
-    def endpoints(self, value):
+    def endpoints(self, value, publish = True):
         self._endpoints = value
         api_args = {'endpoints': self._endpoints}
+        if publish:
+            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -329,9 +337,11 @@ class _DSFRecord(object):
         """
         return self._endpoint_up_count
     @endpoint_up_count.setter
-    def endpoint_up_count(self, value):
+    def endpoint_up_count(self, value, publish = True):
         self._endpoint_up_count = value
         api_args = {'endpoint_up_count': self._endpoint_up_count}
+        if publish:
+            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -339,9 +349,11 @@ class _DSFRecord(object):
         """Indicates whether or not the Record can be served"""
         return self._eligible
     @eligible.setter
-    def eligible(self, value):
+    def eligible(self, value, publish = True):
         self._eligible = value
         api_args = {'eligible': self._eligible}
+        if publish:
+            api_args['publish'] = 'Y'
         self._update(api_args)
 
     def to_json(self, svc_id=None, skip_svc=False):
@@ -1271,6 +1283,15 @@ class DSFRecordSet(object):
             if key != 'records':
                 setattr(self, '_' + key, val)
 
+    def publish(self):
+        uri = '/DSF/{}/'.format(self._service_id)
+        api_args = {'publish':'Y'}
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self.refresh()
+
+    def refresh(self):
+        self._get(self._service_id, self._dsf_record_set_id)
+
     def add_to_service(self, service, publish=True):
         """
         Adds this record_set to a traffic director service.
@@ -1294,7 +1315,9 @@ class DSFRecordSet(object):
         pass
 
     def add_record(self, record_object):
-        """Pass in record object"""
+        """Pass in a record object."""
+        if record_object._dsf_record_set_id:
+            raise Exception('Record already belongs to Record Set: {}'.format(record_object._dsf_record_set_id))
         record_object._post(self._service_id, self._dsf_record_set_id)
 
     @property
@@ -1311,13 +1334,15 @@ class DSFRecordSet(object):
         """A unique label for this :class:`DSFRecordSet`"""
         return self._label
     @label.setter
-    def label(self, value):
+    def label(self, value, publish=True):
         self._label = value
         api_args = {'label': self._label}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
+        if publish:
+            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1336,13 +1361,15 @@ class DSFRecordSet(object):
             :class:`DSFRecordSet`"""
         return self._ttl
     @ttl.setter
-    def ttl(self, value):
+    def ttl(self, value, publish = False):
         self._ttl = value
         api_args = {'ttl': self._ttl}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
+        if publish:
+            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1352,13 +1379,15 @@ class DSFRecordSet(object):
         """Defines how eligible can be changed in response to monitoring"""
         return self._automation
     @automation.setter
-    def automation(self, value):
+    def automation(self, value, publish = True):
         self._automation = value
         api_args = {'automation': self._automation}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
+        if publish:
+            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1368,13 +1397,15 @@ class DSFRecordSet(object):
         """How many Records to serve out of this :class:`DSFRecordSet`"""
         return self._serve_count
     @serve_count.setter
-    def serve_count(self, value):
+    def serve_count(self, value, publish = True):
         self._serve_count = value
         api_args = {'serve_count': self._serve_count}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
+        if publish:
+            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -2445,6 +2476,11 @@ class TrafficDirector(object):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+
+    def publish(self):
+        self._update({'publish':'Y'})
+
+
 
     def revert_changes(self):
         """Clears the changeset for this service and reverts all non-published

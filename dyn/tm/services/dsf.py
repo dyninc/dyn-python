@@ -183,7 +183,7 @@ class _DSFRecord(object):
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
 
-    def _post(self, dsf_id, record_set_id):
+    def _post(self, dsf_id, record_set_id, publish=False):
         """Create a new :class:`DSFRecord` on the DynECT System
 
         :param dsf_id: The unique system id for the DSF service associated with
@@ -201,7 +201,8 @@ class _DSFRecord(object):
         #        if key != '_service_id' and key != '_record_set_id':
         #            api_args[key[1:]] = val
         api_args = self.to_json(skip_svc=True)
-        api_args['publish'] = 'Y'
+        if publish:
+            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -271,11 +272,13 @@ class _DSFRecord(object):
     def refresh(self):
         self._get(self._service_id, self._dsf_record_id)
 
-    def add_to_record_set(self, record_set, service_id = None):
+    def add_to_record_set(self, record_set, service = None, publish = True):
         """
-        Creates record as part of a record_set
-        :param record_set: record_set ID or Object
-        :param service_id: (optional) Service_id or Object
+        Creates and links this :class:`DSFRecord` to a :class:`DSFRecordSet` Object
+        :param record_set: Can either be the _dsf_record_set_id or a :class:`DSFRecordSet` Object.
+        :param service: Only necessary if record_set is passed in as a string. This can be a :class:`TrafficDirector`
+        Object. or the _service_id
+        :param publish: Publish on execution (Default = True)
         """
         if self._dsf_record_id:
             raise Exception('The record already exists in the system!')
@@ -284,21 +287,14 @@ class _DSFRecord(object):
             _record_set_id = record_set._dsf_record_set_id
             _service_id = record_set._service_id
         elif type(record_set) is str:
-            _response_pool_id = record_set
+            if service is None:
+                raise Exception('When record_set as a string, you must provide the service_id as service=')
+            _record_set_id = record_set
         else:
             raise Exception('Could not make sense of Record Set Type')
-
-        if type(record_set) is str and service_id is None:
-            raise Exception('Please include service_id')
-        if type(service_id) is str:
-            if isinstance(service_id, TrafficDirector):
-                _service_id = service_id._service_id
-            elif type(service_id) is str:
-                _service_id = service_id
-            else:
-                raise Exception('Could not make sense of Record Set Type')
-
-        self._post(_service_id, _record_set_id )
+        if service:
+            _service_id = _checkType(service)
+        self._post(_service_id, _record_set_id, publish=True )
 
     @property
     def dsf_id(self):
@@ -1222,6 +1218,7 @@ class DSFRecordSet(object):
         self._trouble_count = trouble_count
         self._eligible = eligible
         self._dsf_monitor_id = dsf_monitor_id
+        self._dsf_record_set_failover_chain_id = None
         if records is not None and len(records) > 0 and isinstance(records[0],
                                                                    dict):
             self._records = []
@@ -1267,14 +1264,15 @@ class DSFRecordSet(object):
             self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
                                                      self._dsf_record_set_id)
 
-    def _post(self, dsf_id, publish=True):
+    def _post(self, service_id, publish=True):
         """Create a new :class:`DSFRecordSet` on the DynECT System
 
         :param dsf_id: The unique system id of the DSF service this
             :class:`DSFRecordSet` is attached to
         """
-        self._service_id = dsf_id
-        uri = '/DSFRecordSet/{}/'.format(self._service_id)
+        self._service_id = service_id
+        uri = '/DSFRecordSet/{}'.format(self._service_id)
+        #api_args = self.to_json(skip_svc=True)
         api_args = {}
         for key, val in self.__dict__.items():
             if key == 'records':
@@ -1340,9 +1338,39 @@ class DSFRecordSet(object):
         :param publish: Publish on execution (Default = True)
         service, or the TrafficDirector service itself.
         """
+        #TODO: DELETE
         _service_id = _checkType(service)
         if self._service_id:
             raise Exception('Records Set already attached to service: {}.'.format(self._service_id))
+        self._post(_service_id, publish=publish)
+
+
+    def add_to_rs_chain(self, rs_chain, service=None, publish=True):
+        """
+        Creates and links this :class:`DSFRecordSet` to a :class:`DSFFailoverChain` Object
+        :param rs_chain: Can either be the _dsf_record_set_failover_chain_id or a :class:`DSFFailoverChain` Object.
+        :param service: Only necessary is rs_chain is passed in as a string. This can be a :class:`TrafficDirector`
+        Object. or the _service_id
+        :param publish: Publish on execution (Default = True)
+        """
+        # TODO: THIS IS A WORKING VERSION!
+        if isinstance(rs_chain, DSFFailoverChain):
+            _dsf_record_set_failover_chain_id = rs_chain._dsf_record_set_failover_chain_id
+            _service_id = rs_chain._service_id
+        elif type(rs_chain) is str:
+            if service is None:
+                raise Exception('If passing rs_chain as a string, you must provide the service_id as service=')
+            _dsf_record_set_failover_chain_id = rs_chain
+        else:
+            raise Exception('Could not make sense of Failover Chain Type')
+        if service:
+            _service_id = _checkType(service)
+
+        if self._dsf_record_set_failover_chain_id:
+            raise Exception('Records Set already attached to response pool: {}.'.format(
+                    self._dsf_record_set_failover_chain_id))
+        self._dsf_record_set_failover_chain_id = _dsf_record_set_failover_chain_id
+
         self._post(_service_id, publish=publish)
 
     @property
@@ -1665,7 +1693,7 @@ class DSFFailoverChain(object):
         self._get(self._service_id, self._dsf_record_set_failover_chain_id)
 
 
-    def add_to_response_pool(self, service, response_pool, publish=True):
+    def add_to_response_pool(self, response_pool, service=None, publish=True):
         """
         Adds this record_set to a traffic director service.
         :param service: Can either be the service_id or a `TrafficDirector` Object
@@ -1673,17 +1701,22 @@ class DSFFailoverChain(object):
         :param publish: Publish on execution (Default = True)
         service, or the TrafficDirector service itself.
         """
-        _service_id = _checkType(service)
-
+        #TODO: VERIFIED
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
+            _service_id = response_pool._service_id
         elif type(response_pool) is str:
+            if service is None:
+                raise Exception('If passing response_pool as a string, you must provide the service_id as service=')
             _response_pool_id = response_pool
         else:
             raise Exception('Could not make sense of Response Pool Type')
 
-        if self._service_id:
-            raise Exception('Records Set already attached to service: {}.'.format(self._service_id))
+        if service:
+            _service_id = _checkType(service)
+
+        if self._dsf_response_pool_id:
+            raise Exception('Records Set already attached to response pool: {}.'.format(self._dsf_response_pool_id))
         self._post(_service_id, _response_pool_id, publish=publish)
 
 
@@ -1852,6 +1885,9 @@ class DSFResponsePool(object):
                 for rs_chain in val:
                     self._rs_chains.append(DSFFailoverChain(**rs_chain))
 
+    def create(self, service, publish=True):
+        _service_id = _checkType(service)
+        self._post(_service_id)
 
     def publish(self):
         uri = '/DSF/{}/'.format(self._service_id)

@@ -13,7 +13,7 @@ from ...compat import force_unicode
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chains',
            'get_all_response_pools', 'get_all_rulesets', 'get_all_dsf_monitors',
-           'DSFARecord',
+           'get_all_records', 'DSFARecord',
            'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
            'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
            'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord',
@@ -36,16 +36,20 @@ def get_all_dsf_services():
 
 
 def get_all_records(service):
-    #TODO: steal constructor from below.
-    pass
-    #_service_id = _checkType(service)
-    #uri = '/DSFRecordSet/{}/'.format(_service_id)
-    #api_args = {'detail': 'Y'}
-    #response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    #records = list()
-    #for pool in response['data']:
-    #    records.append(DSFRecordSet(pool.pop('rdata_class'), api=False, **pool))
-    #return records
+    """:return: A ``list`` of DSF Record Types from service.
+    Warning! This query may take a long time to run with services with many records!
+    """
+    _service_id = _checkType(service)
+    uri = '/DSFRecord/{}/'.format(_service_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    record_ids = [record['dsf_record_id'] for record in response['data']]
+    records = list()
+    for record_id in record_ids:
+        uri = '/DSFRecord/{}/{}'.format(_service_id, record_id)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        records += _constructor(response['data'])
+    return records
 
 def get_all_record_sets(service):
 
@@ -102,6 +106,38 @@ def _checkType(service):
     else:
         raise Exception('Value must be string, or TrafficDirector Object')
     return _service_id
+
+def _constructor(record):
+    returnRecords = []
+    constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
+                            'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
+                            'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
+                            'dname': DSFDNAMERecord,
+                            'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
+                            'key': DSFKEYRecord, 'kx': DSFKXRecord,
+                            'loc': DSFLOCRecord,
+                            'ipseckey': DSFIPSECKEYRecord,
+                            'mx': DSFMXRecord, 'naptr': DSFNAPTRRecord,
+                            'ptr': DSFPTRRecord, 'px': DSFPXRecord,
+                            'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
+                            'ns': DSFNSRecord, 'spf': DSFSPFRecord,
+                            'srv': DSFSRVRecord, 'txt': DSFTXTRecord}
+    rec_type = record['rdata_class'].lower()
+    constructor = constructors[rec_type]
+    rdata_key = 'rdata_{}'.format(rec_type)
+    kws = ('ttl', 'label', 'weight', 'automation', 'endpoints',
+           'endpoint_up_count', 'eligible', 'dsf_record_id',
+           'dsf_record_set_id', 'status', 'torpidity', 'service_id')
+    for data in record['rdata']:
+        record_data = data['data'][rdata_key]
+        for kw in kws:
+            record_data[kw] = record[kw]
+        if constructor is DSFSRVRecord:
+            record_data['rr_weight'] = record_data.pop('weight')
+
+        returnRecords.append(constructor(**record_data))
+    return returnRecords
+
 
 
 
@@ -226,6 +262,15 @@ class _DSFRecord(object):
             else:
                 setattr(self, '_' + key, val)
 
+    def publish(self):
+       uri = '/DSF/{}/'.format(self._service_id)
+       api_args = {'publish':'Y'}
+       DynectSession.get_session().execute(uri, 'PUT', api_args)
+       self.refresh()
+
+    def refresh(self):
+        self._get(self._service_id, self._dsf_record_id)
+
     def add_to_record_set(self, record_set, service_id = None):
         """
         Creates record as part of a record_set
@@ -255,9 +300,6 @@ class _DSFRecord(object):
 
         self._post(_service_id, _record_set_id )
 
-    def refresh(self):
-        self._get(self._service_id, self._dsf_record_id)
-
     @property
     def dsf_id(self):
         """The unique system id for the DSF service associated with this
@@ -284,11 +326,9 @@ class _DSFRecord(object):
         """A unique label for this :class:`DSFRecord`"""
         return self._label
     @label.setter
-    def label(self, value, publish = True):
+    def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        if publish:
-            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -296,11 +336,9 @@ class _DSFRecord(object):
         """Weight for this :class:`DSFRecord`"""
         return self._weight
     @weight.setter
-    def weight(self, value, publish = True):
+    def weight(self, value):
         self._weight = value
         api_args = {'weight': self._weight}
-        if publish:
-            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -310,11 +348,9 @@ class _DSFRecord(object):
         """
         return self._automation
     @automation.setter
-    def automation(self, value, publish = True):
+    def automation(self, value):
         self._automation = value
         api_args = {'automation': self._automation}
-        if publish:
-            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -324,11 +360,9 @@ class _DSFRecord(object):
         """
         return self._endpoints
     @endpoints.setter
-    def endpoints(self, value, publish = True):
+    def endpoints(self, value):
         self._endpoints = value
         api_args = {'endpoints': self._endpoints}
-        if publish:
-            api_args['publish'] = 'Y'
         self._update(api_args)
 
     @property
@@ -1192,7 +1226,7 @@ class DSFRecordSet(object):
                                                                    dict):
             self._records = []
             for record in records:
-                constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
+                """constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
                                 'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
                                 'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
                                 'dname': DSFDNAMERecord,
@@ -1218,6 +1252,8 @@ class DSFRecordSet(object):
                     if constructor is DSFSRVRecord:
                         record_data['rr_weight'] = record_data.pop('weight')
                     self._records.append(constructor(**record_data))
+                    """
+                self._records += _constructor(record)
 
         else:
             self._records = records or []
@@ -1279,15 +1315,20 @@ class DSFRecordSet(object):
 
     def _build(self, data):
         """Private build method"""
+        if data['records']:
+            self._records = []
         for key, val in data.items():
             if key != 'records':
                 setattr(self, '_' + key, val)
+            if key == 'records':
+                for record in val:
+                    self._records += _constructor(record)
 
     def publish(self):
-        uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
-        DynectSession.get_session().execute(uri, 'PUT', api_args)
-        self.refresh()
+       uri = '/DSF/{}/'.format(self._service_id)
+       api_args = {'publish':'Y'}
+       DynectSession.get_session().execute(uri, 'PUT', api_args)
+       self.refresh()
 
     def refresh(self):
         self._get(self._service_id, self._dsf_record_set_id)
@@ -1334,15 +1375,13 @@ class DSFRecordSet(object):
         """A unique label for this :class:`DSFRecordSet`"""
         return self._label
     @label.setter
-    def label(self, value, publish=True):
+    def label(self, value):
         self._label = value
         api_args = {'label': self._label}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        if publish:
-            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1361,15 +1400,13 @@ class DSFRecordSet(object):
             :class:`DSFRecordSet`"""
         return self._ttl
     @ttl.setter
-    def ttl(self, value, publish = False):
+    def ttl(self, value):
         self._ttl = value
         api_args = {'ttl': self._ttl}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        if publish:
-            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1379,15 +1416,13 @@ class DSFRecordSet(object):
         """Defines how eligible can be changed in response to monitoring"""
         return self._automation
     @automation.setter
-    def automation(self, value, publish = True):
+    def automation(self, value):
         self._automation = value
         api_args = {'automation': self._automation}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        if publish:
-            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1397,15 +1432,13 @@ class DSFRecordSet(object):
         """How many Records to serve out of this :class:`DSFRecordSet`"""
         return self._serve_count
     @serve_count.setter
-    def serve_count(self, value, publish = True):
+    def serve_count(self, value):
         self._serve_count = value
         api_args = {'serve_count': self._serve_count}
         if self._master_line:
             api_args['master_line'] = self._master_line
         else:
             api_args['rdata'] = self._rdata
-        if publish:
-            api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -1579,28 +1612,58 @@ class DSFFailoverChain(object):
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._build(response['data'])
 
-    def _get(self, dsf_id, dsf_response_pool_id):
+    def _get(self, dsf_id, dsf_record_set_failover_chain_id):
         """Retrieve an existing :class:`DSFFailoverChain` from the Dynect System
 
         :param dsf_id: The unique system id of the DSF service this
             :class:`DSFFailoverChain` is attached to
-        :param dsf_response_pool_id: The unique system is of the DSF response
-            pool this :class:`DSFFailoverChain` is attached to
+        :param dsf_record_set_failover_chain_id: The unique system id of
+            this :class:`DSFFailoverChain`.
         """
         self._service_id = dsf_id
-        self._dsf_response_pool_id = dsf_response_pool_id
+        self._dsf_record_set_failover_chain_id = dsf_record_set_failover_chain_id
         self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
-                                                              self._dsf_response_pool_id)
+                                                              self._dsf_record_set_failover_chain_id)
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
+        self._build(response['data'])
+
+    def _update(self, api_args, publish=True):
+        """API call to update non superclass record type parameters
+        :param api_args: arguments to be pased to the API call
+        """
+
+        if publish:
+            api_args['publish'] = 'Y'
+        self.uri = 'DSFRecordSetFailoverChain/{}/{}'.format(self._service_id, self._dsf_record_set_failover_chain_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(response['data'])
+
+
+    def _build(self, data):
+        """Private build method"""
+        if data['record_sets']:
+            self._record_sets = []
+        for key, val in data.items():
             if key != 'record_sets':
                 setattr(self, '_' + key, val)
+            if key == 'record_sets':
+                for record_set in val:
+                    self._record_sets.append(DSFRecordSet(**record_set))
+
+
+    def publish(self):
+        uri = '/DSF/{}/'.format(self._service_id)
+        api_args = {'publish':'Y'}
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self.refresh()
+
+    def refresh(self):
+        self._get(self._service_id, self._dsf_record_set_failover_chain_id)
+
 
     def add_to_response_pool(self, service, response_pool, publish=True):
         """
@@ -1632,11 +1695,7 @@ class DSFFailoverChain(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def core(self):
@@ -1648,11 +1707,7 @@ class DSFFailoverChain(object):
     def core(self, value):
         self._core = value
         api_args = {'core': self._core}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def record_sets(self):
@@ -1755,9 +1810,7 @@ class DSFResponsePool(object):
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
-                setattr(self, '_' + key, val)
+        self._build(response['data'])
         self.uri = '/DSFResponsePool/{}/{}/'.format(self.service_id,
                                                     self._dsf_response_pool_id)
 
@@ -1775,9 +1828,39 @@ class DSFResponsePool(object):
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
+        self._build(response['data'])
+
+    def _update(self, api_args, publish=True):
+        """Make the API call to update the current record type
+        :param api_args: arguments to be pased to the API call
+        """
+
+        if publish:
+            api_args['publish'] = 'Y'
+        self.uri = 'DSFResponsePool/{}/{}'.format(self._service_id, self._dsf_response_pool_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Private build method"""
+        if data['rs_chains']:
+            self._rs_chains = []
+        for key, val in data.items():
             if key != 'rs_chains':
                 setattr(self, '_' + key, val)
+            if key == 'rs_chains':
+                for rs_chain in val:
+                    self._rs_chains.append(DSFFailoverChain(**rs_chain))
+
+
+    def publish(self):
+        uri = '/DSF/{}/'.format(self._service_id)
+        api_args = {'publish':'Y'}
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self.refresh()
+
+    def refresh(self):
+        self._get(self._service_id, self._dsf_response_pool_id)
 
     @property
     def label(self):
@@ -1787,11 +1870,7 @@ class DSFResponsePool(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def core_set_count(self):
@@ -1803,11 +1882,7 @@ class DSFResponsePool(object):
     def core_set_count(self, value):
         self._core_set_count = value
         api_args = {'core_set_count': self._core_set_count}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def eligible(self):
@@ -1832,11 +1907,7 @@ class DSFResponsePool(object):
     def automation(self, value):
         self._automation = value
         api_args = {'automation': self._automation}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def dsf_ruleset_ids(self):
@@ -1868,6 +1939,7 @@ class DSFResponsePool(object):
         :class:`DSFResponsePool`
         """
         return self._rs_chains
+
     @rs_chains.setter
     def rs_chains(self, value):
         pass
@@ -1952,9 +2024,7 @@ class DSFRuleset(object):
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
-                setattr(self, '_' + key, val)
+        self._build(response['data'])
         self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
                                                self._dsf_ruleset_id)
 
@@ -1972,9 +2042,40 @@ class DSFRuleset(object):
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
-            if key != 'rs_chains':
+        self._build(response['data'])
+
+
+    def _update(self, api_args, publish=True):
+        """Make the API call to update the current record type
+        :param api_args: arguments to be pased to the API call
+        """
+
+        if publish:
+            api_args['publish'] = 'Y'
+        self.uri = 'DSFRuleset/{}/{}'.format(self._service_id, self._dsf_ruleset_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Private build method"""
+        if data['response_pools']:
+            self._response_pools = []
+        for key, val in data.items():
+            if key != 'response_pools':
                 setattr(self, '_' + key, val)
+            if key == 'response_pools':
+                for response_pool in val:
+                    self._response_pools.append(DSFResponsePool(**response_pool))
+
+
+    def publish(self):
+        uri = '/DSF/{}/'.format(self._service_id)
+        api_args = {'publish':'Y'}
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self.refresh()
+
+    def refresh(self):
+        self._get(self._service_id, self._dsf_ruleset_id)
 
     @property
     def label(self):
@@ -1984,11 +2085,7 @@ class DSFRuleset(object):
     def label(self, value):
         self._label = value
         api_args = {'label': self._label}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def criteria_type(self):
@@ -2000,11 +2097,7 @@ class DSFRuleset(object):
     def criteria_type(self, value):
         self._criteria_type = value
         api_args = {'criteria_type': self._criteria_type}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def criteria(self):
@@ -2016,11 +2109,7 @@ class DSFRuleset(object):
     def criteria(self, value):
         self._criteria = value
         api_args = {'criteria': self._criteria}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            if key != 'record_sets':
-                setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def response_pools(self):
@@ -2478,9 +2567,30 @@ class TrafficDirector(object):
         self._build(response['data'])
 
     def publish(self):
-        self._update({'publish':'Y'})
+        uri = '/DSF/{}/'.format(self._service_id)
+        api_args = {'publish':'Y'}
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self.refresh()
 
+    @property
+    def all_records(self):
+        return get_all_records(self)
 
+    @property
+    def all_record_sets(self):
+        return get_all_record_sets(self)
+
+    @property
+    def all_failover_chains(self):
+        return get_all_failover_chains(self)
+
+    @property
+    def all_response_pools(self):
+        return get_all_response_pools(self)
+
+    @property
+    def all_rulesets(self):
+        return get_all_rulesets(self)
 
     def revert_changes(self):
         """Clears the changeset for this service and reverts all non-published

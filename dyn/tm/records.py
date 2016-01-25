@@ -2650,7 +2650,7 @@ class SSHFPRecord(DNSRecord):
         :param fqdn: Name of node where the record will be added
         :param algorithm: Numeric value representing the public key encryption
             algorithm which will sign the zone.
-        :param fp_type: 1
+        :param fptype: 1
         :param fingerprint: fingerprint
 
         :param ttl: TTL for the record in seconds
@@ -2669,27 +2669,27 @@ class SSHFPRecord(DNSRecord):
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
                 self._get_record(*args, **kwargs)
-            elif 'algorithm' in kwargs or 'fp_type' in kwargs or 'fingerprint' in \
+            elif 'algorithm' in kwargs or 'fptype' in kwargs or 'fingerprint' in \
                    kwargs or 'ttl' in kwargs:
                 self._post(*args, **kwargs)
             elif len(args) + len(kwargs) > 1:
                 self._post(*args, **kwargs)
 
-    def _post(self, algorithm, fp_type, fingerprint, ttl=0):
+    def _post(self, algorithm, fptype, fingerprint, ttl=0):
         """Create a new :class:`~dyn.tm.records.SSHFPRecord` on the DynECT System
         """
         valid = range(1, 2)
         if algorithm not in valid:
             raise DynectInvalidArgumentError('algorthim', algorithm, valid)
         validfp = [1]
-        if fp_type not in validfp:
-            raise DynectInvalidArgumentError('fp_type', fp_type, valid)
+        if fptype not in validfp:
+            raise DynectInvalidArgumentError('fptype', fptype, valid)
         self._algorithm = algorithm
-        self._fp_type = fp_type
+        self._fptype = fptype
         self._fingerprint = fingerprint
         self._ttl = ttl
         self.api_args = {'rdata': {'algorithm': self._algorithm,
-                                   'fptype': self._fp_type,
+                                   'fptype': self._fptype,
                                    'fingerprint': self._fingerprint},
                          'ttl': self._ttl}
         self._create_record(self.api_args)
@@ -2715,16 +2715,16 @@ class SSHFPRecord(DNSRecord):
         self._update_record(self.api_args)
 
     @property
-    def fp_type(self):
+    def fptype(self):
         """FP Type"""
         self._pull()
-        return self._fp_type
+        return self._fptype
 
-    @fp_type.setter
-    def fp_type(self, value):
-        self._fp_type = value
-        self.api_args['rdata']['fp_type'] = self._fp_type
+    @fptype.setter
+    def fptype(self, value):
+        self.api_args['rdata']['fptype'] = value
         self._update_record(self.api_args)
+        self._fptype = value
 
     @property
     def fingerprint(self):

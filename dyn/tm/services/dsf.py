@@ -13,7 +13,7 @@ from ...compat import force_unicode
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chains',
            'get_all_response_pools', 'get_all_rulesets', 'get_all_dsf_monitors',
-           'get_all_records', 'DSFARecord',
+           'get_all_records', 'DSFARecord', 'DSFSSHFPRecord',
            'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
            'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
            'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord',
@@ -120,7 +120,8 @@ def _constructor(record):
                             'ptr': DSFPTRRecord, 'px': DSFPXRecord,
                             'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
                             'ns': DSFNSRecord, 'spf': DSFSPFRecord,
-                            'srv': DSFSRVRecord, 'txt': DSFTXTRecord}
+                            'srv': DSFSRVRecord, 'txt': DSFTXTRecord,
+                            'sshfp': DSFSSHFPRecord}
     rec_type = record['rdata_class'].lower()
     constructor = constructors[rec_type]
     rdata_key = 'rdata_{}'.format(rec_type)
@@ -536,6 +537,19 @@ class DSFCERTRecord(_DSFRecord, CERTRecord):
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFCERTRecord'
 
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['format', 'tag', 'algorithm', 'certificate']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFCERTRecord, self)._update_record(api_args, publish=publish)
+
 
 class DSFCNAMERecord(_DSFRecord, CNAMERecord):
     """An :class:`CNAMERecord` object which is able to store additional data for
@@ -655,6 +669,19 @@ class DSFDNSKEYRecord(_DSFRecord, DNSKEYRecord):
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFDNSKEYRecord'
 
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['flags', 'algorithm', 'protocol', 'public_key']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFDNSKEYRecord, self)._update_record(api_args, publish=publish)
+
 
 class DSFDSRecord(_DSFRecord, DSRecord):
     """An :class:`DSRecord` object which is able to store additional data for
@@ -692,6 +719,19 @@ class DSFDSRecord(_DSFRecord, DSRecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFDSRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['digest', 'algorithm', 'digtype', 'key_tag']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFDSRecord, self)._update_record(api_args, publish=publish)
 
 
 class DSFKEYRecord(_DSFRecord, KEYRecord):
@@ -734,6 +774,7 @@ class DSFKEYRecord(_DSFRecord, KEYRecord):
         :param api_args: arguments to be pased to the API call
         """
         keys = ['flags', 'algorithm', 'protocol', 'public_key']
+        self.refresh()
         for key in keys:
             if key not in api_args:
                 api_args['rdata'][key] = getattr(self, key)
@@ -774,6 +815,19 @@ class DSFKXRecord(_DSFRecord, KXRecord):
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFKXRecord'
 
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['preference', 'exchange',]
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFKXRecord, self)._update_record(api_args, publish=publish)
+
 class DSFLOCRecord(_DSFRecord, LOCRecord):
     """An :class:`LOCRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
@@ -811,6 +865,19 @@ class DSFLOCRecord(_DSFRecord, LOCRecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFLOCRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['altitude', 'horiz_pre', 'latitude', 'longitude', 'size', 'version', 'vert_pre']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFLOCRecord, self)._update_record(api_args, publish=publish)
 
 
 class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
@@ -850,6 +917,19 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFIPSECKEYRecord'
 
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['precedence', 'gatetype', 'gateway', 'public_key',]
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFIPSECKEYRecord, self)._update_record(api_args, publish=publish)
+
 
 class DSFMXRecord(_DSFRecord, MXRecord):
     """An :class:`MXRecord` object which is able to store additional data
@@ -881,6 +961,19 @@ class DSFMXRecord(_DSFRecord, MXRecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFMXRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['exchange', 'preference']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFMXRecord, self)._update_record(api_args, publish=publish)
 
 
 class DSFNAPTRRecord(_DSFRecord, NAPTRRecord):
@@ -923,6 +1016,19 @@ class DSFNAPTRRecord(_DSFRecord, NAPTRRecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFNAPTRRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['order', 'preference', 'flags', 'services', 'regexp', 'replacement']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFNAPTRRecord, self)._update_record(api_args, publish=publish)
 
 
 
@@ -985,6 +1091,19 @@ class DSFPXRecord(_DSFRecord, PXRecord):
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFPXRecord'
 
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['map822', 'preference', 'mapx400']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFPXRecord, self)._update_record(api_args, publish=publish)
+
 
 
 class DSFNSAPRecord(_DSFRecord, NSAPRecord):
@@ -1043,6 +1162,19 @@ class DSFRPRecord(_DSFRecord, RPRecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFRPRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['mbox', 'txtdname']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFRPRecord, self)._update_record(api_args, publish=publish)
 
 
 
@@ -1141,6 +1273,64 @@ class DSFSRVRecord(_DSFRecord, SRVRecord):
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFSRVRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['port', 'priority', 'target', 'weight']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFSRVRecord, self)._update_record(api_args, publish=publish)
+
+
+class DSFSSHFPRecord(_DSFRecord, SSHFPRecord):
+    """An :class:`SSHFPRecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
+    """
+    def __init__(self, fptype, algorithm, fingerprint, ttl=0, label=None,
+                 weight=1, automation='auto', endpoints=None,
+                 endpoint_up_count=None, eligible=True, **kwargs):
+        """Create a :class:`DSFSSHFPRecord` object
+
+        :param algorithm: Numeric value representing the public key encryption
+            algorithm which will sign the zone.
+        :param fptype: FingerPrint Type
+        :param fingerprint: fingerprint value
+        :param ttl: TTL for this record
+        :param label: A unique label for this :class:`DSFSSHFPRecord`
+        :param weight: Weight for this :class:`DSFSSHFPRecord`
+        :param automation: Defines how eligible can be changed in response to
+            monitoring. Must be one of 'auto', 'auto_down', or 'manual'
+        :param endpoints: Endpoints are used to determine status, torpidity,
+            and eligible in response to monitor data
+        :param endpoint_up_count: Number of endpoints that must be up for the
+            Record status to be 'up'
+        :param eligible: Indicates whether or not the Record can be served
+        """
+        SSHFPRecord.__init__(self, None, None, algorithm=algorithm, fptype=fptype, fingerprint=fingerprint, ttl=ttl,
+                           create=False)
+        _DSFRecord.__init__(self, label, weight, automation, endpoints,
+                            endpoint_up_count, eligible, **kwargs)
+        self._record_type = 'DSFSSHFPRecord'
+
+    def _update_record(self, api_args, publish=True):
+        """Make the API call to update the current record type
+
+        :param api_args: arguments to be pased to the API call
+        """
+        keys = ['fptype', 'fingerprint', 'algorithm']
+        self.refresh()
+        for key in keys:
+            if key not in api_args:
+                api_args['rdata'][key] = getattr(self, key)
+
+        super(DSFSSHFPRecord, self)._update_record(api_args, publish=publish)
+
 
 
 

@@ -23,7 +23,6 @@ __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chain
            'DSFResponsePool', 'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor',
            'TrafficDirector']
 
-
 def get_all_dsf_services():
     """:return: A ``list`` of :class:`TrafficDirector` Services"""
     uri = '/DSF/'
@@ -178,7 +177,7 @@ class _DSFRecord(object):
         self._endpoints = endpoints
         self._endpoint_up_count = endpoint_up_count
         self._eligible = eligible
-        self._service_id = self._record_set_id = self.uri = None
+        self._service_id = self._dsf_record_set_id = self.uri = None
         self._dsf_record_id = None
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
@@ -298,24 +297,22 @@ class _DSFRecord(object):
 
     @property
     def dsf_id(self):
-        """The unique system id for the DSF service associated with this
-        :class:`DSFRecord`
+        """The unique system id of the :class:`TrafficDirector` This :class:`DSFRecord` is attached to
         """
         return self._service_id
 
-    @dsf_id.setter
-    def dsf_id(self, value):
-        pass
+    @property
+    def record_id(self):
+        """The unique system id for the DSF service associated with this
+        :class:`DSFRecord`
+        """
+        return self._dsf_record_id
 
     @property
     def record_set_id(self):
-        """The unique system id for the record set associated with this
-        :class:`DSFRecord`
+        """The unique system id of the :class:`DSFRecordSet` This :class:`DSFRecord` is attached to
         """
         return self._record_set_id
-    @record_set_id.setter
-    def record_set_id(self, value):
-        pass
 
     @property
     def label(self):
@@ -1205,7 +1202,7 @@ class DSFRecordSet(object):
             to this :class:`DSFRecordSet`
         :param records: A list of :class:`DSFRecord`'s within this
             :class:`DSFRecordSet`
-        :param kwargs: Used for manipulating additional data to be speicified
+        :param kwargs: Used for manipulating additional data to be specified
             by the creation of other system objects.
         """
         super(DSFRecordSet, self).__init__()
@@ -1223,33 +1220,6 @@ class DSFRecordSet(object):
                                                                    dict):
             self._records = []
             for record in records:
-                """constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
-                                'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
-                                'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
-                                'dname': DSFDNAMERecord,
-                                'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
-                                'key': DSFKEYRecord, 'kx': DSFKXRecord,
-                                'loc': DSFLOCRecord,
-                                'ipseckey': DSFIPSECKEYRecord,
-                                'mx': DSFMXRecord, 'naptr': DSFNAPTRRecord,
-                                'ptr': DSFPTRRecord, 'px': DSFPXRecord,
-                                'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
-                                'ns': DSFNSRecord, 'spf': DSFSPFRecord,
-                                'srv': DSFSRVRecord, 'txt': DSFTXTRecord}
-                rec_type = record['rdata_class'].lower()
-                constructor = constructors[rec_type]
-                rdata_key = 'rdata_{}'.format(rec_type)
-                kws = ('ttl', 'label', 'weight', 'automation', 'endpoints',
-                       'endpoint_up_count', 'eligible', 'dsf_record_id',
-                       'dsf_record_set_id', 'status', 'torpidity', 'service_id')
-                for data in record['rdata']:
-                    record_data = data['data'][rdata_key]
-                    for kw in kws:
-                        record_data[kw] = record[kw]
-                    if constructor is DSFSRVRecord:
-                        record_data['rr_weight'] = record_data.pop('weight')
-                    self._records.append(constructor(**record_data))
-                    """
                 self._records += _constructor(record)
 
         else:
@@ -1322,6 +1292,20 @@ class DSFRecordSet(object):
                 for record in val:
                     self._records += _constructor(record)
 
+    def __str__(self):
+        str = list()
+        str.append('RDClass: {}'.format(self.rdata_class))
+        str.append('Label: {}'.format(self.label))
+        if self._dsf_record_set_id:
+            str.append('ID: {}'.format(self._dsf_record_set_id))
+        return ("<DSFRecordSet>: {}".format(', '.join(str)))
+
+    __repr__ = __unicode__ = __str__
+
+
+
+
+
     def publish(self):
        uri = '/DSF/{}/'.format(self._service_id)
        api_args = {'publish':'Y'}
@@ -1330,20 +1314,6 @@ class DSFRecordSet(object):
 
     def refresh(self):
         self._get(self._service_id, self._dsf_record_set_id)
-
-    def add_to_service(self, service, publish=True):
-        """
-        Adds this record_set to a traffic director service.
-        :param service: Can either be the service_id of a TrafficDirector
-        :param publish: Publish on execution (Default = True)
-        service, or the TrafficDirector service itself.
-        """
-        #TODO: DELETE
-        _service_id = _checkType(service)
-        if self._service_id:
-            raise Exception('Records Set already attached to service: {}.'.format(self._service_id))
-        self._post(_service_id, publish=publish)
-
 
     def add_to_rs_chain(self, rs_chain, service=None, publish=True):
         """
@@ -1382,12 +1352,6 @@ class DSFRecordSet(object):
     @records.setter
     def records(self, value):
         pass
-
-    def add_record(self, record_object):
-        """Pass in a record object."""
-        if record_object._dsf_record_set_id:
-            raise Exception('Record already belongs to Record Set: {}'.format(record_object._dsf_record_set_id))
-        record_object._post(self._service_id, self._dsf_record_set_id)
 
     @property
     def status(self):
@@ -1529,6 +1493,7 @@ class DSFRecordSet(object):
         :class:`DSFRecordSet`
         """
         return self._dsf_monitor_id
+
     @dsf_monitor_id.setter
     def dsf_monitor_id(self, value):
         self._dsf_monitor_id = value
@@ -1538,11 +1503,23 @@ class DSFRecordSet(object):
         self._build(response['data'])
 
     @property
-    def dsf_record_set_id(self):
-        """The unique system id of the DSF Monitor attached to this
-        :class:`DSFRecordSet`
+    def dsf_id(self):
+        """The unique system id of the :class:`TrafficDirector` This :class:`DSFRecordSet` is attached to
+        """
+        return self._service_id
+
+    @property
+    def record_set_id(self):
+        """The unique system id of this :class:`DSFRecordSet`
         """
         return self._dsf_record_set_id
+
+    @property
+    def failover_chain_id(self):
+        """The unique system id of the :class:`DSFFailoverChain` This :class:`DSFRecordSet` is attached to
+        """
+        return self._dsf_record_set_failover_chain_id
+
 
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this :class:`DSFRecordSet` to a JSON blob"""
@@ -1634,8 +1611,11 @@ class DSFFailoverChain(object):
             api_args['label'] = self._label
         if self._core:
             api_args['core'] = self._core
+        #if self._record_sets:
+        #    api_args['record_sets'] = self._record_sets.to_json(skip_svc=True)
         if self._record_sets:
-            api_args['record_sets'] = self._record_sets.to_json(skip_svc=True)
+            api_args['record_sets'] = [set.to_json(skip_svc=True) for set in self._record_sets]
+
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'POST',
@@ -1681,6 +1661,15 @@ class DSFFailoverChain(object):
             if key == 'record_sets':
                 for record_set in val:
                     self._record_sets.append(DSFRecordSet(**record_set))
+
+    def __str__(self):
+        str = list()
+        str.append('Label: {}'.format(self.label))
+        if self._dsf_record_set_failover_chain_id:
+            str.append('ID: {}'.format(self._dsf_record_set_failover_chain_id))
+        return ("<DSFFailoverChain>: {}".format(', '.join(str)))
+
+    __repr__ = __unicode__ = __str__
 
 
     def publish(self):
@@ -1771,6 +1760,27 @@ class DSFFailoverChain(object):
             json_blob['record_sets'] = [rs.to_json(svc_id) for rs in self.record_sets]
         return json_blob
 
+    @property
+    def dsf_id(self):
+        """The unique system id of the :class:`TrafficDirector` This :class:`DSFFailoverChain` is attached to
+        """
+        return self._service_id
+
+    @property
+    def response_pool_id(self):
+        """The unique system id of the :class:`DSFResponsePool` this :class:`DSFFailoverChain` is attached to
+        """
+        return self._dsf_response_pool_id
+
+    @property
+    def failover_chain_id(self):
+        """The unique system id of this :class:`DSFFailoverChain`
+
+        """
+        return self._dsf_record_set_failover_chain_id
+
+
+
     def delete(self):
         """Delete this :class:`DSFFailoverChain` from the Dynect System"""
         api_args = {'publish': 'Y'}
@@ -1804,6 +1814,7 @@ class DSFResponsePool(object):
         self._eligible = eligible
         self._automation = automation
         self._dsf_ruleset_id = dsf_ruleset_id
+        self._dsf_response_pool_id = None
         self._index = index
         if isinstance(rs_chains, list) and len(rs_chains) > 0 and \
                 isinstance(rs_chains[0], dict):
@@ -1838,8 +1849,11 @@ class DSFResponsePool(object):
             api_args['dsf_ruleset_id'] = self._dsf_ruleset_id
         if self._index:
             api_args['index'] = self._index
+        #if self._rs_chains:
+        #    api_args['rs_chains'] = self.rs_chains.to_json(skip_svc=True)
         if self._rs_chains:
-            api_args['rs_chains'] = self._rs_chains
+            api_args['rs_chains'] = [chain.to_json(skip_svc=True) for chain in self.rs_chains]
+
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
@@ -1885,7 +1899,20 @@ class DSFResponsePool(object):
                 for rs_chain in val:
                     self._rs_chains.append(DSFFailoverChain(**rs_chain))
 
+    def __str__(self):
+        str = list()
+        str.append('Label: {}'.format(self.label))
+        if self._dsf_response_pool_id:
+            str.append('ID: {}'.format(self._dsf_response_pool_id))
+        return ("<DSFResponsePool>: {}".format(', '.join(str)))
+
+    __repr__ = __unicode__ = __str__
+
+
     def create(self, service, publish=True):
+
+        if self._dsf_response_pool_id:
+            raise Exception('Response Pool Already Exists. ID: {}'.format(self._dsf_response_pool_id))
         _service_id = _checkType(service)
         self._post(_service_id)
 
@@ -1946,7 +1973,7 @@ class DSFResponsePool(object):
         self._update(api_args)
 
     @property
-    def dsf_ruleset_ids(self):
+    def ruleset_ids(self):
         """List of Unique system ids of the Rulesets this :class:`DSFResponsePool` is
         attached to
         """
@@ -1954,20 +1981,17 @@ class DSFResponsePool(object):
         return [ruleset['dsf_ruleset_id'] for ruleset in self._rulesets]
 
     @property
-    def dsf_response_pool_id(self):
-
+    def response_pool_id(self):
+        """The Unique system id of this :class:`DSFResponsePool`
+        """
         return self._dsf_response_pool_id
 
-    @dsf_ruleset_ids.setter
-    def dsf_ruleset_ids(self, value):
-        #self._dsf_ruleset_id = value
-        #api_args = {'dsf_ruleset_id': self._dsf_ruleset_id}
-        #response = DynectSession.get_session().execute(self.uri, 'PUT',
-        #                                               api_args)
-        #for key, val in response['data'].items():
-        #    if key != 'record_sets':
-        #        setattr(self, '_' + key, val)
-        pass
+
+    @property
+    def dsf_id(self):
+        """The unique system id of the :class:`TrafficDirector` This :class:`DSFResponsePool` is attached to
+        """
+        return self._service_id
 
     @property
     def rs_chains(self):
@@ -1979,10 +2003,6 @@ class DSFResponsePool(object):
     @rs_chains.setter
     def rs_chains(self, value):
         pass
-
-    def add_rs_chain(self, rs_chain):
-        """ Add an rs_chain to the pool. """
-        rs_chain._post(self._service_id, self._dsf_ruleset_id)
 
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this :class:`DSFResponsePool` to a JSON blob"""
@@ -2057,6 +2077,9 @@ class DSFRuleset(object):
         api_args = {'publish': 'Y', 'label': self._label,
                     'criteria_type': self._criteria_type,
                     'criteria': self._criteria}
+        if self._response_pools:
+            api_args['response_pools'] = [pool.to_json(skip_svc=True) for pool in self.response_pools]
+
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
@@ -2102,6 +2125,116 @@ class DSFRuleset(object):
             if key == 'response_pools':
                 for response_pool in val:
                     self._response_pools.append(DSFResponsePool(**response_pool))
+
+    def __str__(self):
+        str = list()
+        str.append('Label: {}'.format(self.label))
+        if self._dsf_ruleset_id:
+            str.append('ID: {}'.format(self._dsf_ruleset_id))
+        return ("<DSFRuleSet>: {}".format(', '.join(str)))
+
+    __repr__ = __unicode__ = __str__
+
+
+    def add_response_pool(self, response_pool, index=0, publish=True):
+        """
+        Adds passed in :class:`DSFResponsePool` to This :class:`DSFRuleSet`
+        :param response_pool: Can either be the response_pool_id or a :class:`DSFResponsePool` Object.
+        :param index: where in the list of response pools to place this pool. 0 is the first position, 0 is the default.
+        :param publish: Publish on execution (Default = True)
+        """
+        #TODO: Working on it..
+        if isinstance(response_pool, DSFResponsePool):
+            _response_pool_id = response_pool._dsf_response_pool_id
+        elif type(response_pool) is str:
+            _response_pool_id = response_pool
+        else:
+            raise Exception('Could not make sense of Response Pool Type')
+        self._get(self._service_id, self._dsf_ruleset_id)
+
+
+        #api_args= {'response_pools': [{'dsf_response_pool_id': _response_pool_id}]}
+        #for old_pool in self._response_pools:
+        #    api_args['response_pools'].append({'dsf_response_pool_id': old_pool._dsf_response_pool_id})
+        #self._update(api_args, publish)
+        api_args = dict()
+        api_args['response_pools'] = list()
+        hit = False
+        for pIndex, old_pool in enumerate(self._response_pools):
+            if pIndex == index:
+                api_args['response_pools'].append({'dsf_response_pool_id': _response_pool_id})
+                hit = True
+            api_args['response_pools'].append({'dsf_response_pool_id': old_pool._dsf_response_pool_id})
+        #If the index was greater than what was available, just append to the end.
+        if not hit:
+            api_args['response_pools'].append({'dsf_response_pool_id': _response_pool_id})
+        self._update(api_args, publish)
+
+
+    def remove_response_pool(self, response_pool, publish=True):
+        """
+        Removes passed in :class:`DSFResponsePool` from this :class:`DSFRuleSet`.
+        :param service: Can either be the service_id or a `TrafficDirector` Object
+        :param response_pool: Can either be the response_pool_id or a `DSFResponsePool` Object.
+        :param publish: Publish on execution (Default = True)
+        """
+        #Todo: Working
+        if isinstance(response_pool, DSFResponsePool):
+            _response_pool_id = response_pool._dsf_response_pool_id
+            _service_id = response_pool._service_id
+        elif type(response_pool) is str:
+            _response_pool_id = response_pool
+        else:
+            raise Exception('Could not make sense of Response Pool Type')
+
+        self.refresh()
+        api_args = dict()
+        api_args['response_pools'] = list()
+        system_pool_ids = [pool._dsf_response_pool_id for pool in self._response_pools]
+        for pool_id in system_pool_ids:
+            if pool_id != _response_pool_id:
+                api_args['response_pools'].append({'dsf_response_pool_id': pool_id})
+        self._update(api_args, publish)
+
+    def add_failover_ip(self, ip, publish=True):
+        """
+        Adds passed in :class:`DSFResponsePool` to the end of this :class:`DSFRuleSet`
+        :param service: Can either be the service_id or a `TrafficDirector` Object
+        :param response_pool: Can either be the response_pool_id or a :class:`DSFResponsePool` Object.
+        :param publish: Publish on execution (Default = True)
+        """
+        #TODO: VERY BROKEN
+        api_args = dict()
+        api_args['response_pools'] = list()
+        for old_pool in self._response_pools:
+            api_args['response_pools'].append({'dsf_response_pool_id': old_pool._dsf_response_pool_id})
+        api_args['response_pools'].append({'failover': ip})
+        print api_args
+        self._update(api_args, publish)
+
+    def order_response_pools(self, pool_list, publish=True):
+        if not isinstance(pool_list, list):
+            raise Exception('You must pass in an ordered list of response pool objects, or ids.')
+        _pool_list = list()
+
+        for list_item in pool_list:
+            if isinstance(list_item, DSFResponsePool):
+                _pool_list.append(list_item._dsf_response_pool_id)
+            elif type(list_item) is str:
+                _pool_list.append(list_item)
+        api_args = dict()
+        api_args['response_pools'] = list()
+        for pool_id in _pool_list:
+            api_args['response_pools'].append({'dsf_response_pool_id': pool_id})
+        self._update(api_args, publish)
+
+
+
+    def create(self, service, publish=True):
+        if self._dsf_ruleset_id:
+            raise Exception('Rule Set Already Exists. ID: {}'.format(self._dsf_ruleset_id))
+        _service_id = _checkType(service)
+        self._post(_service_id, publish)
 
 
     def publish(self):
@@ -2154,6 +2287,18 @@ class DSFRuleset(object):
     @response_pools.setter
     def response_pools(self, value):
         pass
+
+    @property
+    def dsf_id(self):
+        """The unique system id of the :class:`TrafficDirector` This :class:`DSFRuleset` is attached to
+        """
+        return self._service_id
+
+    @property
+    def ruleset_id(self):
+        """The unique system id of this :class:`DSFRuleset`
+        """
+        return self._dsf_ruleset_id
 
     @property
     def _json(self, svc_id=None, skip_svc=False):
@@ -2607,6 +2752,9 @@ class TrafficDirector(object):
         api_args = {'publish':'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    def refresh(self):
+        self._get(self._service_id)
 
     @property
     def all_records(self):

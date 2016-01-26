@@ -1674,9 +1674,25 @@ class DSFRecordSet(object):
 
     @dsf_monitor_id.setter
     def dsf_monitor_id(self, value):
+        """allows you to manually set the monitor_id, Legacy function for backward compatability"""
         api_args = {'dsf_monitor_id': value}
         self._update(api_args)
         self._dsf_monitor_id = value
+
+    def set_monitor(self, monitor):
+        """ For attaching a :class:`DSFMonitor` to this record_set
+        :param monitor: a :class:`DSFMonitor` or string of the dsf_monitor_id to attach to this record_set
+        """
+        if isinstance(monitor, DSFMonitor):
+            _monitor_id = monitor._dsf_monitor_id
+        elif type(monitor) is str:
+            _monitor_id = monitor
+        else:
+            raise Exception('Could not make sense of Monitor Type')
+        api_args = {'dsf_monitor_id': _monitor_id}
+        self._update(api_args)
+        self._dsf_monitor_id = _monitor_id
+
 
     @property
     def dsf_id(self):

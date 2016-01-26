@@ -244,7 +244,7 @@ class _DSFRecord(object):
         :param api_args: arguments to be pased to the API call
         """
 
-        if publish:
+        if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
         self.uri = 'DSFRecord/{}/{}'.format(self._service_id, self._dsf_record_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
@@ -416,6 +416,7 @@ class _DSFRecord(object):
 
     @implicitPublish.setter
     def implicitPublish(self, value):
+        "Toggle for this specific :class:`DSFRecord` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -1694,6 +1695,7 @@ class DSFRecordSet(object):
 
     @implicitPublish.setter
     def implicitPublish(self, value):
+        "Toggle for this specific :class:`DSFRecordSet` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -1957,6 +1959,7 @@ class DSFFailoverChain(object):
 
     @implicitPublish.setter
     def implicitPublish(self, value):
+        "Toggle for this specific :class:`DSFFailoverChain` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2203,6 +2206,7 @@ class DSFResponsePool(object):
 
     @implicitPublish.setter
     def implicitPublish(self, value):
+        "Toggle for this specific :class:`DSFResponsePool` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2497,6 +2501,7 @@ class DSFRuleset(object):
 
     @implicitPublish.setter
     def implicitPublish(self, value):
+        "Toggle for this specific :class:`DSFRuleset` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -3189,6 +3194,7 @@ class TrafficDirector(object):
 
     @implicitPublish.setter
     def implicitPublish(self, value):
+        "Toggle for this specific :class:`TrafficDirector` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value

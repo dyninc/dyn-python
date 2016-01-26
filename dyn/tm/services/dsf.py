@@ -13,7 +13,8 @@ from ...compat import force_unicode
 __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chains',
            'get_all_response_pools', 'get_all_rulesets', 'get_all_dsf_monitors',
-           'get_all_records', 'DSFARecord', 'DSFSSHFPRecord',
+           'get_all_records', 'get_all_notifiers', 'DSFARecord', 'DSFSSHFPRecord',
+           'Notifier',
            'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
            'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
            'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord',
@@ -33,6 +34,16 @@ def get_all_dsf_services():
         directors.append(TrafficDirector(None, api=False, **dsf))
     return directors
 
+
+def get_all_notifiers():
+    """:return: A ``list`` of :class:`TrafficDirector` Services"""
+    uri = '/Notifier/'
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    notifiers = []
+    for notify in response['data']:
+        notifiers.append(Notifier(None, api=False, **notify))
+    return notifiers
 
 def get_all_records(service):
     """
@@ -2856,6 +2867,126 @@ class DSFMonitor(object):
         """Delete an existing :class:`DSFMonitor` from the DynECT System"""
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
+
+class Notifier(object):
+    def __init__(self, *args, **kwargs):
+        """ Create a :class:`Notifier` object
+        :param label:
+        :param recipients: ``list`` of Contact Names
+        :param dsf_services:
+        :param monitor_services:
+        """
+
+        self._label = self._notifier_id = self._recipients = None
+        self._services = None
+        if 'api' in kwargs:
+            del kwargs['api']
+            self._build(kwargs)
+        elif len(args) + len(kwargs) == 1:
+            self._get(*args, **kwargs)
+        else:
+            self._post(*args, **kwargs)
+        self.uri = '/Notifier/'
+
+    def _post(self, label, publish='Y',dsf_services=None, monitor_services=None, recipients=None):
+        """Create a new :class:`TrafficDirector` on the DynECT System"""
+        uri = '/Notifier/'
+        api_args = {}
+        if recipients:
+            api_args['recipients'] = list()
+            for recipient in recipients:
+                api_args['recipients'].append({'recipient': recipient, 'format':'email'})
+
+        if dsf_services or monitor_services:
+            api_args['services'] = list()
+
+        if dsf_services:
+            api_args['services'] += [{'service_class': 'DSF', 'service_id': service_id} for
+                                     service_id in dsf_services]
+        if monitor_services:
+            api_args['services'] += [{'service_class': 'Monitor', 'service_id': service_id} for
+                                     service_id in monitor_services]
+
+        self._label = label
+        api_args['label'] = label
+
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        self.uri = '/Notifier/{}/'.format(response['data']['notifier_id'])
+        self._build(response['data'])
+
+
+
+
+
+    def _get(self, notifier_id):
+        self._notifier_id = notifier_id
+        self.uri = '/Notifier/{}/'.format(self._notifier_id)
+        api_args = {}
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
+        self._build(response['data'])
+
+
+    def _update(self, api_args, publish = True):
+        """Private update method"""
+        self.uri = '/Notifier/{}/'.format(self._notifier_id)
+        if publish:
+            api_args['publish'] = 'Y'
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'])
+
+
+    def _build(self, data):
+        for key, val in data.items():
+            setattr(self, '_' + key, val)
+
+    @property
+    def label(self):
+        return self._label
+
+    @label.setter
+    def label(self, value):
+        api_args = {'label': value}
+        self._update(api_args)
+        self._label = value
+
+    @property
+    def recipients(self):
+        return self._recipients
+
+
+    def add_recipient(self, new_recipient, format='email'):
+        recipients = self._recipients
+        for recipient in recipients:
+            recipient.pop('details', None)
+            recipient.pop('features', None)
+        recipients.append({'recipient': new_recipient, 'format': format})
+        api_args = {'recipients': recipients}
+        self._update(api_args)
+
+    def del_recipient(self, recipient):
+        recipients = [srecipient for srecipient in self._recipients if srecipient['recipient'] != recipient]
+        for recipient in recipients:
+            recipient.pop('details', None)
+            recipient.pop('features', None)
+        api_args = {'recipients': recipients}
+        self._update(api_args)
+
+    @property
+    def dsf_service_ids(self):
+        return [service['service_id'] for service in self._services if service['service_class'] == 'DSF']
+
+    @property
+    def monitor_service_ids(self):
+        return [service['service_id'] for service in self._services if service['service_class'] == 'Monitor']
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<Notifier>: {}, ID: {}').format(self._label, self._notifier_id)
+    __repr__ = __unicode__ = __str__
+
+
 
 
 class TrafficDirector(object):

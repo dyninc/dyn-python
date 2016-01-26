@@ -1,9 +1,10 @@
 Release History
 ---------------
-1.5.3 
+1.6.0 (2016-1-28)
 +++++++++++++++++
+*DSF service objects can now be independently Created, Updated, Read, and Deleted.
+*Signifigant changes to how DSF service works. There may be some minor breaking changes here.
 *Record getters now automatically pull data from system instead of storing them locally.
-
 
 1.5.2 (2016-1-11)
 +++++++++++++++++

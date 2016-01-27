@@ -414,7 +414,7 @@ class _DSFRecord(object):
                          if x not in json_blob and x not in self.__dict__ and
                          x[1:] not in self.__dict__ and
                          inner_data[x] is not None and x != 'record_set_id' and
-                         x != 'service_id'}
+                         x != 'service_id' and x != 'implicitPublish'}
             json_blob['rdata'] = {outer_key: real_data}
         if svc_id and not skip_svc:
             json_blob['service_id'] = svc_id
@@ -2987,7 +2987,7 @@ class DSFNotifier(object):
 
     def to_json(self):
         json_blob = {}
-        if self._label
+        if self._label:
              json_blob['label'] = self._label
         if self._recipients:
              json_blob['recipients'] = [recipient['recipient'] for recipient in self._recipients]

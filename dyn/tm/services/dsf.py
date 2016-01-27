@@ -8,6 +8,7 @@ from ..errors import DynectInvalidArgumentError
 from ..records import *
 from ..session import DynectSession
 from ...compat import force_unicode
+from ..accounts import Notifier
 
 
 __author__ = 'jnappi'
@@ -2863,6 +2864,11 @@ class DSFMonitor(object):
         api_args = {'options': self._options}
         self._update(api_args)
 
+    def __str__(self):
+        """str override"""
+        return force_unicode('<DSFMonitor>: {}, ID: {}').format(self._label, self._dsf_monitor_id)
+    __repr__ = __unicode__ = __str__
+
     def delete(self):
         """Delete an existing :class:`DSFMonitor` from the DynECT System"""
         api_args = {}
@@ -3002,6 +3008,13 @@ class DSFNotifier(object):
         return force_unicode('<DSFNotifier>: {}, ID: {}').format(self._label, self._notifier_id)
     __repr__ = __unicode__ = __str__
 
+    def delete(self):
+        """Delete this :class:`DSFNotifier` from the Dynect
+        System
+        """
+        self.uri = '/Notifier/{}/'.format(self._notifier_id)
+        DynectSession.get_session().execute(self.uri, 'DELETE')
+
 
 
 
@@ -3073,17 +3086,13 @@ class TrafficDirector(object):
             api_args['notifiers'] = []
             for notifier in notifiers:
                 if isinstance(notifier, DSFNotifier):
-                    api_args['notifiers'].append(notifier._notifier_id)
-                if isinstance(notifier, str):
-                    api_args['notifiers'].append(notifier)
+                    api_args['notifiers'].append({'notifier_id':notifier._notifier_id})
+                elif isinstance(notifier, Notifier):
+                    api_args['notifiers'].append({'notifier_id':notifier._notifier_id})
+                elif type(notifier) is str or type(notifier) is unicode:
+                    api_args['notifiers'].append({'notifier_id':notifier})
                 else:
                     raise Exception('notifiers must be a list containing DSFNotifier objects, or notifier_id strings.')
-
-            #if isinstance(notifiers[0], dict):
-            #    api_args['notifiers'] = notifiers
-            #else:  # notifiers is a list of Notifier objects
-            #    api_args['notifiers'] = [{'notifier_id': x.notifier_id} for x
-            #                              in self._notifiers]
         if rulesets:
             api_args['rulesets'] = [rule._json for rule in self._rulesets]
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
@@ -3172,11 +3181,34 @@ class TrafficDirector(object):
         """
         if isinstance(notifier, DSFNotifier):
             _notifier_id = notifier._notifier_id
-        elif type(notifier) is str:
+        elif isinstance(notifier, Notifier):
+            _notifier_id = notifier._notifier_id
+        elif type(notifier) is str or type(notifier) is unicode:
             _notifier_id = notifier
         else:
             raise Exception("Cannot sensibly determine Notifier type, must be DSFNotifier, or notifier_id string")
         api_args = {'add_notifier': True, 'notifier_id': _notifier_id}
+        self._update(api_args)
+
+
+    def del_notifier(self, notifier):
+        """Links the :class:`DSFNotifier` with the specified id to this Traffic Director
+        service
+        """
+        if isinstance(notifier, DSFNotifier):
+            _notifier_id = notifier._notifier_id
+        elif isinstance(notifier, Notifier):
+            _notifier_id = notifier._notifier_id
+        elif type(notifier) is str or type(notifier) is unicode:
+            _notifier_id = notifier
+        else:
+            raise Exception("Cannot sensibly determine Notifier type, must be DSFNotifier, or notifier_id string")
+        self.refresh()
+        safeNotifiers= [{'notifier_id': notifier._notifier_id} for notifier in self._notifiers
+                        if notifier._notifier_id != _notifier_id]
+
+
+        api_args = {'notifiers': safeNotifiers}
         self._update(api_args)
 
     def remove_orphans(self):
@@ -3249,14 +3281,6 @@ class TrafficDirector(object):
         :class:`TrafficDirector` service
         """
         return self._notifiers
-    #@notifiers.setter
-    #def notifiers(self, value):
-    #    if isinstance(value, list) and not isinstance(value, APIList):
-    #        self._notifiers = APIList(DynectSession.get_session, 'notifiers',
-    #                                  None, value)
-    #    elif isinstance(value, APIList):
-    #        self._notifiers = value
-    #    self._notifiers.uri = self.uri
 
     @property
     def rulesets(self):

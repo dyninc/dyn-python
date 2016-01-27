@@ -424,10 +424,10 @@ Adding/manipulating a failover IP to DSFRuleset
 
 Assume we have the same service as the Adding/Deleting/Modifying DSFResponsePools to DSFRuleset example.
 
-    >>>#To Add the failover IP.
-    >>>ruleset.add_failover_ip('1.2.3.4')
-    >>># Notice how its essentially a Response_pool -> Record chain -- this is always added to the end of the response pool list.
-    >>>ruleset.response_pools
+    >>> #To Add the failover IP.
+    >>> ruleset.add_failover_ip('1.2.3.4')
+    >>> # Notice how its essentially a Response_pool -> Record chain -- this is always added to the end of the response pool list.
+    >>> ruleset.response_pools
     >>>[<DSFResponsePool>: Label: pool1, ID: JybChuDQtCWSyADLFfqp2JKFYoE,
     ...<DSFResponsePool>: Label: pool2, ID: LPDIZfbr0gEVg-AR31CNE_wVDIg,
     ...<DSFResponsePool>: Label: pool4, ID: 3a-eVZYaRt3NeNxUXyA87OroswQ,
@@ -620,10 +620,10 @@ Note, that modifying these values will immediately publish them. This can be tur
     >>> td.label
     >>>u'TD_test_2'
 
-    >>>#Now, say you don't want your update changes to be implicitly published. you can turn off implicit publishing for
-    >>>#the service level changes.
-    >>>#!!!WARNING!!!! changing the implict publish flag ONLY disables implicit publishing for this Object,
-    >>>#not any of its children objects like Rulesets etc.
+    >>> #Now, say you don't want your update changes to be implicitly published. you can turn off implicit publishing for
+    >>> #the service level changes.
+    >>> #!!!WARNING!!!! changing the implict publish flag ONLY disables implicit publishing for this Object,
+    >>> #not any of its children objects like Rulesets etc.
     >>>
     >>> td.label
     >>>u'TD_test_2'
@@ -659,8 +659,8 @@ the dyn.tm System
     >>> from dyn.tm.services.dsf import get_all_dsf_services
     >>> get_all_dsf_services()
     >>>[<TrafficDirector>: notme, ID: qzoiassV-quZ_jGh7jbn_PfYNxY,
-    >>><TrafficDirector>: notmeeither, ID: qdE-zi4k7zEVhH6jWugVSbiIxdA,
-    >>><TrafficDirector>: imtheone, ID: AwqcnhOZ6r1aCpIZFIj4mTwdd9Y]
+    ...<TrafficDirector>: notmeeither, ID: qdE-zi4k7zEVhH6jWugVSbiIxdA,
+    ...<TrafficDirector>: imtheone, ID: AwqcnhOZ6r1aCpIZFIj4mTwdd9Y]
     >>> myTD = get_all_dsf_services()[2]
     >>> myTD.label
     >>>u'imtheone'
@@ -672,6 +672,7 @@ Adding/Deleting a Notifier to your Traffic Director Service
 You can add notifiers to your Traffic Director service in the following ways:
 
     Example 1:
+
     >>> from dyn.tm.services.dsf import DSFNotifier
     >>> notifier = DSFNotifier('deleteme', recipients=['youruser'])
     >>> td.add_notifier(notifier1)
@@ -685,6 +686,7 @@ You can add notifiers to your Traffic Director service in the following ways:
     >>>[]
 
     Example 2:
+
     >>> #Notifiers can also be added at the creation time of the Notifier by passing in the service_id
     >>> from dyn.tm.services.dsf import DSFNotifier
     >>> notifier = DSFNotifier('deleteme', recipients=['youruser'], dsf_services=[td.service_id])
@@ -710,9 +712,9 @@ The following example shows how to create a new :class:`TrafficDirector` on the
 dyn.tm System and how to edit some of the fields using the returned
 :class:`TrafficDirector` object.
 
-    >>>#A fully populated service can achieved by creating a full chain and passing child objects into each parent object.
-    >>>#These objects are effectively constructor objects. In other words, they will be useless for CRUD operations, except for
-    >>>#The TrafficDirector object. There are other means for achieving CRUD operations as you will see.
+    >>> #A fully populated service can achieved by creating a full chain and passing child objects into each parent object.
+    >>> #These objects are effectively constructor objects. In other words, they will be useless for CRUD operations, except for
+    >>> #The TrafficDirector object. There are other means for achieving CRUD operations as you will see.
     >>>
     >>> from dyn.tm.services.dsf import *
     >>> from dyn.tm.zones import Node
@@ -757,7 +759,7 @@ Prototype objects like your DSFARecord, DSFRecordSet are just that, prototypes. 
 This goes for any child object where you pass in prototypes. See examples below:
 
     >>> #Trying to access a prototype
-    >>>a_rec.address='1.2.3.4'
+    >>> a_rec.address='1.2.3.4'
     >>>DynectUpdateError: record_update: No service found.
 
     >>> #Instead, do this:

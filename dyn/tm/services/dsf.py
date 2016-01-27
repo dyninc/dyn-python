@@ -1525,21 +1525,21 @@ class DSFRecordSet(object):
         """Pulls data down from Dynect System and repopulates :class:`DSFRecordSet` """
         self._get(self._service_id, self._dsf_record_set_id)
 
-    def add_to_rs_chain(self, rs_chain, service=None, publish=True):
+    def add_to_failover_chain(self, failover_chain, service=None, publish=True):
         """
         Creates and links this :class:`DSFRecordSet` to the passed in :class:`DSFFailoverChain` Object
-        :param rs_chain: Can either be the _dsf_record_set_failover_chain_id or a :class:`DSFFailoverChain` Object.
+        :param failover_chain: Can either be the _dsf_record_set_failover_chain_id or a :class:`DSFFailoverChain` Object.
         :param service: Only necessary is rs_chain is passed in as a string. This can be a :class:`TrafficDirector`
         Object. or the _service_id
         :param publish: Publish on execution (Default = True)
         """
-        if isinstance(rs_chain, DSFFailoverChain):
-            _dsf_record_set_failover_chain_id = rs_chain._dsf_record_set_failover_chain_id
-            _service_id = rs_chain._service_id
-        elif type(rs_chain) is str:
+        if isinstance(failover_chain, DSFFailoverChain):
+            _dsf_record_set_failover_chain_id = failover_chain._dsf_record_set_failover_chain_id
+            _service_id = failover_chain._service_id
+        elif type(failover_chain) is str:
             if service is None:
-                raise Exception('If passing rs_chain as a string, you must provide the service_id as service=')
-            _dsf_record_set_failover_chain_id = rs_chain
+                raise Exception('If passing failover_chain as a string, you must provide the service_id as service=')
+            _dsf_record_set_failover_chain_id = failover_chain
         else:
             raise Exception('Could not make sense of Failover Chain Type')
         if service:
@@ -2204,7 +2204,7 @@ class DSFResponsePool(object):
         return self._service_id
 
     @property
-    def rs_chains(self):
+    def failover_chains(self):
         """A ``list`` of :class:`DSFFailoverChain` that are defined for this
         :class:`DSFResponsePool`
         """

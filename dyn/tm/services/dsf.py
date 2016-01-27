@@ -3150,22 +3150,27 @@ class TrafficDirector(object):
 
     @property
     def all_records(self):
+        """Returns All :class:`DSFRecord` in :class:`TrafficDirector`"""
         return get_all_records(self)
 
     @property
     def all_record_sets(self):
+        """Returns All :class:`DSFRecordSet` in :class:`TrafficDirector`"""
         return get_all_record_sets(self)
 
     @property
     def all_failover_chains(self):
+        """Returns All :class:`DSFFailoverChain` in :class:`TrafficDirector`"""
         return get_all_failover_chains(self)
 
     @property
     def all_response_pools(self):
+        """Returns All :class:`DSFResponsePool` in :class:`TrafficDirector`"""
         return get_all_response_pools(self)
 
     @property
     def all_rulesets(self):
+        """Returns All :class:`DSFRuleset` in :class:`TrafficDirector`"""
         return get_all_rulesets(self)
 
     def revert_changes(self):
@@ -3226,7 +3231,7 @@ class TrafficDirector(object):
     @property
     def records(self):
         """A list of this :class:`TrafficDirector` Services' DSFRecords"""
-        self._get(self._service_id)
+        self.refresh()
         return [record for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains
@@ -3241,7 +3246,7 @@ class TrafficDirector(object):
         """A list of this :class:`TrafficDirector` Services
         :class:`DSFRecordSet`'s
         """
-        self._get(self._service_id)
+        self.refresh()
         return [record_set for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains
@@ -3255,7 +3260,7 @@ class TrafficDirector(object):
         """A list of this :class:`TrafficDirector` Services
         :class:`DSFResponsePool`'s
         """
-        self._get(self._service_id)
+        self.refresh()
         return [response_pool for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools]
     @response_pools.setter
@@ -3267,7 +3272,7 @@ class TrafficDirector(object):
         """A list of this :class:`TrafficDirector` Services
         :class:`DSFFailoverChain`'s
         """
-        self._get(self._service_id)
+        self.refresh()
         return [rs_chains for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains]
@@ -3280,6 +3285,7 @@ class TrafficDirector(object):
         """A list of names of :class:`DSFNotifier` associated with this
         :class:`TrafficDirector` service
         """
+        self.refresh()
         return self._notifiers
 
     @property
@@ -3287,7 +3293,7 @@ class TrafficDirector(object):
         """A list of :class:`DSFRulesets` that are defined for this
         :class:`TrafficDirector` service
         """
-        self._get(self._service_id)
+        self.refresh()
         return self._rulesets
     @rulesets.setter
     def rulesets(self, value):

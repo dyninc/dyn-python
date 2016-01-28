@@ -107,7 +107,7 @@ objects from within a Python script. We'll stick to a simple :class:`DSFARecord`
 
 Create DSF__Record
 ^^^^^^^^^^^^^^^^^^
-We'll assume you already have a :class:`DSFRecordset` object called `record_set` in existence for this example.
+We'll assume you already have a :class:`DSFRecordset` object called :mod:`record_set` in existence for this example.
 
     >>> from dyn.tm.services.dsf import DSFARecord
     >>> record = DSFARecord('10.1.1.1', label='TEST RECORD', weight=1, automation='auto', eligible=True)
@@ -123,8 +123,8 @@ To change the record IP address of the record we just created, we can use one of
     >>> record.address
     >>>'20.1.1.1'
 
-Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
-Service Properties` below for an example and explaination
+Implicit publishing can be turned off for any object if that is undesirable, check :mod:`Modifying Traffic Director
+Service Properties` below for an example and explanation
 
 Get All DSF__Record
 ^^^^^^^^^^^^^^^^^^
@@ -158,12 +158,12 @@ objects from within a Python script.
 
 Create DSFRecordSet
 ^^^^^^^^^^^^^^^^^^
-We'll assume you already have a :class:`DSFFailoverChain` object named `failover_chain` in existence for this example.
+We'll assume you already have a :class:`DSFFailoverChain` object named :mod:`failover_chain` in existence for this example.
 
     >>> from dyn.tm.services.dsf import DSFRecordSet
     >>> #set up recordset for A records,
     >>> record_set = DSFRecordSet('A', label='Record_set_test', ttl=60)
-    >>> #Now, we create this record_set by adding it to an existing failvoer_chain
+    >>> #Now, we create this record_set by adding it to an existing failover_chain
     >>> record_set.add_to_failover_chain(failover_chain) #This is automatically published.
 
 To make the record_set and its child A records in one create action:
@@ -177,7 +177,7 @@ To make the record_set and its child A records in one create action:
     >>> #Now, we create this record_set by adding it to an existing failover_chain
     >>> record_set.add_to_failover_chain(failover_chain) #This is automatically published.
 
-As with all other DSF objects, the prototypes `record1` `record2` can't be used in CRUD operations. You must access these
+As with all other DSF objects, the prototypes :mod:`record1` :mod:`record2` can't be used in CRUD operations. You must access these
 objects within the record_set.
 
     >>> record_set.records
@@ -192,8 +192,8 @@ To change the label for the above :class:`DSFRecordset`:
     >>> record_set.label.label
     >>>'New Name'
 
-Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
-Service Properties` below for an example and explaination
+Implicit publishing can be turned off for any object if that is undesirable, check :mod:`Modifying Traffic Director
+Service Properties` below for an example and explanation
 
 Adding DSFMonitor to DSFRecordSet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -249,7 +249,7 @@ objects from within a Python script.
 
 Create DSFFailoverChain
 ^^^^^^^^^^^^^^^^^^^^^^^
-We'll assume you already have a :class:`DSFResponsePool` object named `response_pool` in existence for this example.
+We'll assume you already have a :class:`DSFResponsePool` object named :mod:`response_pool` in existence for this example.
 
     >>> from dyn.tm.services.dsf import DSFFailoverChain
     >>> #set up failover_chain
@@ -285,8 +285,8 @@ To change the label for the above :class:`DSFFailoverChain`:
     >>> failover_chain.label
     >>>'New Name'
 
-Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
-Service Properties` below for an example and explaination
+Implicit publishing can be turned off for any object if that is undesirable, check :mod:`Modifying Traffic Director
+Service Properties` below for an example and explanation
 
 Get All DSFFailoverChain
 ^^^^^^^^^^^^^^^^^^
@@ -359,8 +359,8 @@ To change the label for the above :class:`DSFResponsePool`:
     >>> response_pool.label
     >>>'New Name'
 
-Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
-Service Properties` below for an example and explaination
+Implicit publishing can be turned off for any object if that is undesirable, check :mod:`Modifying Traffic Director
+Service Properties` below for an example and explanation
 
 Get All DSFResponsePool
 ^^^^^^^^^^^^^^^^^^
@@ -493,8 +493,8 @@ To Delete your :class:`DSFRuleset`:
 
     >>> ruleset.delete()
 
-This will NOT delete child records, however any child response pools and childre that are not in other :class:`DSFRuleset`s
-may not be displayed in the :class:`TrafficDirector` object as it builds its trees from the Rulesets. see `Traffic Director SDK Caveats`
+This will NOT delete child records, however any child response pools and children that are not in other :class:`DSFRuleset`s
+may not be displayed in the :class:`TrafficDirector` object as it builds its trees from the Rulesets. see :mod:`Traffic Director SDK Caveats`
 
 
 DSFMonitor
@@ -635,7 +635,7 @@ The following shows the creation of the very most basic empty :class:`TrafficDir
 Adding a Ruleset to your Traffic Director Service
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The TrafficDirector service has a cascading style of adding sub objects where the child object
-is added to the parent by either and `add_to_` function, or a create. This helps enforce
+is added to the parent by either and :mod:`add_to_` function, or a create. This helps enforce
 that children objects do not become orphaned.
 
    >>> #Continuing from the example above.
@@ -678,7 +678,7 @@ Note, that modifying these values will immediately publish them. This can be tur
 
     >>> #Now, say you don't want your update changes to be implicitly published. you can turn off implicit publishing for
     >>> #the service level changes.
-    >>> #!!!WARNING!!!! changing the implict publish flag ONLY disables implicit publishing for this Object,
+    >>> #!!!WARNING!!!! changing the implicit publish flag ONLY disables implicit publishing for this Object,
     >>> #not any of its children objects like Rulesets etc.
     >>>
     >>> td.label
@@ -831,25 +831,30 @@ Traffic Director SDK Caveats
 *  Creating a fully populated service with prototypes leaves the prototypes unusable.
    CRUD capabilities can only be achieved   by accessing data within the
    :class:`TrafficDirector` object.
-   Accessors are :param:`records`, :mod:`record_sets`, `failover_chains`, `response_pools`, `rulesets`
+   Accessors are :mod:`records`, :mod:`record_sets`, :mod:`failover_chains`, :mod:`response_pools`, :mod:`rulesets`
+
 
 *  Accessors like in the previous bullet point only work if the object is fully linked to the service.
    In other words, you can have a full response_pool, but if it does not belong to a ruleset, then it will
    not show up.
-   To list all objects under the service, including orphands you must use `all_records`, `all_record_sets`,
-   `all_failover_chains`, `all_response_pools`, `all_rulesets`
+   To list all objects under the service, including orphands you must use :mod:`all_records`, :mod:`all_record_sets`,
+   :mod:`all_failover_chains`, :mod:`all_response_pools`, :mod:`all_rulesets`
 
-*  Some `records`, `record_sets`, `failover_chains`, `response_pools`, `rulesets` will appear multiple times.
-   This is becasue these record trees are built from the ruleset, and if one response pool belongs to multiple
+
+*  Some :mod:`records`, :mod:`record_sets`, :mod:`failover_chains`, :mod:`response_pools`, :mod:`rulesets` will appear multiple times.
+   This is because these record trees are built from the ruleset, and if one response pool belongs to multiple
    Rulesets, then its children will appear as many times as is exists as a ruleset member.
 
-*  :param:`refresh()` is your friend. When modifying child objects from a parent sometimes the parent doesn't know about
-   the changes. If you do a refresh() on the :class:`TrafficDirector` object it will pull down the latest data
+
+*  :mod:`refresh()` is your friend. When modifying child objects from a parent sometimes the parent doesn't know about
+   the changes. If you do a :mod:`refresh()` on the :class:`TrafficDirector` object it will pull down the latest data
    from the Dynect System.
 
-*  :param:`publish()` is run on the :class:`TrafficDirector` as a whole, even when run from a child object.
 
-*  :param:`implicitPublish` is non cascading. It is locally bound to the specific object, or child object.
+*  :mod:`publish()` is run on the :class:`TrafficDirector` as a whole, even when run from a child object.
+
+
+*  :mod:`implicitPublish` is non cascading. It is locally bound to the specific object, or child object.
 
 
 

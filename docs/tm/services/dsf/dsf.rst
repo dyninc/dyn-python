@@ -126,6 +126,15 @@ To change the record IP address of the record we just created, we can use one of
 Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
 Service Properties` below for an example and explaination
 
+Get All DSF__Record
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFRecord`: from a certain :class:`TrafficDirector`:
+
+    >>> from dyn.tm.services.dsf import get_all_records
+    >>> #Pass in a :class:`TrafficDirector`: instance to the following call:
+    >>> get_all_records(td)
+
+
 Delete DSF__Record
 ^^^^^^^^^^^^^^^^^^
 To Delete your :class:`DSFRecord`:
@@ -207,6 +216,14 @@ New :class:`DSFRecordset`:
     >>> record_set = DSFRecordSet('A', label='Record_set_test', ttl=60, dsf_monitor_id=monitor.dsf_monitor_id)
     >>> record_set.add_to_failover_chain(failover_chain) #create record_set
 
+Get All DSFRecordSet
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFRecordSet`: from a certain :class:`TrafficDirector`:
+
+    >>> from dyn.tm.services.dsf import get_all_record_sets
+    >>> #Pass in a :class:`TrafficDirector`: instance to the following call:
+    >>> get_all_record_sets(td)
+
 
 Delete DSFRecordSet
 ^^^^^^^^^^^^^^^^^^
@@ -270,6 +287,14 @@ To change the label for the above :class:`DSFFailoverChain`:
 
 Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
 Service Properties` below for an example and explaination
+
+Get All DSFFailoverChain
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFFailoverChain`: from a certain :class:`TrafficDirector`:
+
+    >>> from dyn.tm.services.dsf import get_all_failover_chains
+    >>> #Pass in a :class:`DSFFailoverChain`: instance to the following call:
+    >>> get_all_failover_chains(td)
 
 
 Delete DSFFailoverChain
@@ -337,6 +362,13 @@ To change the label for the above :class:`DSFResponsePool`:
 Implicit publishing can be turned off for any object if that is undesirable, check `Modifying Traffic Director
 Service Properties` below for an example and explaination
 
+Get All DSFResponsePool
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFResponsePool`: from a certain :class:`TrafficDirector`:
+
+    >>> from dyn.tm.services.dsf import get_all_response_pools
+    >>> #Pass in a :class:`DSFResponsePool`: instance to the following call:
+    >>> get_all_response_pools(td)
 
 Delete DSFResponsePool
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -446,6 +478,14 @@ To change the label for the above :class:`DSFRuleset`:
     >>> ruleset.label
     >>>'New Name'
 
+Get All DSFRuleset
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFRuleset`: from a certain :class:`TrafficDirector`:
+
+    >>> from dyn.tm.services.dsf import get_all_rulesets
+    >>> #Pass in a :class:`DSFRuleset`: instance to the following call:
+    >>> get_all_rulesets(td)
+
 
 Delete DSFRuleset
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -492,6 +532,14 @@ To change the label for the above :class:`DSFRuleset`:
 Add To DSFMonitor to DSFRecordSet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 See :class:`DSFRecordSet` example.
+
+Get All DSFMonitor
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFMonitor`:
+
+    >>> from dyn.tm.services.dsf import get_all_dsf_monitors
+    >>> #Not a child class, monitors are their own entity, so no need to pass in a :class:`TrafficDirector`:
+    >>> get_all_dsf_monitors()
 
 
 Delete DSFMonitor
@@ -540,6 +588,14 @@ To change the label for the above :class:`DSFRuleset`:
     >>> #Check to see if it really changed.
     >>> notifier.label
     >>>'NewNotifierName'
+
+Get All DSFNotifier
+^^^^^^^^^^^^^^^^^^
+To get all :class:`DSFNotifier`:
+
+    >>> from dyn.tm.services.dsf import get_all_dsf_notifiers
+    >>> #Not a child class, notifiers are their own entity, so no need to pass in a :class:`TrafficDirector`:
+    >>> get_all_dsf_notifiers()
 
 Delete DSFNotifier
 ^^^^^^^^^^^^^^^^^

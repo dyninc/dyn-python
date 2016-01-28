@@ -129,7 +129,7 @@ def get_all_dsf_monitors():
 def _checkType(service):
     if isinstance(service, TrafficDirector):
         _service_id = service.service_id
-    elif type(service) is str:
+    elif type(service) is str or type(service) is unicode:
         _service_id = service
     else:
         raise Exception('Value must be string, or TrafficDirector Object')
@@ -309,7 +309,7 @@ class _DSFRecord(object):
         if isinstance(record_set, DSFRecordSet):
             _record_set_id = record_set._dsf_record_set_id
             _service_id = record_set._service_id
-        elif type(record_set) is str:
+        elif type(record_set) is str or type(record_set) is unicode:
             if service is None:
                 raise Exception('When record_set as a string, you must provide the service_id as service=')
             _record_set_id = record_set
@@ -1549,7 +1549,7 @@ class DSFRecordSet(object):
         if isinstance(failover_chain, DSFFailoverChain):
             _dsf_record_set_failover_chain_id = failover_chain._dsf_record_set_failover_chain_id
             _service_id = failover_chain._service_id
-        elif type(failover_chain) is str:
+        elif type(failover_chain) is str or type(failover_chain) is unicode:
             if service is None:
                 raise Exception('If passing failover_chain as a string, you must provide the service_id as service=')
             _dsf_record_set_failover_chain_id = failover_chain
@@ -1715,7 +1715,7 @@ class DSFRecordSet(object):
         """
         if isinstance(monitor, DSFMonitor):
             _monitor_id = monitor._dsf_monitor_id
-        elif type(monitor) is str:
+        elif type(monitor) is str or type(monitor) is unicode:
             _monitor_id = monitor
         else:
             raise Exception('Could not make sense of Monitor Type')
@@ -1919,7 +1919,7 @@ class DSFFailoverChain(object):
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
             _service_id = response_pool._service_id
-        elif type(response_pool) is str:
+        elif type(response_pool) is str or type(response_pool) is unicode:
             if service is None:
                 raise Exception('If passing response_pool as a string, you must provide the service_id as service=')
             _response_pool_id = response_pool
@@ -2397,7 +2397,7 @@ class DSFRuleset(object):
         """
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
-        elif type(response_pool) is str:
+        elif type(response_pool) is str or type(response_pool) is unicode:
             _response_pool_id = response_pool
         else:
             raise Exception('Could not make sense of Response Pool Type')
@@ -2426,7 +2426,7 @@ class DSFRuleset(object):
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
             _service_id = response_pool._service_id
-        elif type(response_pool) is str:
+        elif type(response_pool) is str or type(response_pool) is unicode:
             _response_pool_id = response_pool
         else:
             raise Exception('Could not make sense of Response Pool Type')
@@ -2471,7 +2471,7 @@ class DSFRuleset(object):
         for list_item in pool_list:
             if isinstance(list_item, DSFResponsePool):
                 _pool_list.append(list_item._dsf_response_pool_id)
-            elif type(list_item) is str:
+            elif type(list_item) is str or type(list_item) is unicode:
                 _pool_list.append(list_item)
         api_args = dict()
         api_args['response_pools'] = list()

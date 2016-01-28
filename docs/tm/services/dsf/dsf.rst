@@ -804,7 +804,7 @@ dyn.tm System and how to edit some of the fields using the returned
     >>> #Now, lets create a Node object. This is used for attaching the service to a Node (or zone)
     >>> node = Node('example.com',fqdn = 'example.com.')
     >>>
-    >>> Finally, we pass all of this in. upon command execution the service will have been created.
+    >>> #Finally, we pass all of this in. upon command execution the service will have been created.
     >>>
     >>> dsf = TrafficDirector('Test_Service', rulesets=[ruleset], nodes=[node], notifiers=[notifier])
 
@@ -831,7 +831,7 @@ Traffic Director SDK Caveats
 *  Creating a fully populated service with prototypes leaves the prototypes unusable.
    CRUD capabilities can only be achieved   by accessing data within the
    :class:`TrafficDirector` object.
-   Accessors are `records`, `record_sets`, `failover_chains`, `response_pools`, `rulesets`
+   Accessors are :param:`records`, :mod:`record_sets`, `failover_chains`, `response_pools`, `rulesets`
 
 *  Accessors like in the previous bullet point only work if the object is fully linked to the service.
    In other words, you can have a full response_pool, but if it does not belong to a ruleset, then it will
@@ -843,13 +843,13 @@ Traffic Director SDK Caveats
    This is becasue these record trees are built from the ruleset, and if one response pool belongs to multiple
    Rulesets, then its children will appear as many times as is exists as a ruleset member.
 
-*  :param refresh(): is your friend. When modifying child objects from a parent sometimes the parent doesn't know about
+*  :param:`refresh()` is your friend. When modifying child objects from a parent sometimes the parent doesn't know about
    the changes. If you do a refresh() on the :class:`TrafficDirector` object it will pull down the latest data
    from the Dynect System.
 
-*  :param publish(): is run on the :class:`TrafficDirector` as a whole, even when run from a child object.
+*  :param:`publish()` is run on the :class:`TrafficDirector` as a whole, even when run from a child object.
 
-*  :param implicitPublish: is non cascading. It is locally bound to the specific object, or child object.
+*  :param:`implicitPublish` is non cascading. It is locally bound to the specific object, or child object.
 
 
 

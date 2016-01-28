@@ -269,7 +269,18 @@ class _DSFRecord(object):
         """
         for key, val in data.items():
             if key == 'rdata':
-                pass
+                for rdata in val:
+                    blah = type(rdata)
+                    if isinstance(rdata, dict):
+                        for rdatas, rdata_data in rdata.items():
+                            #necessary due to unicode!
+                            try:
+                                for rdata_type, data_value in rdata_data.items():
+                                    if rdata_type == 'rdata_{}'.format(self._rdata_class.lower()):
+                                        for attribute, attrib_value in data_value.items():
+                                            setattr(self, '_' + attribute, attrib_value)
+                            except:
+                                pass
             else:
                 setattr(self, '_' + key, val)
 
@@ -334,7 +345,8 @@ class _DSFRecord(object):
     def label(self, value):
         api_args = {'label': value}
         self._update(api_args)
-        self._label = value
+        if self._implicitPublish:
+            self._label = value
 
     @property
     def weight(self):
@@ -344,7 +356,8 @@ class _DSFRecord(object):
     def weight(self, value):
         api_args = {'weight': value}
         self._update(api_args)
-        self._weight = value
+        if self._implicitPublish:
+            self._weight = value
 
     @property
     def automation(self):
@@ -356,7 +369,8 @@ class _DSFRecord(object):
     def automation(self, value):
         api_args = {'automation': value}
         self._update(api_args)
-        self._automation = value
+        if self._implicitPublish:
+            self._automation = value
 
     @property
     def endpoints(self):
@@ -368,7 +382,8 @@ class _DSFRecord(object):
     def endpoints(self, value):
         api_args = {'endpoints': value}
         self._update(api_args)
-        self._endpoints = value
+        if self._implicitPublish:
+            self._endpoints = value
 
     @property
     def endpoint_up_count(self):
@@ -376,24 +391,22 @@ class _DSFRecord(object):
         """
         return self._endpoint_up_count
     @endpoint_up_count.setter
-    def endpoint_up_count(self, value, publish = True):
+    def endpoint_up_count(self, value):
         api_args = {'endpoint_up_count': value}
-        if publish:
-            api_args['publish'] = 'Y'
         self._update(api_args)
-        self._endpoint_up_count = value
+        if self._implicitPublish:
+            self._endpoint_up_count = value
 
     @property
     def eligible(self):
         """Indicates whether or not the Record can be served"""
         return self._eligible
     @eligible.setter
-    def eligible(self, value, publish = True):
+    def eligible(self, value):
         api_args = {'eligible': value}
-        if publish:
-            api_args['publish'] = 'Y'
         self._update(api_args)
-        self._eligible = value
+        if self._implicitPublish:
+            self._eligible = value
 
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this DSFRecord to a json blob"""
@@ -1577,15 +1590,13 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._label = value
+        if self._implicitPublish:
+            self._label = value
 
     @property
     def rdata_class(self):
         """The rdata property is a read-only attribute"""
         return self._rdata_class
-    @rdata_class.setter
-    def rdata_class(self, value):
-        pass
 
     @property
     def ttl(self):
@@ -1600,7 +1611,8 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._ttl = value
+        if self._implicitPublish:
+            self._ttl = value
 
     @property
     def automation(self):
@@ -1614,7 +1626,8 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._automation = value
+        if self._implicitPublish:
+            self._automation = value
 
     @property
     def serve_count(self):
@@ -1628,7 +1641,8 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._serve_count = value
+        if self._implicitPublish:
+            self._serve_count = value
 
     @property
     def fail_count(self):
@@ -1645,7 +1659,8 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._fail_count = value
+        if self._implicitPublish:
+            self._fail_count = value
 
     @property
     def trouble_count(self):
@@ -1661,7 +1676,8 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._trouble_count = value
+        if self._implicitPublish:
+            self._trouble_count = value
 
     @property
     def eligible(self):
@@ -1675,7 +1691,8 @@ class DSFRecordSet(object):
         else:
             api_args['rdata'] = self._rdata
         self._update(api_args)
-        self._eligible = value
+        if self._implicitPublish:
+            self._eligible = value
 
     @property
     def dsf_monitor_id(self):
@@ -1689,7 +1706,8 @@ class DSFRecordSet(object):
         """allows you to manually set the monitor_id, Legacy function for backward compatability"""
         api_args = {'dsf_monitor_id': value}
         self._update(api_args)
-        self._dsf_monitor_id = value
+        if self._implicitPublish:
+            self._dsf_monitor_id = value
 
     def set_monitor(self, monitor):
         """ For attaching a :class:`DSFMonitor` to this record_set
@@ -1924,7 +1942,8 @@ class DSFFailoverChain(object):
     def label(self, value):
         api_args = {'label': value}
         self._update(api_args)
-        self._label = value
+        if self._implicitPublish:
+            self._label = value
 
     @property
     def core(self):
@@ -1936,7 +1955,8 @@ class DSFFailoverChain(object):
     def core(self, value):
         api_args = {'core': value}
         self._update(api_args)
-        self._core = value
+        if self._implicitPublish:
+            self._core = value
 
     @property
     def record_sets(self):
@@ -2147,7 +2167,8 @@ class DSFResponsePool(object):
     def label(self, value):
         api_args = {'label': value}
         self._update(api_args)
-        self._label = value
+        if self._implicitPublish:
+            self._label = value
 
     @property
     def core_set_count(self):
@@ -2159,7 +2180,8 @@ class DSFResponsePool(object):
     def core_set_count(self, value):
         api_args = {'core_set_count': value}
         self._update(api_args)
-        self._core_set_count = value
+        if self._implicitPublish:
+            self._core_set_count = value
 
     @property
     def eligible(self):
@@ -2170,7 +2192,8 @@ class DSFResponsePool(object):
     def eligible(self, value):
         api_args = {'eligible': value}
         self._update(api_args)
-        self._eligible = value
+        if self._implicitPublish:
+            self._eligible = value
 
     @property
     def automation(self):
@@ -2180,7 +2203,8 @@ class DSFResponsePool(object):
     def automation(self, value):
         api_args = {'automation': value}
         self._update(api_args)
-        self._automation = value
+        if self._implicitPublish:
+            self._automation = value
 
     @property
     def ruleset_ids(self):
@@ -2207,6 +2231,14 @@ class DSFResponsePool(object):
     def failover_chains(self):
         """A ``list`` of :class:`DSFFailoverChain` that are defined for this
         :class:`DSFResponsePool`
+        """
+        return self._rs_chains
+
+
+    @property
+    def rs_chains(self):
+        """A ``list`` of :class:`DSFFailoverChain` that are defined for this
+        :class:`DSFResponsePool` (legacy call)
         """
         return self._rs_chains
 
@@ -2480,7 +2512,8 @@ class DSFRuleset(object):
     def label(self, value):
         api_args = {'label': value}
         self._update(api_args)
-        self._label = value
+        if self._implicitPublish:
+            self._label = value
 
     @property
     def criteria_type(self):
@@ -2492,7 +2525,8 @@ class DSFRuleset(object):
     def criteria_type(self, value):
         api_args = {'criteria_type': value}
         self._update(api_args)
-        self._criteria_type = value
+        if self._implicitPublish:
+            self._criteria_type = value
 
     @property
     def criteria(self):
@@ -2504,7 +2538,8 @@ class DSFRuleset(object):
     def criteria(self, value):
         api_args = {'criteria': value}
         self._update(api_args)
-        self._criteria = value
+        if self._implicitPublish:
+            self._criteria = value
 
     @property
     def response_pools(self):
@@ -2744,6 +2779,7 @@ class DSFMonitor(object):
 
     def _update(self, api_args):
         """Private Update method"""
+        self.uri = '/DSFMonitor/{}/'.format(self._dsf_monitor_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -2872,6 +2908,7 @@ class DSFMonitor(object):
     def delete(self):
         """Delete an existing :class:`DSFMonitor` from the DynECT System"""
         api_args = {}
+        self.uri = '/DSFMonitor/{}/'.format(self._dsf_monitor_id)
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 class DSFNotifier(object):
@@ -2924,10 +2961,6 @@ class DSFNotifier(object):
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self.uri = '/Notifier/{}/'.format(response['data']['notifier_id'])
         self._build(response['data'])
-
-
-
-
 
     def _get(self, notifier_id):
         self._notifier_id = notifier_id
@@ -3133,6 +3166,7 @@ class TrafficDirector(object):
         """Private update method"""
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        self.uri = '/DSF/{}/'.format(self._service_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
@@ -3383,7 +3417,8 @@ class TrafficDirector(object):
     def label(self, value):
         api_args = {'label': value}
         self._update(api_args)
-        self._label = value
+        if self._implicitPublish:
+            self._label = value
 
     @property
     def ttl(self):
@@ -3395,7 +3430,8 @@ class TrafficDirector(object):
     def ttl(self, value):
         api_args = {'ttl': value}
         self._update(api_args)
-        self._ttl = value
+        if self._implicitPublish:
+            self._ttl = value
 
     @property
     def implicitPublish(self):
@@ -3411,6 +3447,7 @@ class TrafficDirector(object):
     def delete(self):
         """Delete this :class:`TrafficDirector` from the DynECT System"""
         api_args = {}
+        self.uri = '/DSF/{}/'.format(self._service_id)
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
     def __str__(self):

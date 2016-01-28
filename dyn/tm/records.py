@@ -32,6 +32,7 @@ class DNSRecord(object):
         self._record_id = None
         self.create = create
         self.api_args = {'rdata': {}}
+        self._implicitPublish = True
 
     def _create_record(self, api_args):
         """Make the API call to create the current record type
@@ -96,7 +97,7 @@ class DNSRecord(object):
         rdata = {}
         for key, val in self.__dict__.items():
             if key.startswith('_') and not hasattr(val, '__call__') \
-                    and key != '_record_type' and key != '_record_id':
+                    and key != '_record_type' and key != '_record_id' and key != '_implicitPublish':
                 if 'ttl' not in key and 'zone' not in key and 'fqdn' not in key:
                     rdata[key[1:]] = val
         return rdata
@@ -234,7 +235,8 @@ class ARecord(DNSRecord):
             self.api_args['rdata'] = {}
         self.api_args['rdata']['address'] = value
         self._update_record(self.api_args)
-        self._address = value
+        if self._implicitPublish:
+            self._address = value
 
     def __str__(self):
         """str override"""
@@ -301,7 +303,8 @@ class AAAARecord(DNSRecord):
         """Set the value of this record's address property"""
         self.api_args['rdata']['address'] = value
         self._update_record(self.api_args)
-        self._address = value
+        if self._implicitPublish:
+            self._address = value
 
     def __str__(self):
         """str override"""
@@ -366,7 +369,8 @@ class ALIASRecord(DNSRecord):
     def alias(self, value):
         self.api_args['rdata']['alias'] = value
         self._update_record(self.api_args)
-        self._alias = value
+        if self._implicitPublish:
+            self._alias = value
 
     def __eq__(self, other):
         """Equivalence override"""
@@ -460,7 +464,8 @@ class CDNSKEYRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def flags(self):
@@ -472,7 +477,8 @@ class CDNSKEYRecord(DNSRecord):
     def flags(self, value):
         self.api_args['rdata']['flags'] = value
         self._update_record(self.api_args)
-        self._flags = value
+        if self._implicitPublish:
+            self._flags = value
 
     @property
     def protocol(self):
@@ -484,7 +490,8 @@ class CDNSKEYRecord(DNSRecord):
     def protocol(self, value):
         self.api_args['rdata']['protocol'] = value
         self._update_record(self.api_args)
-        self._protocol = value
+        if self._implicitPublish:
+            self._protocol = value
 
     @property
     def public_key(self):
@@ -496,7 +503,8 @@ class CDNSKEYRecord(DNSRecord):
     def public_key(self, value):
         self.api_args['rdata']['public_key'] = value
         self._update_record(self.api_args)
-        self._public_key = value
+        if self._implicitPublish:
+            self._public_key = value
 
     def __str__(self):
         """str override"""
@@ -582,7 +590,8 @@ class CDSRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def digest(self):
@@ -596,7 +605,8 @@ class CDSRecord(DNSRecord):
     def digest(self, value):
         self.api_args['rdata']['digest'] = value
         self._update_record(self.api_args)
-        self._digest = value
+        if self._implicitPublish:
+            self._digest = value
 
     @property
     def digtype(self):
@@ -608,7 +618,8 @@ class CDSRecord(DNSRecord):
     def digtype(self, value):
         self.api_args['rdata']['digtype'] = value
         self._update_record(self.api_args)
-        self._digtype = value
+        if self._implicitPublish:
+            self._digtype = value
 
     @property
     def keytag(self):
@@ -620,7 +631,8 @@ class CDSRecord(DNSRecord):
     def keytag(self, value):
         self.api_args['rdata']['keytag'] = value
         self._update_record(self.api_args)
-        self._keytag = value
+        if self._implicitPublish:
+            self._keytag = value
 
     def __str__(self):
         """str override"""
@@ -698,7 +710,8 @@ class CERTRecord(DNSRecord):
     def format(self, value):
         self.api_args['rdata']['format'] = value
         self._update_record(self.api_args)
-        self._format = value
+        if self._implicitPublish:
+            self._format = value
 
     @property
     def tag(self):
@@ -710,7 +723,8 @@ class CERTRecord(DNSRecord):
     def tag(self, value):
         self.api_args['rdata']['tag'] = value
         self._update_record(self.api_args)
-        self._tag = value
+        if self._implicitPublish:
+            self._tag = value
 
     @property
     def algorithm(self):
@@ -722,7 +736,8 @@ class CERTRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def certificate(self):
@@ -734,7 +749,8 @@ class CERTRecord(DNSRecord):
     def certificate(self, value):
         self.api_args['rdata']['certificate'] = value
         self._update_record(self.api_args)
-        self._certificate = value
+        if self._implicitPublish:
+            self._certificate = value
 
     def __str__(self):
         """str override"""
@@ -799,7 +815,8 @@ class CNAMERecord(DNSRecord):
     def cname(self, value):
         self.api_args['rdata']['cname'] = value
         self._update_record(self.api_args)
-        self._cname = value
+        if self._implicitPublish:
+            self._cname = value
 
     def __eq__(self, other):
         """Equivalence override"""
@@ -902,7 +919,8 @@ class CSYNCRecord(DNSRecord):
     def soa_serial(self, value):
         self.api_args['rdata']['soa_serial'] = value
         self._update_record(self.api_args)
-        self._soa_serial = value
+        if self._implicitPublish:
+            self._soa_serial = value
         self._format()
 
     @property
@@ -916,7 +934,8 @@ class CSYNCRecord(DNSRecord):
     def flags(self, value):
         self.api_args['rdata']['flags'] = ','.join(value)
         self._update_record(self.api_args)
-        self._flags = value
+        if self._implicitPublish:
+            self._flags = value
         self._format()
 
     @property
@@ -929,7 +948,8 @@ class CSYNCRecord(DNSRecord):
     def rectypes(self, value):
         self.api_args['rdata']['types'] = ','.join(value)
         self._update_record(self.api_args)
-        self._rectypes = value
+        if self._implicitPublish:
+            self._rectypes = value
         self._format()
 
 class DHCIDRecord(DNSRecord):
@@ -993,7 +1013,8 @@ class DHCIDRecord(DNSRecord):
     def digest(self, value):
         self.api_args['rdata']['digest'] = value
         self._update_record(self.api_args)
-        self._digest = value
+        if self._implicitPublish:
+            self._digest = value
 
     def __str__(self):
         """str override"""
@@ -1064,7 +1085,8 @@ class DNAMERecord(DNSRecord):
     def dname(self, value):
         self.api_args['rdata']['dname'] = value
         self._update_record(self.api_args)
-        self._dname = value
+        if self._implicitPublish:
+            self._dname = value
 
     def __str__(self):
         """str override"""
@@ -1152,7 +1174,8 @@ class DNSKEYRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def flags(self):
@@ -1164,7 +1187,8 @@ class DNSKEYRecord(DNSRecord):
     def flags(self, value):
         self.api_args['rdata']['flags'] = value
         self._update_record(self.api_args)
-        self._flags = value
+        if self._implicitPublish:
+            self._flags = value
 
     @property
     def protocol(self):
@@ -1176,7 +1200,8 @@ class DNSKEYRecord(DNSRecord):
     def protocol(self, value):
         self.api_args['rdata']['protocol'] = value
         self._update_record(self.api_args)
-        self._protocol = value
+        if self._implicitPublish:
+            self._protocol = value
 
     @property
     def public_key(self):
@@ -1188,7 +1213,8 @@ class DNSKEYRecord(DNSRecord):
     def public_key(self, value):
         self.api_args['rdata']['public_key'] = value
         self._update_record(self.api_args)
-        self._public_key = value
+        if self._implicitPublish:
+            self._public_key = value
 
     def __str__(self):
         """str override"""
@@ -1274,7 +1300,8 @@ class DSRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def digest(self):
@@ -1288,7 +1315,8 @@ class DSRecord(DNSRecord):
     def digest(self, value):
         self.api_args['rdata']['digest'] = value
         self._update_record(self.api_args)
-        self._digest = value
+        if self._implicitPublish:
+            self._digest = value
 
     @property
     def digtype(self):
@@ -1300,7 +1328,8 @@ class DSRecord(DNSRecord):
     def digtype(self, value):
         self.api_args['rdata']['digtype'] = value
         self._update_record(self.api_args)
-        self._digtype = value
+        if self._implicitPublish:
+            self._digtype = value
 
     @property
     def keytag(self):
@@ -1312,7 +1341,8 @@ class DSRecord(DNSRecord):
     def keytag(self, value):
         self.api_args['rdata']['keytag'] = value
         self._update_record(self.api_args)
-        self._keytag = value
+        if self._implicitPublish:
+            self._keytag = value
 
     def __str__(self):
         """str override"""
@@ -1402,7 +1432,8 @@ class KEYRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def flags(self):
@@ -1414,7 +1445,8 @@ class KEYRecord(DNSRecord):
     def flags(self, value):
         self.api_args['rdata']['flags'] = value
         self._update_record(self.api_args)
-        self._flags = value
+        if self._implicitPublish:
+            self._flags = value
 
     @property
     def protocol(self):
@@ -1426,7 +1458,8 @@ class KEYRecord(DNSRecord):
     def protocol(self, value):
         self.api_args['rdata']['protocol'] = value
         self._update_record(self.api_args)
-        self._protocol = value
+        if self._implicitPublish:
+            self._protocol = value
 
     @property
     def public_key(self):
@@ -1438,7 +1471,8 @@ class KEYRecord(DNSRecord):
     def public_key(self, value):
         self.api_args['rdata']['public_key'] = value
         self._update_record(self.api_args)
-        self._public_key = value
+        if self._implicitPublish:
+            self._public_key = value
 
     def __str__(self):
         """str override"""
@@ -1516,7 +1550,8 @@ class KXRecord(DNSRecord):
     def exchange(self, value):
         self.api_args['rdata']['exchange'] = value
         self._update_record(self.api_args)
-        self._exchange = value
+        if self._implicitPublish:
+            self._exchange = value
 
     @property
     def preference(self):
@@ -1530,7 +1565,8 @@ class KXRecord(DNSRecord):
     def preference(self, value):
         self.api_args['rdata']['preference'] = value
         self._update_record(self.api_args)
-        self._preference = value
+        if self._implicitPublish:
+            self._preference = value
 
     def __str__(self):
         """str override"""
@@ -1623,7 +1659,8 @@ class LOCRecord(DNSRecord):
     def altitude(self, value):
         self.api_args['rdata']['altitude'] = value
         self._update_record(self.api_args)
-        self._altitude = value
+        if self._implicitPublish:
+            self._altitude = value
 
     @property
     def latitude(self):
@@ -1638,7 +1675,8 @@ class LOCRecord(DNSRecord):
     def latitude(self, value):
         self.api_args['rdata']['latitude'] = value
         self._update_record(self.api_args)
-        self._latitude = value
+        if self._implicitPublish:
+            self._latitude = value
 
     @property
     def longitude(self):
@@ -1653,7 +1691,8 @@ class LOCRecord(DNSRecord):
     def longitude(self, value):
         self.api_args['rdata']['longitude'] = value
         self._update_record(self.api_args)
-        self._longitude = value
+        if self._implicitPublish:
+            self._longitude = value
 
     @property
     def horiz_pre(self):
@@ -1665,7 +1704,8 @@ class LOCRecord(DNSRecord):
     def horiz_pre(self, value):
         self.api_args['rdata']['horiz_pre'] = value
         self._update_record(self.api_args)
-        self._horiz_pre = value
+        if self._implicitPublish:
+            self._horiz_pre = value
 
     @property
     def size(self):
@@ -1677,7 +1717,8 @@ class LOCRecord(DNSRecord):
     def size(self, value):
         self.api_args['rdata']['size'] = value
         self._update_record(self.api_args)
-        self._size = value
+        if self._implicitPublish:
+            self._size = value
 
     @property
     def vert_pre(self):
@@ -1688,7 +1729,8 @@ class LOCRecord(DNSRecord):
     def vert_pre(self, value):
         self.api_args['rdata']['vert_pre'] = value
         self._update_record(self.api_args)
-        self._vert_pre = value
+        if self._implicitPublish:
+            self._vert_pre = value
 
     @property
     def version(self):
@@ -1794,7 +1836,8 @@ class IPSECKEYRecord(DNSRecord):
     def precedence(self, value):
         self.api_args['rdata']['precedence'] = value
         self._update_record(self.api_args)
-        self._precedence = value
+        if self._implicitPublish:
+            self._precedence = value
 
     @property
     def gatetype(self):
@@ -1806,7 +1849,8 @@ class IPSECKEYRecord(DNSRecord):
     def gatetype(self, value):
         self.api_args['rdata']['gatetype'] = value
         self._update_record(self.api_args)
-        self._gatetype = value
+        if self._implicitPublish:
+            self._gatetype = value
 
     @property
     def algorithm(self):
@@ -1818,7 +1862,8 @@ class IPSECKEYRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def gateway(self):
@@ -1830,7 +1875,8 @@ class IPSECKEYRecord(DNSRecord):
     def gateway(self, value):
         self.api_args['rdata']['gateway'] = value
         self._update_record(self.api_args)
-        self._gateway = value
+        if self._implicitPublish:
+            self._gateway = value
 
     @property
     def public_key(self):
@@ -1842,7 +1888,8 @@ class IPSECKEYRecord(DNSRecord):
     def public_key(self, value):
         self.api_args['rdata']['public_key'] = value
         self._update_record(self.api_args)
-        self._public_key = value
+        if self._implicitPublish:
+            self._public_key = value
 
     def __str__(self):
         """str override"""
@@ -1916,7 +1963,8 @@ class MXRecord(DNSRecord):
     def exchange(self, value):
         self.api_args['rdata']['exchange'] = value
         self._update_record(self.api_args)
-        self._exchange = value
+        if self._implicitPublish:
+            self._exchange = value
 
     @property
     def preference(self):
@@ -1930,7 +1978,8 @@ class MXRecord(DNSRecord):
     def preference(self, value):
         self.api_args['rdata']['preference'] = value
         self._update_record(self.api_args)
-        self._preference = value
+        if self._implicitPublish:
+            self._preference = value
 
     def __str__(self):
         """str override"""
@@ -2026,7 +2075,8 @@ class NAPTRRecord(DNSRecord):
     def order(self, value):
         self.api_args['rdata']['order'] = value
         self._update_record(self.api_args)
-        self._order = value
+        if self._implicitPublish:
+            self._order = value
 
     @property
     def preference(self):
@@ -2040,7 +2090,8 @@ class NAPTRRecord(DNSRecord):
     def preference(self, value):
         self.api_args['rdata']['preference'] = value
         self._update_record(self.api_args)
-        self._preference = value
+        if self._implicitPublish:
+            self._preference = value
 
     @property
     def flags(self):
@@ -2054,7 +2105,8 @@ class NAPTRRecord(DNSRecord):
     def flags(self, value):
         self.api_args['rdata']['flags'] = value
         self._update_record(self.api_args)
-        self._flags = value
+        if self._implicitPublish:
+            self._flags = value
 
     @property
     def services(self):
@@ -2069,7 +2121,8 @@ class NAPTRRecord(DNSRecord):
     def services(self, value):
         self.api_args['rdata']['services'] = value
         self._update_record(self.api_args)
-        self._services = value
+        if self._implicitPublish:
+            self._services = value
 
     @property
     def regexp(self):
@@ -2081,7 +2134,8 @@ class NAPTRRecord(DNSRecord):
     def regexp(self, value):
         self.api_args['rdata']['regexp'] = value
         self._update_record(self.api_args)
-        self._regexp = value
+        if self._implicitPublish:
+            self._regexp = value
 
     @property
     def replacement(self):
@@ -2095,7 +2149,8 @@ class NAPTRRecord(DNSRecord):
     def replacement(self, value):
         self.api_args['rdata']['replacement'] = value
         self._update_record(self.api_args)
-        self._replacement = value
+        if self._implicitPublish:
+            self._replacement = value
 
     def __str__(self):
         """str override"""
@@ -2161,7 +2216,8 @@ class PTRRecord(DNSRecord):
     def ptrdname(self, value):
         self.api_args['rdata']['ptrdname'] = value
         self._update_record(self.api_args)
-        self._ptrdname = value
+        if self._implicitPublish:
+            self._ptrdname = value
 
     def __str__(self):
         """str override"""
@@ -2238,7 +2294,8 @@ class PXRecord(DNSRecord):
     def preference(self, value):
         self.api_args['rdata']['preference'] = value
         self._update_record(self.api_args)
-        self._preference = value
+        if self._implicitPublish:
+            self._preference = value
 
     @property
     def map822(self):
@@ -2250,7 +2307,8 @@ class PXRecord(DNSRecord):
     def map822(self, value):
         self.api_args['rdata']['map822'] = value
         self._update_record(self.api_args)
-        self._map822 = value
+        if self._implicitPublish:
+            self._map822 = value
 
     @property
     def mapx400(self):
@@ -2262,7 +2320,8 @@ class PXRecord(DNSRecord):
     def mapx400(self, value):
         self.api_args['rdata']['mapx400'] = value
         self._update_record(self.api_args)
-        self._mapx400 = value
+        if self._implicitPublish:
+            self._mapx400 = value
 
     def __str__(self):
         """str override"""
@@ -2330,7 +2389,8 @@ class NSAPRecord(DNSRecord):
     def nsap(self, value):
         self.api_args['rdata']['nsap'] = value
         self._update_record(self.api_args)
-        self._nsap = value
+        if self._implicitPublish:
+            self._nsap = value
 
     def __str__(self):
         """str override"""
@@ -2406,7 +2466,8 @@ class RPRecord(DNSRecord):
     def mbox(self, value):
         self.api_args['rdata']['mbox'] = value
         self._update_record(self.api_args)
-        self._mbox = value
+        if self._implicitPublish:
+            self._mbox = value
 
     @property
     def txtdname(self):
@@ -2420,7 +2481,8 @@ class RPRecord(DNSRecord):
     def txtdname(self, value):
         self.api_args['rdata']['txtdname'] = value
         self._update_record(self.api_args)
-        self._txtdname = value
+        if self._implicitPublish:
+            self._txtdname = value
 
     def __str__(self):
         """str override"""
@@ -2491,7 +2553,8 @@ class NSRecord(DNSRecord):
     def nsdname(self, value):
         self.api_args['rdata']['nsdname'] = value
         self._update_record(self.api_args)
-        self._nsdname = value
+        if self._implicitPublish:
+            self._nsdname = value
 
     @property
     def service_class(self):
@@ -2504,7 +2567,8 @@ class NSRecord(DNSRecord):
         api_args = {'rdata': {'nsdname': self._nsdname},
                     'service_class': value}
         self._update_record(api_args)
-        self._service_class = value
+        if self._implicitPublish:
+            self._service_class = value
 
     def __str__(self):
         """str override"""
@@ -2566,7 +2630,8 @@ class SOARecord(DNSRecord):
     def rname(self, value):
         self.api_args['rdata']['rname'] = value
         self._update_record(self.api_args)
-        self._rname = value
+        if self._implicitPublish:
+            self._rname = value
 
     @property
     def serial_style(self):
@@ -2579,7 +2644,8 @@ class SOARecord(DNSRecord):
         api_args = {'rdata': {'rname': self._rname},
                     'serial_style': value}
         self._update_record(api_args)
-        self._serial_style = value
+        if self._implicitPublish:
+            self._serial_style = value
 
     @property
     def minimum(self):
@@ -2591,7 +2657,8 @@ class SOARecord(DNSRecord):
     def minimum(self, value):
         api_args = {'rdata': {'rname': self._rname, 'minimum': value}}
         self._update_record(api_args)
-        self._minimum = value
+        if self._implicitPublish:
+            self._minimum = value
 
     @property
     def ttl(self):
@@ -2605,7 +2672,8 @@ class SOARecord(DNSRecord):
         api_args = {'rdata': {'rname': self._rname},
                     'ttl': value}
         self._update_record(api_args)
-        self._ttl = value
+        if self._implicitPublish:
+            self._ttl = value
 
     def delete(self):
         """Users can not POST or DELETE SOA Records"""
@@ -2669,7 +2737,8 @@ class SPFRecord(DNSRecord):
     def txtdata(self, value):
         self.api_args['rdata']['txtdata'] = value
         self._update_record(self.api_args)
-        self._txtdata = value
+        if self._implicitPublish:
+            self._txtdata = value
 
     def __str__(self):
         """str override"""
@@ -2751,7 +2820,8 @@ class SRVRecord(DNSRecord):
     def port(self, value):
         self.api_args['rdata']['port'] = value
         self._update_record(self.api_args)
-        self._port = value
+        if self._implicitPublish:
+            self._port = value
 
     @property
     def priority(self):
@@ -2765,7 +2835,8 @@ class SRVRecord(DNSRecord):
     def priority(self, value):
         self.api_args['rdata']['priority'] = value
         self._update_record(self.api_args)
-        self._priority = value
+        if self._implicitPublish:
+            self._priority = value
 
     @property
     def target(self):
@@ -2779,7 +2850,8 @@ class SRVRecord(DNSRecord):
     def target(self, value):
         self.api_args['rdata']['target'] = value
         self._update_record(self.api_args)
-        self._target = value
+        if self._implicitPublish:
+            self._target = value
 
     @property
     def weight(self):
@@ -2794,7 +2866,8 @@ class SRVRecord(DNSRecord):
     def weight(self, value):
         self.api_args['rdata']['weight'] = value
         self._update_record(self.api_args)
-        self._weight = value
+        if self._implicitPublish:
+            self._weight = value
 
     def __str__(self):
         """str override"""
@@ -2877,7 +2950,8 @@ class SSHFPRecord(DNSRecord):
     def algorithm(self, value):
         self.api_args['rdata']['algorithm'] = value
         self._update_record(self.api_args)
-        self._algorithm = value
+        if self._implicitPublish:
+            self._algorithm = value
 
     @property
     def fptype(self):
@@ -2889,7 +2963,8 @@ class SSHFPRecord(DNSRecord):
     def fptype(self, value):
         self.api_args['rdata']['fptype'] = value
         self._update_record(self.api_args)
-        self._fptype = value
+        if self._implicitPublish:
+            self._fptype = value
 
     @property
     def fingerprint(self):
@@ -2901,7 +2976,8 @@ class SSHFPRecord(DNSRecord):
     def fingerprint(self, value):
         self.api_args['rdata']['fingerprint'] = value
         self._update_record(self.api_args)
-        self._fingerprint = value
+        if self._implicitPublish:
+            self._fingerprint = value
 
     def __str__(self):
         """str override"""
@@ -2991,7 +3067,8 @@ class TLSARecord(DNSRecord):
     def cert_usage(self, value):
         self.api_args['rdata']['cert_usage'] = value
         self._update_record(self.api_args)
-        self._cert_usage = value
+        if self._implicitPublish:
+            self._cert_usage = value
 
     @property
     def selector(self):
@@ -3005,7 +3082,8 @@ class TLSARecord(DNSRecord):
     def selector(self, value):
         self.api_args['rdata']['selector'] = value
         self._update_record(self.api_args)
-        self._selector = value
+        if self._implicitPublish:
+            self._selector = value
 
     @property
     def match_type(self):
@@ -3018,7 +3096,8 @@ class TLSARecord(DNSRecord):
     def match_type(self, value):
         self.api_args['rdata']['match_type'] = value
         self._update_record(self.api_args)
-        self._match_type = value
+        if self._implicitPublish:
+            self._match_type = value
 
     @property
     def certificate(self):
@@ -3032,7 +3111,8 @@ class TLSARecord(DNSRecord):
     def certificate(self, value):
         self.api_args['rdata']['certificate'] = value
         self._update_record(self.api_args)
-        self._certificate = value
+        if self._implicitPublish:
+            self._certificate = value
 
     def __str__(self):
         """str override"""
@@ -3101,7 +3181,8 @@ class TXTRecord(DNSRecord):
     def txtdata(self, value):
         self.api_args['rdata']['txtdata'] = value
         self._update_record(self.api_args)
-        self._txtdata = value
+        if self._implicitPublish:
+            self._txtdata = value
 
     def __str__(self):
         """str override"""

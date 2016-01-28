@@ -37,7 +37,7 @@ def get_all_dsf_services():
 
 
 def get_all_notifiers():
-    """:return: A ``list`` of :class:`TrafficDirector` Services"""
+    """:return: A ``list`` of :class:`DSFNotifier` Services"""
     uri = '/Notifier/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -49,7 +49,7 @@ def get_all_notifiers():
 def get_all_records(service):
     """
     :param service: a dsf_id string, or :class:`TrafficDirector`
-    :return: A ``list`` of DSF Record Types from the passed in `service`
+    :return: A ``list`` of :class:`DSFRecord`s from the passed in `service`
     Warning! This query may take a long time to run with services with many records!
     """
     _service_id = _checkType(service)

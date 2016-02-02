@@ -437,11 +437,11 @@ class _DSFRecord(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFRecord` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFRecord` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -1737,11 +1737,11 @@ class DSFRecordSet(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFRecordSet` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFRecordSet` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2003,11 +2003,11 @@ class DSFFailoverChain(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFFailoverChain` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFFailoverChain` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2262,11 +2262,11 @@ class DSFResponsePool(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFResponsePool` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFResponsePool` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2560,11 +2560,11 @@ class DSFRuleset(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFRuleset` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFRuleset` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -3435,11 +3435,11 @@ class TrafficDirector(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`TrafficDirector` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`TrafficDirector` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value

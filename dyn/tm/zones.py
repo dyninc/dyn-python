@@ -24,7 +24,7 @@ RECS = {'A': ARecord, 'AAAA': AAAARecord, 'ALIAS': ALIASRecord,
         'PTR': PTRRecord, 'PX': PXRecord, 'NSAP': NSAPRecord,
         'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord,
         'SPF': SPFRecord, 'SRV': SRVRecord, 'TLSA': TLSARecord,
-        'TXT': TXTRecord, 'SSHFP': SSHFPRecord }
+        'TXT': TXTRecord, 'SSHFP': SSHFPRecord, 'UNKNOWN': UNKNOWNRecord}
 
 
 def get_all_zones():
@@ -452,7 +452,10 @@ class Zone(object):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            try:
+                constructor = RECS[search]
+            except KeyError:
+                constructor = RECS['UNKNOWN']
             list_records = []
             for record in record_list:
                 del record['zone']
@@ -522,7 +525,10 @@ class Zone(object):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            try:
+                constructor = RECS[search]
+            except KeyError:
+                constructor = RECS['UNKNOWN']
             list_records = []
             for record in record_list:
                 del record['zone']
@@ -933,7 +939,10 @@ class Node(object):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            try:
+                constructor = RECS[search]
+            except KeyError:
+                constructor = RECS['UNKNOWN']
             list_records = []
             for record in record_list:
                 del record['zone']
@@ -999,7 +1008,10 @@ class Node(object):
         records = {}
         for key, record_list in record_lists.items():
             search = key.split('_')[0].upper()
-            constructor = RECS[search]
+            try:
+                constructor = RECS[search]
+            except KeyError:
+                constructor = RECS['UNKNOWN']
             list_records = []
             for record in record_list:
                 del record['zone']

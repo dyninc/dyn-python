@@ -13,9 +13,9 @@ __all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'ALIASRecord', 'CDSRecord',
            'CDNSKEYRecord', 'CERTRecord', 'CNAMERecord', 'CSYNCRecord',
            'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord', 'DSRecord',
            'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
-           'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord', 'RPRecord',
-           'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord', 'TLSARecord',
-           'TXTRecord', 'SSHFPRecord']
+           'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord',
+           'RPRecord', 'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord',
+           'TLSARecord', 'TXTRecord', 'SSHFPRecord', 'UNKNOWNRecord']
 
 
 class DNSRecord(object):
@@ -2160,6 +2160,7 @@ class NAPTRRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class PTRRecord(DNSRecord):
     """Pointer Records are used to reverse map an IPv4 or IPv6 IP address to a
     host name
@@ -3191,3 +3192,26 @@ class TXTRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
+
+
+class UNKNOWNRecord(DNSRecord):
+    """Unknown Record Holder
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create an :class:`~dyn.tm.records.UNKNOWNRecord` object"""
+
+        if 'create' in kwargs:
+            super(UNKNOWNRecord, self).__init__(zone, fqdn, kwargs['create'])
+            del kwargs['create']
+            self._build(kwargs)
+            self._record_type = 'UNKNOWNRecord'
+
+    def __str__(self):
+        """str override"""
+        return '<UNKNOWNRecordRecord>'
+
+    def __repr__(self):
+        """print override"""
+        return '<UNKNOWNRecordRecord>'

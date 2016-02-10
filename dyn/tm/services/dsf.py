@@ -194,7 +194,7 @@ class _DSFRecord(object):
         self._endpoint_up_count = endpoint_up_count
         self._eligible = eligible
         self._service_id = self._dsf_record_set_id = self.uri = None
-        self._dsf_record_id = None
+        self._dsf_record_id = self._status = None
         self._implicitPublish = True
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
@@ -407,6 +407,13 @@ class _DSFRecord(object):
         self._update(api_args)
         if self._implicitPublish:
             self._eligible = value
+
+    @property
+    def status(self):
+        """Status of Record"""
+        self.refresh()
+        return self._status
+
 
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this DSFRecord to a json blob"""

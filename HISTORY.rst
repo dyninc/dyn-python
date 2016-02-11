@@ -1,5 +1,10 @@
 Release History
 ---------------
+
+1.6.1 (2016-2-11)
+*Added UNKNOWN record type
+*DSF records status getter added
+
 1.6.0 (2016-1-28)
 +++++++++++++++++
 *DSF service objects can now be independently Created, Updated, Read, and Deleted.

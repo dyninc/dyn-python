@@ -194,7 +194,7 @@ class _DSFRecord(object):
         self._endpoint_up_count = endpoint_up_count
         self._eligible = eligible
         self._service_id = self._dsf_record_set_id = self.uri = None
-        self._dsf_record_id = None
+        self._dsf_record_id = self._status = None
         self._implicitPublish = True
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
@@ -408,6 +408,13 @@ class _DSFRecord(object):
         if self._implicitPublish:
             self._eligible = value
 
+    @property
+    def status(self):
+        """Status of Record"""
+        self.refresh()
+        return self._status
+
+
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this DSFRecord to a json blob"""
 
@@ -437,11 +444,11 @@ class _DSFRecord(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFRecord` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFRecord` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -1737,11 +1744,11 @@ class DSFRecordSet(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFRecordSet` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFRecordSet` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2003,11 +2010,11 @@ class DSFFailoverChain(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFFailoverChain` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFFailoverChain` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2262,11 +2269,11 @@ class DSFResponsePool(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFResponsePool` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFResponsePool` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -2560,11 +2567,11 @@ class DSFRuleset(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`DSFRuleset` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`DSFRuleset` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value
@@ -3435,11 +3442,11 @@ class TrafficDirector(object):
 
     @property
     def implicitPublish(self):
+        "Toggle for this specific :class:`TrafficDirector` for turning on and off implicit Publishing for record Updates."
         return self._implicitPublish
 
     @implicitPublish.setter
     def implicitPublish(self, value):
-        "Toggle for this specific :class:`TrafficDirector` for turning on and off implicit Publishing for record Updates."
         if value != True and value != False:
             raise Exception('Value must be True or False')
         self._implicitPublish = value

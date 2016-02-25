@@ -1,5 +1,5 @@
 .. _advanced:
-Test DB
+
 Advanced Topics
 ===============
 This Section serves as a collective for advanced topics that most developers

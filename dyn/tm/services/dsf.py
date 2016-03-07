@@ -2644,7 +2644,14 @@ class DSFRuleset(object):
         return self._criteria
     @criteria.setter
     def criteria(self, value):
-        api_args = {'criteria': value}
+        api_args = dict()
+        if type(value) is dict:
+            if value.get('geoip'):
+                for key, val in value['geoip'].items():
+                    if len(val) != 0:
+                        api_args['criteria_type'] = 'geoip'
+
+        api_args['criteria'] = value
         self._update(api_args)
         if self._implicitPublish:
             self._criteria = value

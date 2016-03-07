@@ -1,7 +1,18 @@
 Release History
 ---------------
 
+1.6.2 (2016-3-7)
+++++++++++++++++
+*Added order_rulesets() to TrafficDirector object, for re-ordering Rulesets
+*Added index=n to Ruleset create() so New rulesets can be placed in a certain location in the chain.
+*Added getters for single DSF objects get_record(), get_record_set() etc.
+*Fixed bug with DSF Monitor options
+*Fixed bug where adding criteria to rulesets with 'always' criteria_type changes it to 'geoip' by default.
+
+
+
 1.6.1 (2016-2-11)
++++++++++++++++++
 *Added UNKNOWN record type
 *DSF records status getter added
 

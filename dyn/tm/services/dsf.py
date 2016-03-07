@@ -15,6 +15,8 @@ __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chains',
            'get_all_response_pools', 'get_all_rulesets', 'get_all_dsf_monitors',
            'get_all_records', 'get_all_notifiers', 'DSFARecord', 'DSFSSHFPRecord',
+           'get_record', 'get_record_set', 'get_failover_chain', 'get_response_pool',
+           'get_ruleset', 'get_dsf_monitor',
            'DSFNotifier',
            'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
            'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
@@ -125,6 +127,101 @@ def get_all_dsf_monitors():
     for dsf in response['data']:
         mons.append(DSFMonitor(api=False, **dsf))
     return mons
+
+def get_record(record_id, service, always_list = False):
+    """
+    returns :class:`DSFRecord`
+    :param record_id: id of record you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :param always_list: Force the returned record to always be in a list.
+    :return returns single record, unless this is a special record type, then a list is returned
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRecord/{}/{}'.format(_service_id, record_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    record= _constructor(response['data'])
+    if len(record) > 1 or always_list:
+        return record
+    else:
+        return record[0]
+
+def get_record_set(record_set_id, service):
+    """
+    returns :class:`DSFRecordSet`
+    :param record_set_id: id of record set you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFRecordSet` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRecordSet/{}/{}'.format(_service_id, record_set_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFRecordSet(response['data'].pop('rdata_class'), api=False, **response['data'])
+
+def get_failover_chain(failover_chain_id, service):
+    """
+    returns :class:`DSFFailoverChain`
+    :param failover_chain_id: id of :class:`DSFFailoverChain` you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFFailoverChain` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRecordSetFailoverChain/{}/{}'.format(_service_id, failover_chain_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFFailoverChain(response['data'].pop('label'), api=False, **response['data'])
+
+def get_response_pool(response_pool_id, service):
+    """
+    returns :class:`DSFResponsePool`
+    :param response_pool_id: id of :class:`DSFResponsePool` you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFResponsePool` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFResponsePool/{}/{}'.format(_service_id, response_pool_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFResponsePool(response['data'].pop('label'), api=False, **response['data'])
+
+def get_ruleset(ruleset_id, service):
+    """
+    returns :class:`DSFRuleset`
+    :param ruleset_id: id of :class:`DSFRuleset` you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFRuleset` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRuleset/{}/{}'.format(_service_id, ruleset_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFRuleset(response['data'].pop('label'), api=False, **response['data'])
+
+def get_dsf_monitor(monitor_id):
+    """ A quick :class:`DSFmonitor` getter, for consistency sake.
+    :param monitor_id: id of :class:`DSFmonitor` you wish to pull up
+    :return returns :class:`DSFmonitor` Object"""
+    uri = '/DSFMonitor/{}'.format(monitor_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFMonitor(api=False, **response['data'])
+
 
 def _checkType(service):
     if isinstance(service, TrafficDirector):
@@ -2306,6 +2403,7 @@ class DSFRuleset(object):
         self._criteria_type = criteria_type
         self._criteria = criteria
         self._failover = failover
+        self._ordering = None
         self._implicitPublish=True
         if isinstance(response_pools, list) and len(response_pools) > 0 and \
                 isinstance(response_pools[0], dict):
@@ -2335,6 +2433,8 @@ class DSFRuleset(object):
         api_args = {'publish': 'Y', 'label': self._label,
                     'criteria_type': self._criteria_type,
                     'criteria': self._criteria}
+        if self._ordering is not None:
+            api_args['ordering'] = self._ordering
         if self._response_pools:
             api_args['response_pools'] = [pool.to_json(skip_svc=True) for pool in self.response_pools]
 
@@ -2422,7 +2522,6 @@ class DSFRuleset(object):
             api_args['response_pools'].append({'dsf_response_pool_id': _response_pool_id})
         self._update(api_args, publish)
 
-
     def remove_response_pool(self, response_pool, publish=True):
         """
         Removes passed in :class:`DSFResponsePool` from this :class:`DSFRuleSet`.
@@ -2487,15 +2586,18 @@ class DSFRuleset(object):
         self._update(api_args, publish)
 
 
-    def create(self, service, publish=True):
+    def create(self, service, index = None, publish=True):
         """Adds this :class:`DSFRuleset` to the passed in :class:`TrafficDirector`
         :param service: a :class:`TrafficDirector` or id string for the :class:`TrafficDirector`
         you wish to add this :class:`DSFRuleset` to.
+        :param index: in what position to serve this ruleset. 0 = first.
         :param publish: publish at execution time. Default = True
         """
         if self._dsf_ruleset_id:
             raise Exception('Rule Set Already Exists. ID: {}'.format(self._dsf_ruleset_id))
         _service_id = _checkType(service)
+        if index is not None:
+            self._ordering = index
         self._post(_service_id, publish)
 
 
@@ -2543,7 +2645,14 @@ class DSFRuleset(object):
         return self._criteria
     @criteria.setter
     def criteria(self, value):
-        api_args = {'criteria': value}
+        api_args = dict()
+        if type(value) is dict:
+            if value.get('geoip'):
+                for key, val in value['geoip'].items():
+                    if len(val) != 0:
+                        api_args['criteria_type'] = 'geoip'
+
+        api_args['criteria'] = value
         self._update(api_args)
         if self._implicitPublish:
             self._criteria = value
@@ -2803,9 +2912,6 @@ class DSFMonitor(object):
                     ep = DSFMonitorEndpoint(**endpoint)
                     ep._monitor = self
                     self._endpoints.append(ep)
-            elif key == 'options':
-                for opt_key, opt_val in val.items():
-                    setattr(self, '_' + opt_key, opt_val)
             elif key == 'active':
                 self._active = Active(val)
             else:
@@ -3344,6 +3450,30 @@ class TrafficDirector(object):
         elif isinstance(value, APIList):
             self._rulesets = value
         self._rulesets.uri = self.uri
+
+    def order_rulesets(self, ruleset_list, publish=True):
+        """
+        For reordering the ruleset list. simply pass in a ``list`` of :class:`DSFRulesets`s in the order
+        you wish them to be served.
+        :param ruleset_list: ordered ``list`` of :class:`DSFRulesets`
+        :param publish: Publish on execution. default = True
+        """
+
+        if not isinstance(ruleset_list, list):
+            raise Exception('You must pass in an ordered list of response pool objects, or ids.')
+        _ruleset_list = list()
+
+        for list_item in ruleset_list:
+            if isinstance(list_item, DSFRuleset):
+                _ruleset_list.append(list_item._dsf_ruleset_id)
+            elif type(list_item) is str or type(list_item) is unicode:
+                _ruleset_list.append(list_item)
+        api_args = dict()
+        api_args['rulesets'] = list()
+        for ruleset_id in _ruleset_list:
+            api_args['rulesets'].append({'dsf_ruleset_id': ruleset_id})
+        self._update(api_args, publish)
+
 
     @property
     def nodeObjects(self):

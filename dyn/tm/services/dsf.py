@@ -15,6 +15,8 @@ __author__ = 'jnappi'
 __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chains',
            'get_all_response_pools', 'get_all_rulesets', 'get_all_dsf_monitors',
            'get_all_records', 'get_all_notifiers', 'DSFARecord', 'DSFSSHFPRecord',
+           'get_record', 'get_record_set', 'get_failover_chain', 'get_response_pool',
+           'get_ruleset', 'get_dsf_monitor',
            'DSFNotifier',
            'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
            'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
@@ -125,6 +127,101 @@ def get_all_dsf_monitors():
     for dsf in response['data']:
         mons.append(DSFMonitor(api=False, **dsf))
     return mons
+
+def get_record(record_id, service, always_list = False):
+    """
+    returns :class:`DSFRecord`
+    :param record_id: id of record you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :param always_list: Force the returned record to always be in a list.
+    :return returns single record, unless this is a special record type, then a list is returned
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRecord/{}/{}'.format(_service_id, record_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    record= _constructor(response['data'])
+    if len(record) > 1 or always_list:
+        return record
+    else:
+        return record[0]
+
+def get_record_set(record_set_id, service):
+    """
+    returns :class:`DSFRecordSet`
+    :param record_set_id: id of record set you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFRecordSet` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRecordSet/{}/{}'.format(_service_id, record_set_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFRecordSet(response['data'].pop('rdata_class'), api=False, **response['data'])
+
+def get_failover_chain(failover_chain_id, service):
+    """
+    returns :class:`DSFFailoverChain`
+    :param failover_chain_id: id of :class:`DSFFailoverChain` you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFFailoverChain` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRecordSetFailoverChain/{}/{}'.format(_service_id, failover_chain_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFFailoverChain(response['data'].pop('label'), api=False, **response['data'])
+
+def get_response_pool(response_pool_id, service):
+    """
+    returns :class:`DSFResponsePool`
+    :param response_pool_id: id of :class:`DSFResponsePool` you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFResponsePool` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFResponsePool/{}/{}'.format(_service_id, response_pool_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFResponsePool(response['data'].pop('label'), api=False, **response['data'])
+
+def get_ruleset(ruleset_id, service):
+    """
+    returns :class:`DSFRuleset`
+    :param ruleset_id: id of :class:`DSFRuleset` you wish to pull up
+    :param service: id of service which this record belongs. Can either be
+     the service_id or a :class:`TrafficDirector` Object
+    :return returns :class:`DSFRuleset` Object
+    """
+    if service:
+        _service_id = _checkType(service)
+
+    uri = '/DSFRuleset/{}/{}'.format(_service_id, ruleset_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFRuleset(response['data'].pop('label'), api=False, **response['data'])
+
+def get_dsf_monitor(monitor_id):
+    """ A quick :class:`DSFmonitor` getter, for consistency sake.
+    :param monitor_id: id of :class:`DSFmonitor` you wish to pull up
+    :return returns :class:`DSFmonitor` Object"""
+    uri = '/DSFMonitor/{}'.format(monitor_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    return DSFMonitor(api=False, **response['data'])
+
 
 def _checkType(service):
     if isinstance(service, TrafficDirector):

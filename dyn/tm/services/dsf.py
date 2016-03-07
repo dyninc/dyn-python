@@ -2403,6 +2403,7 @@ class DSFRuleset(object):
         self._criteria_type = criteria_type
         self._criteria = criteria
         self._failover = failover
+        self._ordering = None
         self._implicitPublish=True
         if isinstance(response_pools, list) and len(response_pools) > 0 and \
                 isinstance(response_pools[0], dict):
@@ -2432,6 +2433,8 @@ class DSFRuleset(object):
         api_args = {'publish': 'Y', 'label': self._label,
                     'criteria_type': self._criteria_type,
                     'criteria': self._criteria}
+        if self._ordering is not None:
+            api_args['ordering'] = self._ordering
         if self._response_pools:
             api_args['response_pools'] = [pool.to_json(skip_svc=True) for pool in self.response_pools]
 
@@ -2519,7 +2522,6 @@ class DSFRuleset(object):
             api_args['response_pools'].append({'dsf_response_pool_id': _response_pool_id})
         self._update(api_args, publish)
 
-
     def remove_response_pool(self, response_pool, publish=True):
         """
         Removes passed in :class:`DSFResponsePool` from this :class:`DSFRuleSet`.
@@ -2584,15 +2586,17 @@ class DSFRuleset(object):
         self._update(api_args, publish)
 
 
-    def create(self, service, publish=True):
+    def create(self, service, index = 0, publish=True):
         """Adds this :class:`DSFRuleset` to the passed in :class:`TrafficDirector`
         :param service: a :class:`TrafficDirector` or id string for the :class:`TrafficDirector`
         you wish to add this :class:`DSFRuleset` to.
+        :param index: in what position to serve this ruleset. 0 = first.
         :param publish: publish at execution time. Default = True
         """
         if self._dsf_ruleset_id:
             raise Exception('Rule Set Already Exists. ID: {}'.format(self._dsf_ruleset_id))
         _service_id = _checkType(service)
+        self._ordering = index
         self._post(_service_id, publish)
 
 
@@ -3438,6 +3442,32 @@ class TrafficDirector(object):
         elif isinstance(value, APIList):
             self._rulesets = value
         self._rulesets.uri = self.uri
+
+    def order_rulesets(self, ruleset_list, publish=True):
+        """
+        For reordering the ruleset list. simply pass in a ``list`` of :class:`DSFRulesets`s in the order
+        you wish them to be served.
+        :param ruleset_list: ordered ``list`` of :class:`DSFRulesets`
+        :param publish: Publish on execution. default = True
+        """
+
+        if not isinstance(ruleset_list, list):
+            raise Exception('You must pass in an ordered list of response pool objects, or ids.')
+        _ruleset_list = list()
+
+        for list_item in ruleset_list:
+            if isinstance(list_item, DSFRuleset):
+                _ruleset_list.append(list_item._dsf_ruleset_id)
+            elif type(list_item) is str or type(list_item) is unicode:
+                _ruleset_list.append(list_item)
+        api_args = dict()
+        api_args['rulesets'] = list()
+        for ruleset_id in _ruleset_list:
+            api_args['rulesets'].append({'dsf_ruleset_id': ruleset_id})
+        self._update(api_args, publish)
+
+
+
 
     @property
     def nodeObjects(self):

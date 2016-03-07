@@ -2900,9 +2900,6 @@ class DSFMonitor(object):
                     ep = DSFMonitorEndpoint(**endpoint)
                     ep._monitor = self
                     self._endpoints.append(ep)
-            elif key == 'options':
-                for opt_key, opt_val in val.items():
-                    setattr(self, '_' + opt_key, opt_val)
             elif key == 'active':
                 self._active = Active(val)
             else:

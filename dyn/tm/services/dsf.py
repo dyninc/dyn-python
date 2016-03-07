@@ -2586,7 +2586,7 @@ class DSFRuleset(object):
         self._update(api_args, publish)
 
 
-    def create(self, service, index = 0, publish=True):
+    def create(self, service, index = None, publish=True):
         """Adds this :class:`DSFRuleset` to the passed in :class:`TrafficDirector`
         :param service: a :class:`TrafficDirector` or id string for the :class:`TrafficDirector`
         you wish to add this :class:`DSFRuleset` to.
@@ -2596,7 +2596,8 @@ class DSFRuleset(object):
         if self._dsf_ruleset_id:
             raise Exception('Rule Set Already Exists. ID: {}'.format(self._dsf_ruleset_id))
         _service_id = _checkType(service)
-        self._ordering = index
+        if index is not None:
+            self._ordering = index
         self._post(_service_id, publish)
 
 
@@ -3472,8 +3473,6 @@ class TrafficDirector(object):
         for ruleset_id in _ruleset_list:
             api_args['rulesets'].append({'dsf_ruleset_id': ruleset_id})
         self._update(api_args, publish)
-
-
 
 
     @property

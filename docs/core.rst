@@ -3,7 +3,7 @@
 Core
 ====
 The :mod:`dyn.core` module contains functionality that is core to the behavior
-of the rest of the library. In particular this is where a lot of the "heavy lifting"
+of the rest of the library. This is where a lot of the "heavy lifting"
 for sessions is done.
 
 

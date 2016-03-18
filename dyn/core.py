@@ -4,6 +4,7 @@ itself. Although it's possible to use this functionality outside of the dyn
 library, it is not recommened and could possible result in some strange
 behavior.
 """
+import base64
 import copy
 import time
 import locale
@@ -78,7 +79,8 @@ class SessionEngine(Singleton):
     _valid_methods = tuple()
     uri_root = '/'
 
-    def __init__(self, host=None, port=443, ssl=True, history=False):
+    def __init__(self, host=None, port=443, ssl=True, history=False,
+        proxy_host=None, proxy_port=None, proxy_user=None, proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
 
@@ -87,6 +89,10 @@ class SessionEngine(Singleton):
         :param ssl: Enable SSL
         :param history: A boolean flag determining whether or not you would
             like to store a record of all API calls made to review later
+        :param proxy_host: A proxy host to utilize
+        :param proxy_port: The port that the proxy is served on
+        :param proxy_user: A username to connect to the proxy with if required
+        :param proxy_pass: A password to connect to the proxy with if required
         :return: SessionEngine object
         """
         super(SessionEngine, self).__init__()
@@ -96,6 +102,10 @@ class SessionEngine(Singleton):
         self.host = host
         self.port = port
         self.ssl = ssl
+        self.proxy_host = proxy_host
+        self.proxy_port = proxy_port
+        self.proxy_user = proxy_user
+        self.proxy_pass = proxy_pass
         self.poll_incomplete = True
         self.content_type = 'application/json'
         self._encoding = locale.getdefaultlocale()[-1] or 'UTF-8'
@@ -148,7 +158,8 @@ class SessionEngine(Singleton):
 
     def connect(self):
         """Establishes a connection to the REST API server as defined by the
-        host, port and ssl instance variables
+        host, port and ssl instance variables. If a proxy is specified, it
+        is used.
         """
         if self._token:
             self.logger.debug('Forcing logout from old session')
@@ -158,17 +169,48 @@ class SessionEngine(Singleton):
             self.poll_incomplete = orig_value
             self._token = None
         self._conn = None
-        if self.ssl:
-            msg = 'Establishing SSL connection to {}:{}'.format(self.host,
-                                                                self.port)
-            self.logger.info(msg)
-            self._conn = HTTPSConnection(self.host, self.port, timeout=300)
+        use_proxy = False
+        headers = {}
+
+        if self.proxy_host and not self.proxy_port:
+            msg = 'Proxy missing port, please specify a port'
+            raise ValueError(msg)
+
+        if self.proxy_host and self.proxy_port:
+            use_proxy = True
+
+            if self.proxy_user and self.proxy_pass:
+                auth = '{}:{}'.format(self.proxy_user, self.proxy_pass)
+                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(auth)
+
+        if use_proxy:
+            if self.ssl:
+                msg = 'Establishing SSL connection to {}:{} with proxy {}:{}'.format(self.host,
+                                                                                     self.port,
+                                                                                     self.proxy_host,
+                                                                                     self.proxy_port)
+                self.logger.info(msg)
+                self._conn = HTTPSConnection(self.proxy_host, self.proxy_port, timeout=300)
+                self._conn.set_tunnel(self.host, self.port, headers)
+            else:
+                msg = 'Establishing unencrypted connection to {}:{} with proxy {}:{}'.format(self.host,
+                                                                                             self.port,
+                                                                                             self.proxy_host,
+                                                                                             self.proxy_port)
+                self.logger.info(msg)
+                self._conn = HTTPConnection(self.proxy_host, self.proxy_port, timeout=300)
+                self._conn.set_tunnel(self.host, self.port, headers)
         else:
-            msg = \
-                'Establishing unencrypted connection to {}:{}'.format(self.host,
-                                                                      self.port)
-            self.logger.info(msg)
-            self._conn = HTTPConnection(self.host, self.port, timeout=300)
+            if self.ssl:
+                msg = 'Establishing SSL connection to {}:{}'.format(self.host,
+                                                                    self.port)
+                self.logger.info(msg)
+                self._conn = HTTPSConnection(self.host, self.port, timeout=300)
+            else:
+                msg = 'Establishing unencrypted connection to {}:{}'.format(self.host,
+                                                                            self.port)
+                self.logger.info(msg)
+                self._conn = HTTPConnection(self.host, self.port, timeout=300)
 
     def _process_response(self, response, method, final=False):
         """API Method. Process an API response for failure, incomplete, or

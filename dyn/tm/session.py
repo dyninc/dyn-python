@@ -19,7 +19,8 @@ class DynectSession(SessionEngine):
 
     def __init__(self, customer, username, password, host='api.dynect.net', 
                  port=443, ssl=True, api_version='current', auto_auth=True,
-                 key=None, history=False):
+                 key=None, history=False, proxy_host=None, proxy_port=None,
+                 proxy_user=None, proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
 
@@ -35,8 +36,14 @@ class DynectSession(SessionEngine):
             encrypting your password
         :param history: A boolean flag determining whether or not you would
             like to store a record of all API calls made to review later
+        :param proxy_host: A proxy host to utilize
+        :param proxy_port: The port that the proxy is served on
+        :param proxy_user: A username to connect to the proxy with if required
+        :param proxy_pass: A password to connect to the proxy with if required
         """
-        super(DynectSession, self).__init__(host, port, ssl, history)
+        super(DynectSession, self).__init__(host, port, ssl, history,
+                                            proxy_host, proxy_port,
+                                            proxy_user, proxy_pass)
         self.__cipher = AESCipher(key)
         self.extra_headers = {'API-Version': api_version}
         self.customer = customer

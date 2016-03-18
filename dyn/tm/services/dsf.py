@@ -27,6 +27,7 @@ __all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chain
            'DSFResponsePool', 'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor',
            'TrafficDirector']
 
+
 def get_all_dsf_services():
     """:return: A ``list`` of :class:`TrafficDirector` Services"""
     uri = '/DSF/'
@@ -3369,6 +3370,37 @@ class TrafficDirector(object):
         """
         api_args = {'remove_orphans': 'Y'}
         self._update(api_args)
+
+    def replace_all_rulesets(self, rulesets):
+        """
+            This request will replace all rulesets with a new list of rulesets.
+            :param rulesets: a list of rulesets :class:DSFRuleset to be published to the service
+            Warning! This call takes extra time as it is several api calls.
+            """
+        old_rulesets = self.all_rulesets
+        for old_rule in old_rulesets:
+            old_rule.delete()
+        for new_rule in rulesets:
+            new_rule.create(self)
+
+    def replace_one_ruleset(self, ruleset):
+        """
+            This request will replace a single ruleset and maintain the order of the list.
+            :param ruleset: A single object of :class:DSFRuleset`
+            Warning! This call takes extra time as it is several api calls.
+            """
+        old_rulesets = self.all_rulesets
+        order_rulesets = list()
+        for rule in old_rulesets:
+            print(rule.label + " -- " + ruleset.label)
+            if rule.label == ruleset.label:
+                print(rule.label + " -- " + ruleset.label)
+                rule.delete()
+                order_rulesets.append(ruleset)
+            else:
+                order_rulesets.append(rule)
+        ruleset.create(self)
+        self.order_rulesets(order_rulesets)
 
     @property
     def service_id(self):

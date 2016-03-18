@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+1.6.3 (2016-3-21)
+++++++++++++++++
+*Added TrafficDirector:replace_all_rulesets to wholesale replace rulesets on a TrafficDirector
+*Added TrafficDirector:replace_one_ruleset to remove and replace a single ruleset entry in place
+*Merged Proxy support from PR #73
+
+
 1.6.2 (2016-3-7)
 ++++++++++++++++
 *Added order_rulesets() to TrafficDirector object, for re-ordering Rulesets
@@ -8,8 +15,6 @@ Release History
 *Added getters for single DSF objects get_record(), get_record_set() etc.
 *Fixed bug with DSF Monitor options
 *Fixed bug where adding criteria to rulesets with 'always' criteria_type changes it to 'geoip' by default.
-
-
 
 1.6.1 (2016-2-11)
 +++++++++++++++++

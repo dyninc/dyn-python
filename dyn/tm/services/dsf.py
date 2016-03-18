@@ -3391,6 +3391,7 @@ class TrafficDirector(object):
         """
             This request will replace a single ruleset and maintain the order of the list.
             :param ruleset: A single object of :class:DSFRuleset`
+            The replacement is keyed by the DSFRuleset label value
             Warning! This call takes extra time as it is several api calls.
             """
         if isinstance(ruleset, DSFRuleset):

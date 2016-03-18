@@ -3377,11 +3377,15 @@ class TrafficDirector(object):
             :param rulesets: a list of rulesets :class:DSFRuleset to be published to the service
             Warning! This call takes extra time as it is several api calls.
             """
-        old_rulesets = self.all_rulesets
-        for old_rule in old_rulesets:
-            old_rule.delete()
-        for new_rule in rulesets:
-            new_rule.create(self)
+        if (type(rulesets) is list or type(rulesets) is tuple) and isinstance(rulesets[0], DSFRuleset):
+            old_rulesets = self.all_rulesets
+            for old_rule in old_rulesets:
+                old_rule.delete()
+            for new_rule in rulesets:
+                new_rule._dsf_ruleset_id = None
+                new_rule.create(self)
+        else:
+            raise Exception("rulesets parameter must be a list of DSFRuleset objects")
 
     def replace_one_ruleset(self, ruleset):
         """
@@ -3389,18 +3393,24 @@ class TrafficDirector(object):
             :param ruleset: A single object of :class:DSFRuleset`
             Warning! This call takes extra time as it is several api calls.
             """
-        old_rulesets = self.all_rulesets
-        order_rulesets = list()
-        for rule in old_rulesets:
-            print(rule.label + " -- " + ruleset.label)
-            if rule.label == ruleset.label:
-                print(rule.label + " -- " + ruleset.label)
-                rule.delete()
-                order_rulesets.append(ruleset)
+        if isinstance(ruleset, DSFRuleset):
+            old_rulesets = self.all_rulesets
+            old_rule = None
+            rule_index = 0
+            for rule in old_rulesets:
+                if rule.label == ruleset.label:
+                    old_rule = rule
+                    rule_index += 1
+                    break
+                rule_index += 1
+            if old_rule is not None:
+                old_rule.delete()
+                ruleset._dsf_ruleset_id = None
+                ruleset.create(self, index=rule_index)
             else:
-                order_rulesets.append(rule)
-        ruleset.create(self)
-        self.order_rulesets(order_rulesets)
+                ruleset.create(self)
+        else:
+            raise Exception("rulesets parameter must be a single object of class DSFRuleset")
 
     @property
     def service_id(self):

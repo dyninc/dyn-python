@@ -19,7 +19,8 @@ class MMSession(SessionEngine):
     _valid_methods = ('GET', 'POST')
     uri_root = '/rest/json'
 
-    def __init__(self, apikey, host='emailapi.dynect.net', port=443, ssl=True):
+    def __init__(self, apikey, host='emailapi.dynect.net', port=443, ssl=True,
+                 proxy_host=None, proxy_port=None, proxy_user=None, proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
 
@@ -27,8 +28,13 @@ class MMSession(SessionEngine):
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
         :param apikey: your unique Email API key
+        :param proxy_host: A proxy host to utilize
+        :param proxy_port: The port that the proxy is served on
+        :param proxy_user: A username to connect to the proxy with if required
+        :param proxy_pass: A password to connect to the proxy with if required
         """
-        super(MMSession, self).__init__(host, port, ssl)
+        super(MMSession, self).__init__(host, port, ssl, proxy_host, proxy_port,
+                                        proxy_user, proxy_pass)
         self.apikey = apikey
         self.content_type = 'application/x-www-form-urlencoded'
         self._conn = None

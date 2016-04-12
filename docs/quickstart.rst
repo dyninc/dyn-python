@@ -3,49 +3,46 @@
 Quickstart
 ==========
 
-Eager to get started? This page gives a good introduction on how to get started
-with managing your dyn services with this module. This assumes you already have
-the dyn module installed. If  you do not, head over to the 
-:ref:`Installation <install>` section for information on installing the package.
+Eager to get started? This guide will help you get started managing your Dyn
+services using this module.
 
-First, make sure that dyn is :ref:`installed <install>`
+If you have not already, :ref:`Install <install>` the Dyn module before proceeding further.
 
-Second, it's important to understand that this library handles interacting with
-both your Traffic Management (TM) and Message Management (MM) services. For both
-TM and MM you will need to create Session objects which handle interacting with
-the API, processing API responses, and creating the various objects described
+It is also important to understand that this library handles interacting with
+both Traffic Management (TM) and Message Management (MM) services. For both
+TM and MM, you will need to create Session objects to handle API interactions,
+processing API responses, and creating the various objects described
 in the :ref:`TM <dyn-tm>` and :ref:`MM <dyn-mm>` API documentation sections.
 
-So, with that in mind, let's get started with some simple examples.
+Here are some simple examples to get you started.
 
 Authentication
 --------------
-The first step you'll need to take every time you use either of these libraries,
-is creating an API Session. These session objects are what, internally, manage
-interacting with the API.
+API sessions will need to be created each time you use either of these libraries.
+These session objects internally manage interaction with the API.
 
-So, to create a TM DynectSession, we begin by importing the tm.session module::
+To create a TM DynectSession, begin by importing the tm.session module::
 
     >>> from dyn.tm.session import DynectSession
 
-Now we simply create an instance of a DynectSession by using our Dynect
+Now create an instance of a DynectSession by using our Dyn
 login credentials::
-    
+
     >>> my_session = DynectSession(customer, username, password)
 
-Now we have a :class:`DynectSession` object called ``my_session``. We will be
-able to use this to access all of the resources that you have access to.
+Now you have a :class:`DynectSession` object called ``my_session``. You will be
+able to use this to access your available resources.
 
-Similarly for MM, we import and create an :class:`MMSession` from the mm.session
+For MM, you can import and create an :class:`MMSession` from the mm.session
 module::
 
     >>> from dyn.mm.session import MMSession
 
-Now we create an instance of that this session by providing it an API Key::
+Now create an instance of this session by providing it an API Key::
 
     >>> mm_session = MMSession(my_api_key)
-    
-This object will now grant us access to the features provided by the Email API.
+
+This object will now grant you access to the features provided by the Email API.
 
 Managing Your TM Accounts
 -------------------------
@@ -65,7 +62,7 @@ your account, such as new :class:`Users` objects::
     >>> jsmith.get_permissions_report()
     ['ZoneAdd', 'ZoneDelete', 'Login', 'ZoneGet']
 
-We can also create new :class:`PermissionGroups` that can later be applied to
+You can also create new :class:`PermissionGroups` that can later be applied to
 :class:`User` objects
 ::
 
@@ -78,17 +75,17 @@ We can also create new :class:`PermissionGroups` that can later be applied to
 
 Using your Zones
 ----------------
-Using our current session we can create a new zone::
+Using your current session you can create a new zone::
 
     >>> from dyn.tm.zones import Zone
     >>> my_zone = Zone('mysite.com', 'myemail@email.com')
 
-We can also access our previously created zones::
+You can also access your previously created zones::
 
     >>> my_old_zone = Zone('example.com')
 
-Using these :class:`Zone` objects we can then perform any manipulations one
-might normally perform on a zone. Such as, adding a record::
+Using these :class:`Zone` objects you can begin to manipulate your zones,
+such as, adding a record::
 
     >>> a_rec = my_zone.add_record('node', 'A', '127.0.0.1')
     >>> a_rec.ip
@@ -100,7 +97,7 @@ might normally perform on a zone. Such as, adding a record::
 
 TM Services
 -----------
-Now let's try adding a :class:`DynamicDNS` service to our zone::
+Try adding a :class:`DynamicDNS` service to your zone::
 
     >>> ddns = my_zone.add_service(service_type='DDNS', record_type='A',
     ...                            address='127.0.0.1')
@@ -112,29 +109,29 @@ Now let's try adding a :class:`DynamicDNS` service to our zone::
 
 TM Errors and Exceptions
 ------------------------
-In the event of an authentication problem, dyn.tm will raise a 
+In the event of an authentication problem, dyn.tm will raise a
 :class:`~dyn.tm.errors.DynectAuthError` exception.
 
-In the event an error in an API Creation is encountered, dyn.tm will 
+In the event an error in an API Creation is encountered, dyn.tm will
 raise a :class:`~dyn.tm.errors.DynectCreateError` exception with
 additional information about why the POST failed.
 
-In the event an error in an API Update is encountered, dyn.tm will 
+In the event an error in an API Update is encountered, dyn.tm will
 raise a :class:`~dyn.tm.errors.DynectUpdateError` exception with
 additional information about why the PUT failed.
 
-In the event an error in an API Get is encountered, dyn.tm will 
+In the event an error in an API Get is encountered, dyn.tm will
 raise a :class:`~dyn.tm.errors.DynectGetError` exception with
 additional information about why the GET failed.
 
-In the event an error in an API Deletion is encountered, dyn.tm will 
+In the event an error in an API Deletion is encountered, dyn.tm will
 raise a :class:`~dyn.tm.errors.DynectDeleteError` exception with
 additional information about why the DELETE failed.
 
-In the event an error in an API request returns with a status of incomplete (ie
+In the event an error in an API request returns with an incomplete status (i.e.
 the requested job has not yet completed) the wrapper will poll until either the
-job has copmleted or the polling times out. In such an unlikely event, 
-dyn.tm will raise a :class:`~dyn.tm.errors.DynectQueryTimeout` 
+job has completed or the polling times out. In such an event,
+dyn.tm will raise a :class:`~dyn.tm.errors.DynectQueryTimeout`
 exception
 
 All exceptions that dyn.tm explicitly raises inherit from
@@ -145,18 +142,18 @@ MM Errors and Exceptions
 In the event that an invalid API Key is provided to your :class:`MMSession` an
 :class:`~dyn.mm.errors.EmailKeyError` exception will be raised.
 
-If you were to pass an invalid argument to one of the provided MM objects, a
+If you passed an invalid argument to one of the provided MM objects, a
 :class:`~dyn.mm.errors.DynInvalidArgumentError` exception is raised.
 
 The :class:`~dyn.mm.errors.DynInvalidArgumentError` should not be confused with
-the :class:`~dyn.mm.errors.EmailInvalidArgumentError` that is raised if a
-required field is not provided. This is an unlikely exception to get raised
-because the error would likely first be raised as a
+the :class:`~dyn.mm.errors.EmailInvalidArgumentError`. The latter is raised if a
+required field is not provided. This is an unlikely exception to be raised
+as the error would likely be raised as
 :class:`~dyn.mm.errors.DynInvalidArgumentError`. However, it is still a possible
-situation.
+scenario.
 
-Finally, the :class:`~dyn.mm.errors.EmailObjectError` will be raised if you
-attempt to create an object that already exists on the Dyn Email System.
+The :class:`~dyn.mm.errors.EmailObjectError` will be raised if you
+attempt to create an object that already exists on the Dyn MM system.
 
 All MM exceptions inherit from :class:`~dyn.mm.errors.EmailError`
 

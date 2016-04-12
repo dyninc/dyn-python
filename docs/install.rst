@@ -3,7 +3,7 @@
 Installation
 ============
 
-This part of the documentation covers the installation of the Dyn module.
+Follow the instructions below to install the Dyn module.
 
 
 Distribute & Pip
@@ -19,7 +19,7 @@ The easiest way to install the Dyn module is via ‘pip’.
 Get the Code
 ------------
 
-Dyn is actively developed on GitHub, the code is always available
+Dyn is actively developed on GitHub. The code is always available
 ''<https://github.com/dyninc/dyn-python>` and there are several options
 available to obtain the code.
 

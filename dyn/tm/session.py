@@ -169,10 +169,11 @@ class DynectSession(SessionEngine):
         """Add a new user session to the dict of open user sessions."""
         if self._open_user_sessions is None:
             self._open_user_sessions = {}
-        if user['user_name'] in self._open_user_sessions:
-            raise ValueError("Already have an open session for {0}".format(user['user_name']))
-        else:
+        # if user['user_name'] in self._open_user_sessions:
+            # raise ValueError("Already have an open session for {0}".format(user['user_name']))
+        # else:
             # this is called after a successful authentication, so the token is already updated
+            # if we have already authenticated this user, update so we have the latest token
             user['token'] = self._token
             self._open_user_sessions[user['user_name']] = user
             self.set_active_user(user['user_name'])
@@ -202,11 +203,18 @@ class DynectSession(SessionEngine):
             self.set_active_user(user)
             break
 
-    def authenticate(self, customer, username, password):
+    def authenticate(self, customer=None, username=None, password=None):
         """Authenticate to the DynectSession service with the provided
         credentials. This can be called to add multiple user sessions.
         User sessions can be managed by calling set_active_user
         """
+        if customer is None:
+            customer = self._active_user_session['customer_name']
+        if username is None:
+            username = self._active_user_session['user_name']
+        if password is None:
+            password = self._active_user_session['password']
+
         api_args = {'customer_name': customer, 'user_name': username,
                     'password': password}
         try:

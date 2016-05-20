@@ -174,9 +174,9 @@ class DynectSession(SessionEngine):
         # else:
             # this is called after a successful authentication, so the token is already updated
             # if we have already authenticated this user, update so we have the latest token
-            user['token'] = self._token
-            self._open_user_sessions[user['user_name']] = user
-            self.set_active_user(user['user_name'])
+        user['token'] = self._token
+        self._open_user_sessions[user['user_name']] = user
+        self.set_active_user(user['user_name'])
 
     def set_active_user(self, username):
         """Set the currently active session based on username.

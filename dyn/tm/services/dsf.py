@@ -2560,7 +2560,7 @@ class DSFRuleset(object):
         for old_pool in self._response_pools:
             api_args['response_pools'].append({'dsf_response_pool_id': old_pool._dsf_response_pool_id})
         api_args['response_pools'].append({'failover': ip})
-        print api_args
+        print(api_args)
         self._update(api_args, publish)
 
     def order_response_pools(self, pool_list, publish=True):

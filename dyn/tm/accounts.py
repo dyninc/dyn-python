@@ -778,7 +778,7 @@ class User(object):
         """Remove this specific zones from the
         :class:`~dyn.tm.accounts.User`
 
-        :param zones: the zones to be updated
+        :param zones: array of the zones to be updated
         """
         api_args = {}
         if zones is not None:

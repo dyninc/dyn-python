@@ -764,6 +764,27 @@ class User(object):
         uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
         DynectSession.get_session().execute(uri, 'DELETE')
 
+    def add_zone(self, zone):
+        """Add individual permissions to this :class:`~dyn.tm.accounts.User`
+
+        :param permission: the permission to add
+        """
+        if zone not in self._zone:
+            self.permissions.append(zone)
+            uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
+            DynectSession.get_session().execute(uri, 'POST')
+
+    def delete_zone(self, zone):
+        """Remove this specific permission from the
+        :class:`~dyn.tm.accounts.User`
+
+        :param permission: the permission to remove
+        """
+        if zone in self._zone:
+            self.permissions.remove(zone)
+        uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
+        DynectSession.get_session().execute(uri, 'DELETE')
+
     def add_forbid_rule(self, permission, zone=None):
         """Adds the forbid rule to the :class:`~dyn.tm.accounts.User`'s
         permission group

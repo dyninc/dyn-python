@@ -376,8 +376,9 @@ class User(object):
         self._nickname = self._organization = self._phone = self._address = None
         self._address_2 = self._city = self._country = self._fax = None
         self._notify_email = self._pager_email = self._post_code = None
-        self._group_name = self._permission = self._zone = self._forbid = None
+        self._group_name = self._permission = self._forbid = None
         self._status = self._website = None
+        self._zone = []
         self.permissions = []
         self.permission_groups = []
         self.groups = []
@@ -441,7 +442,11 @@ class User(object):
                                                        api_args)
 
         for val in response['data']['allowed']:
+            print(val)
             self.permissions.append(val['name'])
+            for zone in val['zone']:
+                if zone['zone_name'] not in self._zone:
+                    self._zone.append(zone['zone_name'])
 
     def _update(self, api_args=None):
         response = DynectSession.get_session().execute(self.uri, 'PUT',

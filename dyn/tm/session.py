@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module implements an interface to a DynECT REST Session. It provides
 easy access to all other functionality within the dynect library via
 methods that return various types of DynECT objects which will provide their
@@ -17,13 +16,12 @@ class DynectSession(SessionEngine):
     _valid_methods = ('DELETE', 'GET', 'POST', 'PUT')
     uri_root = '/REST'
 
-    def __init__(self, customer, username, password, host='api.dynect.net', 
+    def __init__(self, customer, username, password, host='api.dynect.net',
                  port=443, ssl=True, api_version='current', auto_auth=True,
                  key=None, history=False, proxy_host=None, proxy_port=None,
-                 proxy_user=None, proxy_pass=None):
+                 proxy_user=None, proxy_pass=None, timeout=300):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
-
         :param host: DynECT API server address
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
@@ -43,15 +41,20 @@ class DynectSession(SessionEngine):
         """
         super(DynectSession, self).__init__(host, port, ssl, history,
                                             proxy_host, proxy_port,
-                                            proxy_user, proxy_pass)
+                                            proxy_user, proxy_pass, timeout=timeout)
         self.__cipher = AESCipher(key)
         self.extra_headers = {'API-Version': api_version}
-        self.customer = customer
-        self.username = username
-        self.password = self.__cipher.encrypt(password)
+        self._open_user_sessions = None
+        self._active_user_session = {
+            "customer_name": customer,
+            "user_name": username,
+            "password": self.__cipher.encrypt(password)
+        }
         self.connect()
         if auto_auth:
-            self.authenticate()
+            self.authenticate(self._active_user_session['customer_name'],
+                              self._active_user_session['user_name'],
+                              self._active_user_session['password'])
 
     def __enter__(self):
         """Yield this instance as a reference for use within the context block
@@ -72,8 +75,12 @@ class DynectSession(SessionEngine):
         # Need to force a re-connect on next execute
         self._conn.close()
         self._conn.connect()
-        # Need to get a new Session token
-        self.execute('/REST/Session/', 'POST', self.__auth_data)
+        self._open_user_sessions = None
+        # Need to get a new Session token for the last active session
+        self.authenticate(self.__auth_data['customer_name'],
+                          self.__auth_data['user_name'],
+                          self.__auth_data['password'])
+
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
         return self.execute(uri, method, raw_args, final=True)
@@ -81,10 +88,9 @@ class DynectSession(SessionEngine):
     def _process_response(self, response, method, final=False):
         """Process an API response for failure, incomplete, or success and
         throw any appropriate errors
-
         :param response: the JSON response from the request being processed
         :param method: the HTTP method
-        :param final: boolean flag representing whether or not to continue 
+        :param final: boolean flag representing whether or not to continue
             polling
         """
         status = response['status']
@@ -113,22 +119,20 @@ class DynectSession(SessionEngine):
 
     def update_password(self, new_password):
         """Update the current users password
-
         :param new_password: The new password to use
         """
         uri = '/Password/'
         api_args = {'password': new_password}
         self.execute(uri, 'PUT', api_args)
-        self.password = self.__cipher.encrypt(new_password)
+        self._active_user_session['password'] = self.__cipher.encrypt(new_password)
 
     def user_permissions_report(self, user_name=None):
         """Returns information regarding the requested user's permission access
-
         :param user_name: The user whose permissions will be returned. Defaults
             to the current user
         """
         api_args = dict()
-        api_args['user_name'] = user_name or self.username
+        api_args['user_name'] = user_name or self._active_user_session['user_name']
         uri = '/UserPermissionReport/'
         response = self.execute(uri, 'POST', api_args)
         permissions = []
@@ -144,16 +148,75 @@ class DynectSession(SessionEngine):
         if self._permissions is None:
             self._permissions = self.user_permissions_report()
         return self._permissions
+
     @permissions.setter
     def permissions(self, value):
         pass
 
-    def authenticate(self):
-        """Authenticate to the DynectSession service with the provided
-        credentials
+    def get_active_session(self):
         """
-        api_args = {'customer_name': self.customer, 'user_name': self.username,
-                    'password': self.__cipher.decrypt(self.password)}
+        :return: dictionary of the currently active user session
+        """
+        return self._active_user_session
+
+    def get_open_sessions(self):
+        """
+        :return: dictionary of all active user sessions
+        """
+        return self._open_user_sessions
+
+    def add_user_session(self, user):
+        """Add a new user session to the dict of open user sessions."""
+        if self._open_user_sessions is None:
+            self._open_user_sessions = {}
+        # if user['user_name'] in self._open_user_sessions:
+            # raise ValueError("Already have an open session for {0}".format(user['user_name']))
+        # else:
+            # this is called after a successful authentication, so the token is already updated
+            # if we have already authenticated this user, update so we have the latest token
+        user['token'] = self._token
+        self._open_user_sessions[user['user_name']] = user
+        self.set_active_user(user['user_name'])
+
+    def set_active_user(self, username):
+        """Set the currently active session based on username.
+        This will update the token used for API requests
+        """
+        if username in self._open_user_sessions:
+            self._active_user_session = self._open_user_sessions[username]
+            self._token = self._active_user_session['token']
+        else:
+            raise ValueError("No open session for {0}".format(username))
+
+    def log_out_active_user(self):
+        """Log the active user session out of the DynECT system. Set active
+        user session to next available, None if none available
+        """
+        # logout of active user session
+        self.execute('/Session', 'DELETE', {})
+        # remove session from dict of active user sessions
+        del self._open_user_sessions[self._active_user_session['user_name']]
+
+        # reset active user session to next open session
+        self._active_user_session = None
+        for user in self._open_user_sessions:
+            self.set_active_user(user)
+            break
+
+    def authenticate(self, customer=None, username=None, password=None):
+        """Authenticate to the DynectSession service with the provided
+        credentials. This can be called to add multiple user sessions.
+        User sessions can be managed by calling set_active_user
+        """
+        if customer is None:
+            customer = self._active_user_session['customer_name']
+        if username is None:
+            username = self._active_user_session['user_name']
+        if password is None:
+            password = self._active_user_session['password']
+
+        api_args = {'customer_name': customer, 'user_name': username,
+                    'password': password}
         try:
             response = self.execute('/Session/', 'POST', api_args)
         except IOError:
@@ -162,21 +225,28 @@ class DynectSession(SessionEngine):
             self.logger.error('An error was encountered authenticating to Dyn')
             raise DynectAuthError(response['msgs'])
         else:
+            self.add_user_session(api_args)
             self.logger.info('DynectSession Authentication Successful')
 
     def log_out(self):
-        """Log the current session out from the DynECT API system"""
-        self.execute('/Session/', 'DELETE', {})
+        """Log the current sessions out from the DynECT API system"""
+        for sess in self._open_user_sessions.keys():
+            if self._active_user_session['user_name'] != sess:
+                self.set_active_user(sess)
+            self.log_out_active_user()
+
         self.close_session()
 
     @property
     def __auth_data(self):
         """A dict of the authdata required to authenticate as this user"""
-        return {'customer_name': self.customer, 'user_name': self.username,
-                'password': self.__cipher.decrypt(self.password)}
+        authdata = self._active_user_session
+        if authdata is not None:
+            authdata['password'] = self.__cipher.decrypt(authdata['password'])
+        return authdata
 
     def __str__(self):
         """str override"""
         header = super(DynectSession, self).__str__()
-        return header + force_unicode(': {}, {}').format(self.customer,
-                                                         self.username)
+        return header + force_unicode(': {}, {}').format(self.__auth_data['customer_name'],
+                                                         self.__auth_data['user_name'])

@@ -1,5 +1,8 @@
 *.py[cod]
 
+# test files
+.tests/
+
 # C extensions
 *.so
 

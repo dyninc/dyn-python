@@ -1,6 +1,14 @@
 Release History
 ---------------
 
+1.6.4 (2016-5-31)
+++++++++++++++++
+*Added support for adding/replacing/removing zone permissions
+*Update user get to support permissions and zone permissions
+*Multiple user account support added to DynectSession
+*Added configurable timeout parameter to http requests
+
+
 1.6.3 (2016-3-21)
 ++++++++++++++++
 *Added TrafficDirector:replace_all_rulesets to wholesale replace rulesets on a TrafficDirector

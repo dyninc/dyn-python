@@ -3200,7 +3200,7 @@ class DSFNotifier(object):
             return
         if 'td' in kwargs:
             del kwargs['td']
-            self._build(kwargs['notifier'])
+            self._build(kwargs['notifier'], link_id=kwargs['link_id'])
             return
         elif len(args) + len(kwargs) == 1:
             self._get(*args, **kwargs)
@@ -3251,9 +3251,10 @@ class DSFNotifier(object):
         self._build(response['data'])
 
 
-    def _build(self, data):
+    def _build(self, data, link_id=None):
         for key, val in data.items():
             setattr(self, '_' + key, val)
+        self._link_id = link_id
 
     @property
     def label(self):
@@ -3266,9 +3267,13 @@ class DSFNotifier(object):
         self._label = value
 
     @property
+    def link_id(self):
+        """ Link ID connecting thie Notifier to TD service """
+        return self._link_id
+
+    @property
     def recipients(self):
         return self._recipients
-
 
     def add_recipient(self, new_recipient, format='email'):
         recipients = self._recipients
@@ -3448,8 +3453,9 @@ class TrafficDirector(object):
                                                        api_args)
         self._build(response['data'])
         #We hose the note if a publish was requested
-        if api_args['publish'] == 'Y':
-            self._note = None         
+        if api_args.get('publish', None):
+            if api_args['publish'] == 'Y':
+                self._note = None         
 
     def publish(self, notes=None):
         """Publish changes to :class:`TrafficDirector`.
@@ -3513,9 +3519,9 @@ class TrafficDirector(object):
         api_args = {'revert': True}
         self._update(api_args)
 
-    def add_notifier(self, notifier):
+    def add_notifier(self, notifier, notes=None):
         """Links the :class:`DSFNotifier` with the specified id to this Traffic Director
-        service
+        service, Accepts :class:`DSFNotifier` or :class:`Notifier` or the notifier public id.
         """
         if isinstance(notifier, DSFNotifier):
             _notifier_id = notifier._notifier_id
@@ -3526,27 +3532,24 @@ class TrafficDirector(object):
         else:
             raise Exception("Cannot sensibly determine Notifier type, must be DSFNotifier, or notifier_id string")
         api_args = {'add_notifier': True, 'notifier_id': _notifier_id}
+        if notes:
+            api_args['notes'] = notes 
         self._update(api_args)
 
 
-    def del_notifier(self, notifier):
-        """Links the :class:`DSFNotifier` with the specified id to this Traffic Director
-        service
+    def del_notifier(self, notifier, notes=None):
+        """delinks the :class:`DSFNotifier` with the specified id to this Traffic Director
+        service. Accepts :class:`DSFNotifier` or :class:`Notifier`.
         """
         if isinstance(notifier, DSFNotifier):
-            _notifier_id = notifier._notifier_id
+            _link_id = notifier._link_id
         elif isinstance(notifier, Notifier):
-            _notifier_id = notifier._notifier_id
-        elif type(notifier) is str or type(notifier) is unicode:
-            _notifier_id = notifier
+            _link_id = notifier._link_id
         else:
             raise Exception("Cannot sensibly determine Notifier type, must be DSFNotifier, or notifier_id string")
-        self.refresh()
-        safeNotifiers= [{'notifier_id': notifier._notifier_id} for notifier in self._notifiers
-                        if notifier._notifier_id != _notifier_id]
-
-
-        api_args = {'notifiers': safeNotifiers}
+        api_args = {'remove_notifier': True, 'link_id': _link_id}
+        if notes:
+            api_args['notes'] = notes 
         self._update(api_args)
 
     def remove_orphans(self):
@@ -3809,13 +3812,11 @@ class TrafficDirector(object):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
 
-    def delete(self, notes=None):
+    def delete(self):
         """Delete this :class:`TrafficDirector` from the DynECT System
         :param notes: Optional zone publish notes
         """
         api_args = {}
-        if notes:
-            api_args['notes'] = notes
         self.uri = '/DSF/{}/'.format(self._service_id)
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 

@@ -765,9 +765,9 @@ class User(object):
         DynectSession.get_session().execute(uri, 'DELETE')
 
     def add_zone(self, zone):
-        """Add individual permissions to this :class:`~dyn.tm.accounts.User`
+        """Add individual zones to this :class:`~dyn.tm.accounts.User`
 
-        :param permission: the permission to add
+        :param zone: the zone to add
         """
         if zone not in self._zone:
             self.permissions.append(zone)
@@ -775,10 +775,10 @@ class User(object):
             DynectSession.get_session().execute(uri, 'POST')
 
     def delete_zone(self, zone):
-        """Remove this specific permission from the
+        """Remove this specific zones from the
         :class:`~dyn.tm.accounts.User`
 
-        :param permission: the permission to remove
+        :param zone: the zone to remove
         """
         if zone in self._zone:
             self.permissions.remove(zone)

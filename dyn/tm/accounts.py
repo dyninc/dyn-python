@@ -770,9 +770,24 @@ class User(object):
         :param zone: the zone to add
         """
         if zone not in self._zone:
-            self.permissions.append(zone)
+            self._zone.append(zone)
             uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
             DynectSession.get_session().execute(uri, 'POST')
+
+    def replace_zone(self, zones):
+        """Remove this specific zones from the
+        :class:`~dyn.tm.accounts.User`
+
+        :param zones: the zones to be updated
+        """
+        api_args = {}
+        if zones is not None:
+            api_args['zones'] = zones
+            self._zone = zones
+        else:
+            self._zone = []
+        uri = '/UserZoneEntry/{}/'.format(self._user_name)
+        DynectSession.get_session().execute(uri, 'PUT')
 
     def delete_zone(self, zone):
         """Remove this specific zones from the
@@ -781,7 +796,7 @@ class User(object):
         :param zone: the zone to remove
         """
         if zone in self._zone:
-            self.permissions.remove(zone)
+            self._zone.remove(zone)
         uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
         DynectSession.get_session().execute(uri, 'DELETE')
 

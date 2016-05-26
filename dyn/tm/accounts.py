@@ -371,6 +371,7 @@ class User(object):
         super(User, self).__init__()
         self._user_name = user_name
         self.uri = '/User/{}/'.format(self._user_name)
+        self._permission_report_uri = '/UserPermissionReport/'
         self._password = self._email = self._first_name = self._last_name = None
         self._nickname = self._organization = self._phone = self._address = None
         self._address_2 = self._city = self._country = self._fax = None
@@ -434,6 +435,13 @@ class User(object):
                                                        api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
+
+        api_args = {'user_name': self._user_name}
+        response = DynectSession.get_session().execute(self._permission_report_uri, 'POST',
+                                                       api_args)
+
+        for val in response['data']['allowed']:
+            self.permissions.append(val['name'])
 
     def _update(self, api_args=None):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
@@ -618,7 +626,7 @@ class User(object):
         """A list of permissions assigned to this
         :class:`~dyn.tm.accounts.User`
         """
-        return self._permission
+        return self.permissions
     @permission.setter
     def permission(self, value):
         api_args = {'permission': value}
@@ -679,9 +687,10 @@ class User(object):
 
         :param permission: the permission to add
         """
-        self.permissions.append(permission)
-        uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
-        DynectSession.get_session().execute(uri, 'POST')
+        if permission not in self.permissions:
+            self.permissions.append(permission)
+            uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
+            DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions(self, permissions=None):
         """Replaces the list of permissions for this

@@ -487,6 +487,11 @@ class ActiveFailover(object):
         api_args['notify_events'] = value
         self._update(api_args)
 
+    def recover(self):
+        """Recover this :class:`ActiveFailover` service"""
+        api_args = {'recover': 'Y'}
+        self._update(api_args)
+
     @property
     def syslog_server(self):
         """The Hostname or IP address of a server to receive syslog

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging
 from datetime import datetime
 
-from ..utils import APIList, Active, unix_date
-from ..errors import DynectInvalidArgumentError
-from ..session import DynectSession
-from ...compat import force_unicode
+from dyn.compat import force_unicode
+from dyn.tm.utils import APIList, Active, unix_date
+from dyn.tm.errors import DynectInvalidArgumentError
+from dyn.tm.session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
@@ -14,6 +13,7 @@ __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
 
 class Monitor(object):
     """A :class:`Monitor` for RTTM Service. May be used as a HealthMonitor"""
+
     def __init__(self, protocol, interval, retries=None, timeout=None,
                  port=None, path=None, host=None, header=None, expected=None):
         """Create a :class:`Monitor` object
@@ -65,8 +65,8 @@ class Monitor(object):
         """eq override for comparing :class:`HealthMonitor` objects to JSON
         response hashes or other :class:`DNSSECKey` instances
 
-        :param other: the value to compare this :class:`HealthMonitor` to. Valid
-            input types: `dict`, :class:`HealthMonitor`
+        :param other: the value to compare this :class:`HealthMonitor` to.
+            Valid input types: `dict`, :class:`HealthMonitor`
         """
         if isinstance(other, dict):
             return False
@@ -98,8 +98,8 @@ class Monitor(object):
 
     @property
     def status(self):
-        """Get the current status of this :class:`HealthMonitor` from the DynECT
-        System
+        """Get the current status of this :class:`HealthMonitor` from the
+        DynECT System
         """
         self._get()
         return self._status
@@ -108,6 +108,7 @@ class Monitor(object):
     def protocol(self):
         """The protocol to monitor"""
         return self._protocol
+
     @protocol.setter
     def protocol(self, value):
         if value not in self.valid_protocols:
@@ -120,6 +121,7 @@ class Monitor(object):
     def interval(self):
         """How often to run this monitor"""
         return self._interval
+
     @interval.setter
     def interval(self, value):
         if value not in self.valid_intervals:
@@ -134,6 +136,7 @@ class Monitor(object):
         up
         """
         return self._retries
+
     @retries.setter
     def retries(self, value):
         self._retries = value
@@ -146,6 +149,7 @@ class Monitor(object):
         out
         """
         return self._timeout
+
     @timeout.setter
     def timeout(self, value):
         self._timeout = value
@@ -156,6 +160,7 @@ class Monitor(object):
     def port(self):
         """For HTTP(S)/SMTP/TCP probes, an alternate connection port"""
         return self._port
+
     @port.setter
     def port(self, value):
         self._port = value
@@ -166,6 +171,7 @@ class Monitor(object):
     def path(self):
         """For HTTP(S) probes, a specific path to request"""
         return self._path
+
     @path.setter
     def path(self, value):
         self._path = value
@@ -176,6 +182,7 @@ class Monitor(object):
     def host(self):
         """For HTTP(S) probes, a value to pass in to the Host"""
         return self._host
+
     @host.setter
     def host(self, value):
         self._host = value
@@ -188,6 +195,7 @@ class Monitor(object):
         separated by a newline character
         """
         return self._header
+
     @header.setter
     def header(self, value):
         self._header = value
@@ -201,6 +209,7 @@ class Monitor(object):
         this string means the monitor will report a down status
         """
         return self._expected
+
     @expected.setter
     def expected(self, value):
         self._expected = value
@@ -210,6 +219,7 @@ class Monitor(object):
     def __str__(self):
         """str override"""
         return force_unicode('<HealthMonitor>: {}').format(self._protocol)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -219,12 +229,14 @@ class Monitor(object):
 
 class PerformanceMonitor(Monitor):
     """A :class:`PerformanceMonitor` for RTTM Service."""
+
     def __init__(self, *args, **kwargs):
         super(PerformanceMonitor, self).__init__(*args, **kwargs)
         self.valid_intervals = (10, 20, 30, 60)
 
     def _get(self):
-        """Update this :class:`PerformanceMonitor` with data from the Dyn System
+        """Update this :class:`PerformanceMonitor` with data from the Dyn
+        System
         """
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
         api_args = {}
@@ -232,7 +244,8 @@ class PerformanceMonitor(Monitor):
         self._build(response['data']['performance_monitor'])
 
     def _update(self, api_args):
-        """Update the Dyn System with data from this :class:`PerformanceMonitor`
+        """Update the Dyn System with data from this
+        :class:`PerformanceMonitor`
         """
         uri = '/RTTM/{}/{}/'.format(self.zone, self.fqdn)
         response = DynectSession.get_session().execute(uri, 'PUT', api_args)
@@ -241,6 +254,7 @@ class PerformanceMonitor(Monitor):
     def __str__(self):
         """str override"""
         return force_unicode('<PerformanceMonitor>: {}').format(self._protocol)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -252,6 +266,7 @@ class RegionPoolEntry(object):
     """Creates a new RTTM service region pool entry in the zone/node
     indicated
     """
+
     def __init__(self, address, label, weight, serve_mode, **kwargs):
         """Create a :class:`RegionPoolEntry` object
 
@@ -281,7 +296,8 @@ class RegionPoolEntry(object):
 
     def _update(self, args):
         """Private method for processing various updates"""
-        uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone, self._fqdn,
+        uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone,
+                                                         self._fqdn,
                                                          self._region_code,
                                                          self._address)
         response = DynectSession.get_session().execute(uri, 'PUT', args)
@@ -289,7 +305,8 @@ class RegionPoolEntry(object):
             setattr(self, '_' + key, val)
 
     def _get(self):
-        uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone, self._fqdn,
+        uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone,
+                                                         self._fqdn,
                                                          self._region_code,
                                                          self._address)
         args = {'detail': 'Y'}
@@ -301,6 +318,7 @@ class RegionPoolEntry(object):
     def logs(self):
         self._get()
         return self._log
+
     @logs.setter
     def logs(self, value):
         pass
@@ -309,6 +327,7 @@ class RegionPoolEntry(object):
     def address(self):
         """The IPv4 address or FQDN of this Node IP"""
         return self._address
+
     @address.setter
     def address(self, new_address):
         api_args = {'new_address': new_address}
@@ -318,6 +337,7 @@ class RegionPoolEntry(object):
     def label(self):
         """A descriptive string identifying this IP"""
         return self._label
+
     @label.setter
     def label(self, value):
         self._label = value
@@ -326,10 +346,11 @@ class RegionPoolEntry(object):
 
     @property
     def weight(self):
-        """A number from 1-15 describing how often this record should be served.
-         The higher the number, the more often the address is served
-         """
+        """A number from 1-15 describing how often this record should be
+        served. The higher the number, the more often the address is served
+        """
         return self._weight
+
     @weight.setter
     def weight(self, new_weight):
         if new_weight < 1 or new_weight > 15:
@@ -342,6 +363,7 @@ class RegionPoolEntry(object):
     def serve_mode(self):
         """Sets the behavior of this particular record"""
         return self._serve_mode
+
     @serve_mode.setter
     def serve_mode(self, serve_mode):
         if serve_mode not in self.valid_modes:
@@ -355,6 +377,7 @@ class RegionPoolEntry(object):
     def region_code(self):
         """Name of the region"""
         return self._region_code
+
     @region_code.setter
     def region_code(self, value):
         pass
@@ -367,7 +390,8 @@ class RegionPoolEntry(object):
 
     def delete(self):
         """Delete this :class:`RegionPoolEntry`"""
-        uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone, self._fqdn,
+        uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone,
+                                                         self._fqdn,
                                                          self._region_code,
                                                          self._address)
         DynectSession.get_session().execute(uri, 'DELETE', {})
@@ -375,6 +399,7 @@ class RegionPoolEntry(object):
     def __str__(self):
         """str override"""
         return force_unicode('<RTTMRegionPoolEntry>: {}').format(self._address)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -384,6 +409,7 @@ class RegionPoolEntry(object):
 
 class RTTMRegion(object):
     """docstring for RTTMRegion"""
+
     def __init__(self, zone, fqdn, region_code, pool, autopopulate=None,
                  ep=None, apmc=None, epmc=None, serve_count=None,
                  failover_mode=None, failover_data=None):
@@ -410,13 +436,14 @@ class RTTMRegion(object):
         """
         super(RTTMRegion, self).__init__()
         self.valid_region_codes = ('US West', 'US Central', 'US East', 'Asia',
-                                   'EU West', 'EU Central', 'EU East', 'global')
+                                   'EU West', 'EU Central', 'EU East',
+                                   'global')
         self.valid_modes = ('ip', 'cname', 'region', 'global')
         self._zone = zone
         self._fqdn = fqdn
         if region_code not in self.valid_region_codes:
-                raise DynectInvalidArgumentError('region_code', region_code,
-                                                 self.valid_region_codes)
+            raise DynectInvalidArgumentError('region_code', region_code,
+                                             self.valid_region_codes)
         self._region_code = region_code
         if len(pool) > 0 and isinstance(pool[0], dict):
             pool_list = pool
@@ -447,7 +474,8 @@ class RTTMRegion(object):
         if self._autopopulate:
             if self._autopopulate not in ('Y', 'N'):
                 raise DynectInvalidArgumentError('autopopulate',
-                                                 self._autopopulate, ('Y', 'N'))
+                                                 self._autopopulate,
+                                                 ('Y', 'N'))
             api_args['autopopulate'] = self._autopopulate
         if self._ep:
             api_args['ep'] = self._ep
@@ -499,6 +527,7 @@ class RTTMRegion(object):
         ignored. Must be either 'Y' or 'N'.
         """
         return self._autopopulate
+
     @autopopulate.setter
     def autopopulate(self, value):
         self._autopopulate = value
@@ -507,11 +536,12 @@ class RTTMRegion(object):
 
     @property
     def ep(self):
-        """Eligibility Pool - How many records will make it into the eligibility
-         pool. The addresses that get chosen will be those that respond the
-         fastest
-         """
+        """Eligibility Pool - How many records will make it into the
+        eligibility pool. The addresses that get chosen will be those that
+        respond the fastest
+        """
         return self._ep
+
     @ep.setter
     def ep(self, value):
         self._ep = value
@@ -520,10 +550,11 @@ class RTTMRegion(object):
 
     @property
     def apmc(self):
-        """The minimum amount of IPs that must be in the up state, otherwise the
-        region will be in failover.
+        """The minimum amount of IPs that must be in the up state, otherwise
+        the region will be in failover.
         """
         return self._apmc
+
     @apmc.setter
     def apmc(self, value):
         self._apmc = value
@@ -532,10 +563,11 @@ class RTTMRegion(object):
 
     @property
     def epmc(self):
-        """The minimum amount of IPs that must be populated in the EP, otherwise
-        the region will be in failover
+        """The minimum amount of IPs that must be populated in the EP,
+        otherwise the region will be in failover
         """
         return self._epmc
+
     @epmc.setter
     def epmc(self, value):
         self._epmc = value
@@ -546,6 +578,7 @@ class RTTMRegion(object):
     def serve_count(self):
         """How many records will be returned in each DNS response"""
         return self._serve_count
+
     @serve_count.setter
     def serve_count(self, value):
         self._serve_count = value
@@ -558,6 +591,7 @@ class RTTMRegion(object):
         'region', or 'global'
         """
         return self._failover_mode
+
     @failover_mode.setter
     def failover_mode(self, value):
         self._failover_mode = value
@@ -569,7 +603,9 @@ class RTTMRegion(object):
         """Dependent upon failover_mode. Must be one of ip', 'cname', 'region',
         or 'global'
         """
+
         return self._failover_data
+
     @failover_data.setter
     def failover_data(self, value):
         if value not in self.valid_modes:
@@ -582,6 +618,7 @@ class RTTMRegion(object):
     def pool(self):
         """The IP Pool list for this :class:`RTTMRegion`"""
         return self._pool
+
     @pool.setter
     def pool(self, value):
         self._pool = value
@@ -593,6 +630,7 @@ class RTTMRegion(object):
         """The current state of the region."""
         self._get()
         return self._status
+
     @status.setter
     def status(self, value):
         pass
@@ -627,6 +665,7 @@ class RTTMRegion(object):
     def __str__(self):
         """str override"""
         return force_unicode('<RTTMRegion>: {}').format(self._region_code)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -643,8 +682,8 @@ class RTTM(object):
             active status or if the service should remain in failover until
             manually reset. Must be one of 'Y' or 'N'
         :param ttl: Time To Live in seconds of records in the service. Must be
-            less than 1/2 of the Health Probe's monitoring interval. Must be one
-            of 30, 60, 150, 300, or 450.
+            less than 1/2 of the Health Probe's monitoring interval. Must be
+            one of 30, 60, 150, 300, or 450.
         :param notify_events: A list of the events which trigger notifications.
             Must be one of 'ip', 'svc', or 'nosrv'
         :param syslog_server: The Hostname or IP address of a server to receive
@@ -657,9 +696,10 @@ class RTTM(object):
             syslog, lpr, news, uucp, cron, authpriv, ftp, ntp, security,
             console, local0, local1, local2, local3, local4, local5, local6, or
             local7
-        :param syslog_delivery: The syslog delivery action type. 'all' will deliver
-            notifications no matter what the endpoint state. 'change' (default) will
-            deliver only on change in the detected endpoint state
+        :param syslog_delivery: The syslog delivery action type. 'all' will
+            deliver notifications no matter what the endpoint state. 'change'
+            (default) will deliver only on change in the detected endpoint
+            state
         :param region: A list of :class:`RTTMRegion`'s
         :param monitor: The :class:`Monitor` for this service
         :param performance_monitor: The performance monitor for the service
@@ -680,15 +720,16 @@ class RTTM(object):
             %adr	address of monitored node
             %med	median value
             %rts	response times (RTTM)
-        :param recovery_delay: number of up status polling intervals to consider service up
+        :param recovery_delay: number of up status polling intervals to
+            consider service up
         """
         super(RTTM, self).__init__()
         self.valid_ttls = (30, 60, 150, 300, 450)
         self.valid_notify_events = ('ip', 'svc', 'nosrv')
         self.valid_syslog_facilities = ('kern', 'user', 'mail', 'daemon',
-                                        'auth', 'syslog', 'lpr', 'news', 'uucp',
-                                        'cron', 'authpriv', 'ftp', 'ntp',
-                                        'security', 'console', 'local0',
+                                        'auth', 'syslog', 'lpr', 'news',
+                                        'uucp', 'cron', 'authpriv', 'ftp',
+                                        'ntp', 'security', 'console', 'local0',
                                         'local1', 'local2', 'local3', 'local4',
                                         'local5', 'local6', 'local7')
         self._zone = zone
@@ -696,9 +737,10 @@ class RTTM(object):
         self.uri = '/RTTM/{}/{}/'.format(self._zone, self._fqdn)
         self._auto_recover = self._ttl = self._notify_events = None
         self._syslog_server = self._syslog_port = self._syslog_ident = None
-        self._syslog_facility = self._monitor = self._performance_monitor = None
-        self._contact_nickname = self._active = self._syslog_delivery = None
-        self._syslog_probe_fmt = self._syslog_status_fmt = self._syslog_rttm_fmt = None
+        self._syslog_facility = self._monitor = None
+        self._performance_monitor = self._contact_nickname = None
+        self._active = self._syslog_delivery = self._syslog_probe_fmt = None
+        self._syslog_status_fmt = self._syslog_rttm_fmt = None
         self._recovery_delay = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
@@ -712,9 +754,10 @@ class RTTM(object):
 
     def _post(self, contact_nickname, performance_monitor, region, ttl=None,
               auto_recover=None, notify_events=None, syslog_server=None,
-              syslog_port=514, syslog_ident='dynect', syslog_facility='daemon', syslog_delivery='change',
-              syslog_probe_fmt = None, syslog_status_fmt = None, syslog_rttm_fmt = None, recovery_delay = None,
-              monitor=None):
+              syslog_port=514, syslog_ident='dynect', syslog_facility='daemon',
+              syslog_delivery='change', syslog_probe_fmt=None,
+              syslog_status_fmt=None, syslog_rttm_fmt=None,
+              recovery_delay=None, monitor=None):
         """Create a new RTTM Service on the DynECT System"""
         self._auto_recover = auto_recover
         self._ttl = ttl
@@ -810,7 +853,8 @@ class RTTM(object):
                     code = region.pop('region_code', None)
                     pool = region.pop('pool', None)
                     status = region.pop('status', None)
-                    r = RTTMRegion(self._zone, self._fqdn, code, pool, **region)
+                    r = RTTMRegion(self._zone, self._fqdn, code, pool,
+                                   **region)
                     r._status = status
                     self._region.append(r)
             elif key == 'monitor':
@@ -828,7 +872,8 @@ class RTTM(object):
                 else:
                     proto = val.pop('protocol', None)
                     inter = val.pop('interval', None)
-                    self._performance_monitor = PerformanceMonitor(proto, inter,
+                    self._performance_monitor = PerformanceMonitor(proto,
+                                                                   inter,
                                                                    **val)
             elif key == 'notify_events':
                 self._notify_events = [item.strip() for item in val.split(',')]
@@ -886,7 +931,8 @@ class RTTM(object):
         self._build(response['data'])
 
     def recover(self, recoverip=None, address=None):
-        """Recovers the RTTM service or a specific node IP within the service"""
+        """Recovers the RTTM service or a specific node IP within the service
+        """
         api_args = {'recover': True}
         if recoverip:
             api_args['recoverip'] = recoverip
@@ -907,6 +953,7 @@ class RTTM(object):
             this :class:`ReverseDNS` Service
         """
         return self._active
+
     @active.setter
     def active(self, value):
         deactivate = ('N', False)
@@ -918,12 +965,13 @@ class RTTM(object):
 
     @property
     def auto_recover(self):
-        """Indicates whether or not the service should automatically come out of
-        failover when the IP addresses resume active status or if the service
-        should remain in failover until manually reset. Must be one of 'Y' or
-        'N'
+        """Indicates whether or not the service should automatically come out
+        of failover when the IP addresses resume active status or if the
+        service should remain in failover until manually reset. Must be one of
+        'Y' or 'N'
         """
         return self._auto_recover
+
     @auto_recover.setter
     def auto_recover(self, value):
         if value not in ('Y', 'N'):
@@ -939,6 +987,7 @@ class RTTM(object):
         150, 300, or 450.
         """
         return self._ttl
+
     @ttl.setter
     def ttl(self, value):
         if value not in self.valid_ttls:
@@ -948,10 +997,11 @@ class RTTM(object):
 
     @property
     def notify_events(self):
-        """A list of events which trigger notifications. Valid values are: 'ip',
-        'svc', and 'nosrv'
+        """A list of events which trigger notifications. Valid values are:
+        'ip', 'svc', and 'nosrv'
         """
         return self._notify_events
+
     @notify_events.setter
     def notify_events(self, value):
         for val in value:
@@ -986,6 +1036,7 @@ class RTTM(object):
         """The port where the remote syslog server listens for notifications"""
         self._get()
         return self._syslog_port
+
     @syslog_port.setter
     def syslog_port(self, value):
         api_args = {'syslog_port': value}
@@ -996,6 +1047,7 @@ class RTTM(object):
         """The ident to use when sending syslog notifications"""
         self._get()
         return self._syslog_ident
+
     @syslog_ident.setter
     def syslog_ident(self, value):
         api_args = {'syslog_ident': value}
@@ -1004,12 +1056,13 @@ class RTTM(object):
     @property
     def syslog_facility(self):
         """The syslog facility to use when sending syslog notifications. Must
-        be one of kern, user, mail, daemon, auth, syslog, lpr, news, uucp, cron,
-        authpriv, ftp, ntp, security, console, local0, local1, local2, local3,
-        local4, local5, local6, or local7
+        be one of kern, user, mail, daemon, auth, syslog, lpr, news, uucp,
+        cron, authpriv, ftp, ntp, security, console, local0, local1, local2,
+        local3, local4, local5, local6, or local7
         """
         self._get()
         return self._syslog_facility
+
     @syslog_facility.setter
     def syslog_facility(self, value):
         if value not in self.valid_syslog_facilities:
@@ -1072,6 +1125,7 @@ class RTTM(object):
     def region(self):
         """A list of :class:`RTTMRegion`'s"""
         return self._region
+
     @region.setter
     def region(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
@@ -1085,6 +1139,7 @@ class RTTM(object):
     def monitor(self):
         """The :class:`Monitor` for this service"""
         return self._monitor
+
     @monitor.setter
     def monitor(self, value):
         if isinstance(value, Monitor):
@@ -1096,6 +1151,7 @@ class RTTM(object):
     def performance_monitor(self):
         """The Performance :class:`Monitor` for this service"""
         return self._performance_monitor
+
     @performance_monitor.setter
     def performance_monitor(self, value):
         if isinstance(value, Monitor):
@@ -1108,6 +1164,7 @@ class RTTM(object):
     def contact_nickname(self):
         """The name of contact to receive notifications from this service"""
         return self._contact_nickname
+
     @contact_nickname.setter
     def contact_nickname(self, value):
         api_args = {'contact_nickname': value}
@@ -1121,6 +1178,7 @@ class RTTM(object):
     def __str__(self):
         """str override"""
         return force_unicode('<RTTM>: {}').format(self._fqdn)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

@@ -1,13 +1,16 @@
+# -*- coding: utf-8 -*-
 """This module implements an interface to a DynECT REST Session. It provides
 easy access to all other functionality within the dynect library via
 methods that return various types of DynECT objects which will provide their
 own respective functionality.
 """
 # API Libs
-from ..core import SessionEngine
-from .errors import *
-from ..compat import force_unicode
-from ..encrypt import AESCipher
+from dyn.compat import force_unicode
+from dyn.core import SessionEngine
+from dyn.encrypt import AESCipher
+from dyn.tm.errors import (DynectAuthError, DynectCreateError,
+                           DynectUpdateError, DynectGetError,
+                           DynectDeleteError, DynectQueryTimeout)
 
 
 class DynectSession(SessionEngine):
@@ -22,6 +25,7 @@ class DynectSession(SessionEngine):
                  proxy_user=None, proxy_pass=None, timeout=300):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
+
         :param host: DynECT API server address
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
@@ -41,7 +45,8 @@ class DynectSession(SessionEngine):
         """
         super(DynectSession, self).__init__(host, port, ssl, history,
                                             proxy_host, proxy_port,
-                                            proxy_user, proxy_pass, timeout=timeout)
+                                            proxy_user, proxy_pass,
+                                            timeout=timeout)
         self.__cipher = AESCipher(key)
         self.extra_headers = {'API-Version': api_version}
         self._open_user_sessions = None
@@ -88,6 +93,7 @@ class DynectSession(SessionEngine):
     def _process_response(self, response, method, final=False):
         """Process an API response for failure, incomplete, or success and
         throw any appropriate errors
+
         :param response: the JSON response from the request being processed
         :param method: the HTTP method
         :param final: boolean flag representing whether or not to continue
@@ -119,20 +125,24 @@ class DynectSession(SessionEngine):
 
     def update_password(self, new_password):
         """Update the current users password
+
         :param new_password: The new password to use
         """
         uri = '/Password/'
         api_args = {'password': new_password}
         self.execute(uri, 'PUT', api_args)
-        self._active_user_session['password'] = self.__cipher.encrypt(new_password)
+        self._active_user_session['password'] = self.__cipher.encrypt(
+            new_password)
 
     def user_permissions_report(self, user_name=None):
         """Returns information regarding the requested user's permission access
+
         :param user_name: The user whose permissions will be returned. Defaults
             to the current user
         """
         api_args = dict()
-        api_args['user_name'] = user_name or self._active_user_session['user_name']
+        user_name = user_name or self._active_user_session['user_name']
+        api_args['user_name'] = user_name
         uri = '/UserPermissionReport/'
         response = self.execute(uri, 'POST', api_args)
         permissions = []
@@ -169,11 +179,6 @@ class DynectSession(SessionEngine):
         """Add a new user session to the dict of open user sessions."""
         if self._open_user_sessions is None:
             self._open_user_sessions = {}
-        # if user['user_name'] in self._open_user_sessions:
-            # raise ValueError("Already have an open session for {0}".format(user['user_name']))
-        # else:
-            # this is called after a successful authentication, so the token is already updated
-            # if we have already authenticated this user, update so we have the latest token
         user['token'] = self._token
         self._open_user_sessions[user['user_name']] = user
         self.set_active_user(user['user_name'])
@@ -247,5 +252,6 @@ class DynectSession(SessionEngine):
     def __str__(self):
         """str override"""
         header = super(DynectSession, self).__str__()
-        return header + force_unicode(': {}, {}').format(self.__auth_data['customer_name'],
-                                                         self.__auth_data['user_name'])
+        return header + force_unicode(': {}, {}').format(
+            self.__auth_data['customer_name'],
+            self.__auth_data['user_name'])

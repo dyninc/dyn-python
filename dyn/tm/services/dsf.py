@@ -1,31 +1,30 @@
 # -*- coding: utf-8 -*-
-"""This module contains wrappers for interfacing with every element of a Traffic
-Director (DSF) service.
+"""This module contains wrappers for interfacing with every element of a
+Traffic Director (DSF) service.
 """
 import dyn.tm.zones
-from ..utils import APIList, Active
-from ..errors import DynectInvalidArgumentError
-from ..records import *
-from ..session import DynectSession
-from ...compat import force_unicode
-from ..accounts import Notifier
-
+from dyn.compat import force_unicode
+from dyn.tm.utils import APIList, Active
+from dyn.tm.errors import DynectInvalidArgumentError
+from dyn.tm.records import *  # NOQA
+from dyn.tm.session import DynectSession
+from dyn.tm.accounts import Notifier
 
 __author__ = 'jnappi'
-__all__ = ['get_all_dsf_services', 'get_all_record_sets','get_all_failover_chains',
-           'get_all_response_pools', 'get_all_rulesets', 'get_all_dsf_monitors',
-           'get_all_records', 'get_all_notifiers', 'DSFARecord', 'DSFSSHFPRecord',
-           'get_record', 'get_record_set', 'get_failover_chain', 'get_response_pool',
-           'get_ruleset', 'get_dsf_monitor',
-           'DSFNotifier',
-           'DSFAAAARecord', 'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
-           'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord', 'DSFDSRecord',
-           'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord', 'DSFIPSECKEYRecord',
-           'DSFMXRecord', 'DSFNAPTRRecord', 'DSFPTRRecord', 'DSFPXRecord',
-           'DSFNSAPRecord', 'DSFRPRecord', 'DSFNSRecord', 'DSFSPFRecord',
-           'DSFSRVRecord', 'DSFTXTRecord', 'DSFRecordSet', 'DSFFailoverChain',
-           'DSFResponsePool', 'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor',
-           'TrafficDirector']
+__all__ = ['get_all_dsf_services', 'get_all_record_sets',
+           'get_all_failover_chains', 'get_all_response_pools',
+           'get_all_rulesets', 'get_all_dsf_monitors', 'get_all_records',
+           'get_all_notifiers', 'DSFARecord', 'DSFSSHFPRecord', 'get_record',
+           'get_record_set', 'get_failover_chain', 'get_response_pool',
+           'get_ruleset', 'get_dsf_monitor', 'DSFNotifier', 'DSFAAAARecord',
+           'DSFALIASRecord', 'DSFCERTRecord', 'DSFCNAMERecord',
+           'DSFDHCIDRecord', 'DSFDNAMERecord', 'DSFDNSKEYRecord',
+           'DSFDSRecord', 'DSFKEYRecord', 'DSFKXRecord', 'DSFLOCRecord',
+           'DSFIPSECKEYRecord', 'DSFMXRecord', 'DSFNAPTRRecord',
+           'DSFPTRRecord', 'DSFPXRecord', 'DSFNSAPRecord', 'DSFRPRecord',
+           'DSFNSRecord', 'DSFSPFRecord', 'DSFSRVRecord', 'DSFTXTRecord',
+           'DSFRecordSet', 'DSFFailoverChain', 'DSFResponsePool',
+           'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor', 'TrafficDirector']
 
 
 def get_all_dsf_services():
@@ -49,13 +48,15 @@ def get_all_notifiers():
         notifiers.append(DSFNotifier(None, api=False, **notify))
     return notifiers
 
+
 def get_all_records(service):
     """
     :param service: a dsf_id string, or :class:`TrafficDirector`
     :return: A ``list`` of :class:`DSFRecord`s from the passed in `service`
-    Warning! This query may take a long time to run with services with many records!
+    Warning! This query may take a long time to run with services with many
+    records!
     """
-    _service_id = _checkType(service)
+    _service_id = _check_type(service)
     uri = '/DSFRecord/{}/'.format(_service_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -67,50 +68,59 @@ def get_all_records(service):
         records += _constructor(response['data'])
     return records
 
+
 def get_all_record_sets(service):
     """:param service: a dsf_id string, or :class:`TrafficDirector`
-    :return: A ``list`` of :class:`DSFRecordSets` from the passed in `service`"""
-    _service_id = _checkType(service)
+    :return: A ``list`` of :class:`DSFRecordSets` from the passed in `service`
+    """
+    _service_id = _check_type(service)
     uri = '/DSFRecordSet/{}/'.format(_service_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
     recordSets = list()
     for pool in response['data']:
-        recordSets.append(DSFRecordSet(pool.pop('rdata_class'), api=False, **pool))
+        recordSets.append(
+            DSFRecordSet(pool.pop('rdata_class'), api=False, **pool))
     return recordSets
 
 
 def get_all_failover_chains(service):
     """:param service: a dsf_id string, or :class:`TrafficDirector`
-    :return: A ``list`` of :class:`DSFFailoverChains` from the passed in `service`"""
-    _service_id = _checkType(service)
+    :return: A ``list`` of :class:`DSFFailoverChains` from the passed in
+    `service`
+    """
+    _service_id = _check_type(service)
     uri = '/DSFRecordSetFailoverChain/{}/'.format(_service_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
     failoverChains = list()
     for pool in response['data']:
-        failoverChains.append(DSFFailoverChain(pool.pop('label'), api=False, **pool))
+        failoverChains.append(
+            DSFFailoverChain(pool.pop('label'), api=False, **pool))
     return failoverChains
-
 
 
 def get_all_response_pools(service):
     """:param service: a dsf_id string, or :class:`TrafficDirector`
-    :return: A ``list`` of :class:`DSFResponsePools` from the passed in `service`"""
-    _service_id = _checkType(service)
+    :return: A ``list`` of :class:`DSFResponsePools` from the passed in
+    `service`
+    """
+    _service_id = _check_type(service)
     uri = '/DSFResponsePool/{}/'.format(_service_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
     responsePools = list()
     for pool in response['data']:
-        responsePools.append(DSFResponsePool(pool.pop('label'), api=False, **pool))
+        responsePools.append(
+            DSFResponsePool(pool.pop('label'), api=False, **pool))
     return responsePools
 
 
 def get_all_rulesets(service):
     """:param service: a dsf_id string, or :class:`TrafficDirector`
-    :return: A ``list`` of :class:`DSFRulesets` from the passed in `service`"""
-    _service_id = _checkType(service)
+    :return: A ``list`` of :class:`DSFRulesets` from the passed in `service`
+    """
+    _service_id = _check_type(service)
     uri = '/DSFRuleset/{}/'.format(_service_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -118,6 +128,7 @@ def get_all_rulesets(service):
     for rule in response['data']:
         ruleset.append(DSFRuleset(rule.pop('label'), api=False, **rule))
     return ruleset
+
 
 def get_all_dsf_monitors():
     """:return: A ``list`` of :class:`DSFMonitor` Services"""
@@ -129,26 +140,27 @@ def get_all_dsf_monitors():
         mons.append(DSFMonitor(api=False, **dsf))
     return mons
 
-def get_record(record_id, service, always_list = False):
+
+def get_record(record_id, service, always_list=False):
     """
     returns :class:`DSFRecord`
     :param record_id: id of record you wish to pull up
     :param service: id of service which this record belongs. Can either be
      the service_id or a :class:`TrafficDirector` Object
     :param always_list: Force the returned record to always be in a list.
-    :return returns single record, unless this is a special record type, then a list is returned
+    :return returns single record, unless this is a special record type, then
+    a list is returned
     """
-    if service:
-        _service_id = _checkType(service)
-
+    _service_id = _check_type(service)
     uri = '/DSFRecord/{}/{}'.format(_service_id, record_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    record= _constructor(response['data'])
+    record = _constructor(response['data'])
     if len(record) > 1 or always_list:
         return record
     else:
         return record[0]
+
 
 def get_record_set(record_set_id, service):
     """
@@ -158,29 +170,31 @@ def get_record_set(record_set_id, service):
      the service_id or a :class:`TrafficDirector` Object
     :return returns :class:`DSFRecordSet` Object
     """
-    if service:
-        _service_id = _checkType(service)
-
+    _service_id = _check_type(service)
     uri = '/DSFRecordSet/{}/{}'.format(_service_id, record_set_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    return DSFRecordSet(response['data'].pop('rdata_class'), api=False, **response['data'])
+    return DSFRecordSet(response['data'].pop('rdata_class'), api=False,
+                        **response['data'])
+
 
 def get_failover_chain(failover_chain_id, service):
     """
     returns :class:`DSFFailoverChain`
-    :param failover_chain_id: id of :class:`DSFFailoverChain` you wish to pull up
+    :param failover_chain_id: id of :class:`DSFFailoverChain` you wish to pull
+        up
     :param service: id of service which this record belongs. Can either be
      the service_id or a :class:`TrafficDirector` Object
     :return returns :class:`DSFFailoverChain` Object
     """
-    if service:
-        _service_id = _checkType(service)
-
-    uri = '/DSFRecordSetFailoverChain/{}/{}'.format(_service_id, failover_chain_id)
+    _service_id = _check_type(service)
+    uri = '/DSFRecordSetFailoverChain/{}/{}'.format(_service_id,
+                                                    failover_chain_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    return DSFFailoverChain(response['data'].pop('label'), api=False, **response['data'])
+    return DSFFailoverChain(response['data'].pop('label'), api=False,
+                            **response['data'])
+
 
 def get_response_pool(response_pool_id, service):
     """
@@ -190,13 +204,13 @@ def get_response_pool(response_pool_id, service):
      the service_id or a :class:`TrafficDirector` Object
     :return returns :class:`DSFResponsePool` Object
     """
-    if service:
-        _service_id = _checkType(service)
-
+    _service_id = _check_type(service)
     uri = '/DSFResponsePool/{}/{}'.format(_service_id, response_pool_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    return DSFResponsePool(response['data'].pop('label'), api=False, **response['data'])
+    return DSFResponsePool(response['data'].pop('label'), api=False,
+                           **response['data'])
+
 
 def get_ruleset(ruleset_id, service):
     """
@@ -206,13 +220,13 @@ def get_ruleset(ruleset_id, service):
      the service_id or a :class:`TrafficDirector` Object
     :return returns :class:`DSFRuleset` Object
     """
-    if service:
-        _service_id = _checkType(service)
-
+    _service_id = _check_type(service)
     uri = '/DSFRuleset/{}/{}'.format(_service_id, ruleset_id)
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    return DSFRuleset(response['data'].pop('label'), api=False, **response['data'])
+    return DSFRuleset(response['data'].pop('label'), api=False,
+                      **response['data'])
+
 
 def get_dsf_monitor(monitor_id):
     """ A quick :class:`DSFmonitor` getter, for consistency sake.
@@ -224,7 +238,7 @@ def get_dsf_monitor(monitor_id):
     return DSFMonitor(api=False, **response['data'])
 
 
-def _checkType(service):
+def _check_type(service):
     if isinstance(service, TrafficDirector):
         _service_id = service.service_id
     elif type(service) is str or type(service) is unicode:
@@ -233,22 +247,23 @@ def _checkType(service):
         raise Exception('Value must be string, or TrafficDirector Object')
     return _service_id
 
+
 def _constructor(record):
-    returnRecords = []
+    return_records = []
     constructors = {'a': DSFARecord, 'aaaa': DSFAAAARecord,
-                            'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
-                            'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
-                            'dname': DSFDNAMERecord,
-                            'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
-                            'key': DSFKEYRecord, 'kx': DSFKXRecord,
-                            'loc': DSFLOCRecord,
-                            'ipseckey': DSFIPSECKEYRecord,
-                            'mx': DSFMXRecord, 'naptr': DSFNAPTRRecord,
-                            'ptr': DSFPTRRecord, 'px': DSFPXRecord,
-                            'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
-                            'ns': DSFNSRecord, 'spf': DSFSPFRecord,
-                            'srv': DSFSRVRecord, 'txt': DSFTXTRecord,
-                            'sshfp': DSFSSHFPRecord}
+                    'alias': DSFALIASRecord, 'cert': DSFCERTRecord,
+                    'cname': DSFCNAMERecord, 'dhcid': DSFDHCIDRecord,
+                    'dname': DSFDNAMERecord,
+                    'dnskey': DSFDNSKEYRecord, 'ds': DSFDSRecord,
+                    'key': DSFKEYRecord, 'kx': DSFKXRecord,
+                    'loc': DSFLOCRecord,
+                    'ipseckey': DSFIPSECKEYRecord,
+                    'mx': DSFMXRecord, 'naptr': DSFNAPTRRecord,
+                    'ptr': DSFPTRRecord, 'px': DSFPXRecord,
+                    'nsap': DSFNSAPRecord, 'rp': DSFRPRecord,
+                    'ns': DSFNSRecord, 'spf': DSFSPFRecord,
+                    'srv': DSFSRVRecord, 'txt': DSFTXTRecord,
+                    'sshfp': DSFSSHFPRecord}
     rec_type = record['rdata_class'].lower()
     constructor = constructors[rec_type]
     rdata_key = 'rdata_{}'.format(rec_type)
@@ -262,11 +277,13 @@ def _constructor(record):
         if constructor is DSFSRVRecord:
             record_data['rr_weight'] = record_data.pop('weight')
 
-        returnRecords.append(constructor(**record_data))
-    return returnRecords
+        return_records.append(constructor(**record_data))
+    return return_records
+
 
 class _DSFRecord(object):
     """Super Class for DSF Records."""
+
     def __init__(self, label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
         """Create a :class:`_DSFRecord` object.
@@ -302,12 +319,13 @@ class _DSFRecord(object):
 
         :param dsf_id: The unique system id for the DSF service associated with
             this :class:`DSFRecord`
-        :param record_set_id: The unique system id for the record set associated
-            with this :class:`DSFRecord`
+        :param record_set_id: The unique system id for the record set
+            associated with this :class:`DSFRecord`
         """
         self._service_id = dsf_id
         self._record_set_id = record_set_id
-        self.uri = '/DSFRecord/{}/{}/'.format(self._service_id, self._record_set_id)
+        self.uri = '/DSFRecord/{}/{}/'.format(self._service_id,
+                                              self._record_set_id)
         api_args = {}
         api_args = self.to_json(skip_svc=True)
         if publish:
@@ -321,62 +339,66 @@ class _DSFRecord(object):
 
         :param dsf_id: The unique system id for the DSF service associated with
             this :class:`DSFRecord`
-        :param dsf_record_id: The unique system id for the record set associated
-            with this :class:`DSFRecord`
+        :param dsf_record_id: The unique system id for the record set
+            associated with this :class:`DSFRecord`
         """
         self._service_id = dsf_id
         self._dsf_record_id = dsf_record_id
-        self.uri = '/DSFRecord/{}/{}/'.format(self._service_id, self._dsf_record_id)
+        self.uri = '/DSFRecord/{}/{}/'.format(self._service_id,
+                                              self._dsf_record_id)
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
         self._build(response['data'])
-
 
     def _update_record(self, api_args, publish=True):
         """Make the API call to update the current record type
 
         :param api_args: arguments to be pased to the API call
         """
-        record_rdata = '{}_rdata'.format(self._record_type.replace('Record','').replace('DSF','').lower())
+        record_rdata = '{}_rdata'.format(
+            self._record_type.replace('Record', '').replace('DSF', '').lower())
         new_api_args = {'rdata': {record_rdata: api_args['rdata']}}
 
         if not self._record_type.endswith('Record'):
             self._record_type += 'Record'
         if publish and self._implicitPublish:
             new_api_args['publish'] = 'Y'
-        self.uri = 'DSFRecord/{}/{}'.format(self._service_id, self._dsf_record_id)
-        response = DynectSession.get_session().execute(self.uri, 'PUT', new_api_args)
+        self.uri = 'DSFRecord/{}/{}'.format(self._service_id,
+                                            self._dsf_record_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       new_api_args)
         self._build(response['data'])
 
     def _update(self, api_args, publish=True):
         """API call to update non superclass record type parameters
         :param api_args: arguments to be pased to the API call
         """
-
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
-        self.uri = 'DSFRecord/{}/{}'.format(self._service_id, self._dsf_record_id)
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self.uri = 'DSFRecord/{}/{}'.format(self._service_id,
+                                            self._dsf_record_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
-
 
     def _build(self, data):
         """Private build method
+
         :param data: API Response data
         """
         for key, val in data.items():
             if key == 'rdata':
                 for rdata in val:
-                    blah = type(rdata)
                     if isinstance(rdata, dict):
                         for rdatas, rdata_data in rdata.items():
-                            #necessary due to unicode!
+                            # necessary due to unicode!
                             try:
-                                for rdata_type, data_value in rdata_data.items():
-                                    if rdata_type == 'rdata_{}'.format(self._rdata_class.lower()):
-                                        for attribute, attrib_value in data_value.items():
-                                            setattr(self, '_' + attribute, attrib_value)
+                                for rtype, rdata_v in rdata_data.items():
+                                    if rtype == 'rdata_{}'.format(
+                                            self._rdata_class.lower()):
+                                        for k, v in rdata_v.items():
+                                            setattr(self, '_' + k, v)
                             except:
                                 pass
             else:
@@ -385,21 +407,24 @@ class _DSFRecord(object):
     def publish(self):
         """Publish changes to :class:`TrafficDirector`."""
         uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
+        api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
 
     def refresh(self):
-        """Pulls data down from Dynect System and repopulates :class:`DSFRecord` """
+        """Pulls data down from Dynect System and repopulates
+        :class:`DSFRecord`
+        """
         self._get(self._service_id, self._dsf_record_id)
 
-    def add_to_record_set(self, record_set, service = None, publish = True):
-        """
-        Creates and links this :class:`DSFRecord` to passed in :class:`DSFRecordSet` Object
-        :param record_set: Can either be the _dsf_record_set_id or a :class:`DSFRecordSet` Object.
-        :param service: Only necessary if record_set is passed in as a string. This can be a :class:`TrafficDirector`
-        Object. or the _service_id
-        :param publish: Publish on execution (Default = True)
+    def add_to_record_set(self, record_set, service=None):
+        """Creates and links this :class:`DSFRecord` to passed in
+        :class:`DSFRecordSet` Object
+
+        :param record_set: Can either be the _dsf_record_set_id or a
+            :class:`DSFRecordSet` Object.
+        :param service: Only necessary if record_set is passed in as a string.
+            This can be a :class:`TrafficDirector` Object. or the _service_id
         """
         if self._dsf_record_id:
             raise Exception('The record already exists in the system!')
@@ -409,17 +434,20 @@ class _DSFRecord(object):
             _service_id = record_set._service_id
         elif type(record_set) is str or type(record_set) is unicode:
             if service is None:
-                raise Exception('When record_set as a string, you must provide the service_id as service=')
+                msg = ('When record_set as a string, you must provide the '
+                       'service_id as service=')
+                raise Exception(msg)
             _record_set_id = record_set
         else:
             raise Exception('Could not make sense of Record Set Type')
         if service:
-            _service_id = _checkType(service)
-        self._post(_service_id, _record_set_id, publish=True )
+            _service_id = _check_type(service)
+        self._post(_service_id, _record_set_id, publish=True)
 
     @property
     def dsf_id(self):
-        """The unique system id of the :class:`TrafficDirector` This :class:`DSFRecord` is attached to
+        """The unique system id of the :class:`TrafficDirector` This
+        :class:`DSFRecord` is attached to
         """
         return self._service_id
 
@@ -431,7 +459,8 @@ class _DSFRecord(object):
 
     @property
     def record_set_id(self):
-        """The unique system id of the :class:`DSFRecordSet` This :class:`DSFRecord` is attached to
+        """The unique system id of the :class:`DSFRecordSet` This
+        :class:`DSFRecord` is attached to
         """
         return self._record_set_id
 
@@ -439,6 +468,7 @@ class _DSFRecord(object):
     def label(self):
         """A unique label for this :class:`DSFRecord`"""
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = {'label': value}
@@ -450,6 +480,7 @@ class _DSFRecord(object):
     def weight(self):
         """Weight for this :class:`DSFRecord`"""
         return self._weight
+
     @weight.setter
     def weight(self, value):
         api_args = {'weight': value}
@@ -459,10 +490,11 @@ class _DSFRecord(object):
 
     @property
     def automation(self):
-        """Defines how eligiblity can be changed in response to monitoring. Must
-        be one of 'auto', 'auto_down', or 'manual'
+        """Defines how eligiblity can be changed in response to monitoring.
+        Must be one of 'auto', 'auto_down', or 'manual'
         """
         return self._automation
+
     @automation.setter
     def automation(self, value):
         api_args = {'automation': value}
@@ -476,6 +508,7 @@ class _DSFRecord(object):
         response to monitor data
         """
         return self._endpoints
+
     @endpoints.setter
     def endpoints(self, value):
         api_args = {'endpoints': value}
@@ -488,6 +521,7 @@ class _DSFRecord(object):
         """Number of endpoints that must be up for the Record status to be 'up'
         """
         return self._endpoint_up_count
+
     @endpoint_up_count.setter
     def endpoint_up_count(self, value):
         api_args = {'endpoint_up_count': value}
@@ -499,6 +533,7 @@ class _DSFRecord(object):
     def eligible(self):
         """Indicates whether or not the Record can be served"""
         return self._eligible
+
     @eligible.setter
     def eligible(self, value):
         api_args = {'eligible': value}
@@ -511,7 +546,6 @@ class _DSFRecord(object):
         """Status of Record"""
         self.refresh()
         return self._status
-
 
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this DSFRecord to a json blob"""
@@ -541,20 +575,23 @@ class _DSFRecord(object):
         return json_blob
 
     @property
-    def implicitPublish(self):
-        "Toggle for this specific :class:`DSFRecord` for turning on and off implicit Publishing for record Updates."
+    def implicit_publish(self):
+        """Toggle for this specific :class:`DSFRecord` for turning on and off
+        implicit Publishing for record Updates."""
         return self._implicitPublish
 
-    @implicitPublish.setter
-    def implicitPublish(self, value):
-        if value != True and value != False:
+    @implicit_publish.setter
+    def implicit_publish(self, value):
+        if not isinstance(value, bool):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
+
+    implicitPublish = implicit_publish  # NOQA
 
     def delete(self):
         """Delete this :class:`DSFRecord`"""
         api_args = {'publish': 'Y'}
-        uri = '/DSFRecord/{}/{}'.format(self._service_id,self._dsf_record_id)
+        uri = '/DSFRecord/{}/{}'.format(self._service_id, self._dsf_record_id)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
 
@@ -562,6 +599,7 @@ class DSFARecord(_DSFRecord, ARecord):
     """An :class:`ARecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, address, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -590,6 +628,7 @@ class DSFAAAARecord(_DSFRecord, AAAARecord):
     """An :class:`AAAARecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, address, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -615,9 +654,10 @@ class DSFAAAARecord(_DSFRecord, AAAARecord):
 
 
 class DSFALIASRecord(_DSFRecord, ALIASRecord):
-    """An :class:`AliasRecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`AliasRecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, alias, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -636,15 +676,17 @@ class DSFALIASRecord(_DSFRecord, ALIASRecord):
         :param eligible: Indicates whether or not the Record can be served
         """
         ALIASRecord.__init__(self, None, None, alias=alias, ttl=ttl,
-                            create=False)
+                             create=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFALIASRecord'
+
 
 class DSFCERTRecord(_DSFRecord, CERTRecord):
     """An :class:`CERTRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, format, tag, algorithm, certificate, ttl=0, label=None,
                  weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -688,9 +730,10 @@ class DSFCERTRecord(_DSFRecord, CERTRecord):
 
 
 class DSFCNAMERecord(_DSFRecord, CNAMERecord):
-    """An :class:`CNAMERecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`CNAMERecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, cname, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -716,9 +759,10 @@ class DSFCNAMERecord(_DSFRecord, CNAMERecord):
 
 
 class DSFDHCIDRecord(_DSFRecord, DHCIDRecord):
-    """An :class:`DHCIDRecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`DHCIDRecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, digest, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -744,9 +788,10 @@ class DSFDHCIDRecord(_DSFRecord, DHCIDRecord):
 
 
 class DSFDNAMERecord(_DSFRecord, DNAMERecord):
-    """An :class:`DNAMERecord` object which is able to store additional data for
-    use by a :class:`TrafficDirector` service.
+    """An :class:`DNAMERecord` object which is able to store additional data
+    for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, dname, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -775,6 +820,7 @@ class DSFDNSKEYRecord(_DSFRecord, DNSKEYRecord):
     """An :class:`DNSKEYRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, protocol, public_key, algorithm=5, flags=256, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -823,6 +869,7 @@ class DSFDSRecord(_DSFRecord, DSRecord):
     """An :class:`DSRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, digest, keytag, algorithm=5, digtype=1, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -874,6 +921,7 @@ class DSFKEYRecord(_DSFRecord, KEYRecord):
     """An :class:`KEYRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, algorithm, flags, protocol, public_key, ttl=0,
                  label=None, weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -918,11 +966,11 @@ class DSFKEYRecord(_DSFRecord, KEYRecord):
         super(DSFKEYRecord, self)._update_record(api_args, publish=publish)
 
 
-
 class DSFKXRecord(_DSFRecord, KXRecord):
     """An :class:`KXRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, exchange, preference, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -956,7 +1004,7 @@ class DSFKXRecord(_DSFRecord, KXRecord):
 
         :param api_args: arguments to be pased to the API call
         """
-        keys = ['preference', 'exchange',]
+        keys = ['preference', 'exchange', ]
         self.refresh()
         for key in keys:
             if key not in api_args:
@@ -964,10 +1012,12 @@ class DSFKXRecord(_DSFRecord, KXRecord):
 
         super(DSFKXRecord, self)._update_record(api_args, publish=publish)
 
+
 class DSFLOCRecord(_DSFRecord, LOCRecord):
     """An :class:`LOCRecord` object which is able to store additional data for
     use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, altitude, latitude, longitude, horiz_pre=10000, size=1,
                  vert_pre=10, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -1007,7 +1057,8 @@ class DSFLOCRecord(_DSFRecord, LOCRecord):
 
         :param api_args: arguments to be pased to the API call
         """
-        keys = ['altitude', 'horiz_pre', 'latitude', 'longitude', 'size', 'version', 'vert_pre']
+        keys = ['altitude', 'horiz_pre', 'latitude', 'longitude', 'size',
+                'version', 'vert_pre']
         self.refresh()
         for key in keys:
             if key not in api_args:
@@ -1020,8 +1071,10 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
     """An :class:`IPSECKEYRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, precedence, gatetype, algorithm, gateway, public_key,
-                 ttl=0, label=None, weight=1, automation='auto', endpoints=None,
+                 ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
         """Create a :class:`DSFIPSECKEYRecord` object
 
@@ -1047,7 +1100,8 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
         """
         IPSECKEYRecord.__init__(self, None, None, precedence=precedence,
                                 gatetype=gatetype, algorithm=algorithm,
-                                gateway=gateway, public_key=public_key, ttl=ttl,
+                                gateway=gateway, public_key=public_key,
+                                ttl=ttl,
                                 create=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
@@ -1058,19 +1112,21 @@ class DSFIPSECKEYRecord(_DSFRecord, IPSECKEYRecord):
 
         :param api_args: arguments to be pased to the API call
         """
-        keys = ['precedence', 'gatetype', 'gateway', 'public_key',]
+        keys = ['precedence', 'gatetype', 'gateway', 'public_key', ]
         self.refresh()
         for key in keys:
             if key not in api_args:
                 api_args['rdata'][key] = getattr(self, key)
 
-        super(DSFIPSECKEYRecord, self)._update_record(api_args, publish=publish)
+        super(DSFIPSECKEYRecord, self)._update_record(api_args,
+                                                      publish=publish)
 
 
 class DSFMXRecord(_DSFRecord, MXRecord):
     """An :class:`MXRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, exchange, preference=10, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -1116,6 +1172,7 @@ class DSFNAPTRRecord(_DSFRecord, NAPTRRecord):
     """An :class:`NAPTRRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, order, preference, services, regexp, replacement,
                  flags='U', ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
@@ -1158,7 +1215,8 @@ class DSFNAPTRRecord(_DSFRecord, NAPTRRecord):
 
         :param api_args: arguments to be pased to the API call
         """
-        keys = ['order', 'preference', 'flags', 'services', 'regexp', 'replacement']
+        keys = ['order', 'preference', 'flags', 'services', 'regexp',
+                'replacement']
         self.refresh()
         for key in keys:
             if key not in api_args:
@@ -1167,12 +1225,13 @@ class DSFNAPTRRecord(_DSFRecord, NAPTRRecord):
         super(DSFNAPTRRecord, self)._update_record(api_args, publish=publish)
 
 
-
 class DSFPTRRecord(_DSFRecord, PTRRecord):
     """An :class:`PTRRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, ptrdname, ttl=0, label=None, weight=1, automation='auto',
+
+    def __init__(self, ptrdname, ttl=0, label=None, weight=1,
+                 automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
         """Create a :class:`DSFPTRRecord` object
@@ -1196,12 +1255,13 @@ class DSFPTRRecord(_DSFRecord, PTRRecord):
         self._record_type = 'DSFPTRRecord'
 
 
-
 class DSFPXRecord(_DSFRecord, PXRecord):
     """An :class:`PXRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, preference, map822, mapx400, ttl=0, label=None, weight=1,
+
+    def __init__(self, preference, map822, mapx400, ttl=0, label=None,
+                 weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
         """Create a :class:`DSFPXRecord` object
@@ -1222,7 +1282,8 @@ class DSFPXRecord(_DSFRecord, PXRecord):
         :param eligible: Indicates whether or not the Record can be served
         """
         PXRecord.__init__(self, None, None, preference=preference,
-                          map822=map822, mapx400=mapx400, ttl=ttl, create=False)
+                          map822=map822, mapx400=mapx400, ttl=ttl,
+                          create=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFPXRecord'
@@ -1241,11 +1302,11 @@ class DSFPXRecord(_DSFRecord, PXRecord):
         super(DSFPXRecord, self)._update_record(api_args, publish=publish)
 
 
-
 class DSFNSAPRecord(_DSFRecord, NSAPRecord):
     """An :class:`NSAPRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, nsap, ttl=0, label=None, weight=1, automation='auto',
                  endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
@@ -1269,11 +1330,11 @@ class DSFNSAPRecord(_DSFRecord, NSAPRecord):
         self._record_type = 'DSFNSAPRecord'
 
 
-
 class DSFRPRecord(_DSFRecord, RPRecord):
     """An :class:`RPRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, mbox, txtdname, ttl=0, label=None, weight=1,
                  automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
@@ -1313,13 +1374,13 @@ class DSFRPRecord(_DSFRecord, RPRecord):
         super(DSFRPRecord, self)._update_record(api_args, publish=publish)
 
 
-
 class DSFNSRecord(_DSFRecord, NSRecord):
     """An :class:`NSRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, nsdname, service_class='', ttl=0, label=None, weight=1, 
-                 automation='auto', endpoints=None, endpoint_up_count=None, 
+
+    def __init__(self, nsdname, service_class='', ttl=0, label=None, weight=1,
+                 automation='auto', endpoints=None, endpoint_up_count=None,
                  eligible=True, **kwargs):
         """Create a :class:`DSFNSRecord` object
 
@@ -1344,13 +1405,13 @@ class DSFNSRecord(_DSFRecord, NSRecord):
         self._record_type = 'DSFNSRecord'
 
 
-
 class DSFSPFRecord(_DSFRecord, SPFRecord):
     """An :class:`SPFRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto', 
-                 endpoints=None, endpoint_up_count=None, eligible=True, 
+
+    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
         """Create a :class:`DSFSPFRecord` object
 
@@ -1373,13 +1434,13 @@ class DSFSPFRecord(_DSFRecord, SPFRecord):
         self._record_type = 'DSFSPFRecord'
 
 
-
 class DSFSRVRecord(_DSFRecord, SRVRecord):
     """An :class:`SRVRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, port, priority, target, rr_weight, ttl=0, label=None, 
-                 weight=1, automation='auto', endpoints=None, 
+
+    def __init__(self, port, priority, target, rr_weight, ttl=0, label=None,
+                 weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
         """Create a :class:`DSFSRVRecord` object
 
@@ -1389,9 +1450,9 @@ class DSFSRVRecord(_DSFRecord, SRVRecord):
             exist on the zone/node
         :param target: The domain name of a host where the service is running
             on the specified port
-        :param rr_weight: Secondary prioritizing of records to serve. Records of
-            equal priority should be served based on their weight. Higher values
-            are served more often
+        :param rr_weight: Secondary prioritizing of records to serve. Records
+            of equal priority should be served based on their weight. Higher
+            values are served more often
         :param ttl: TTL for this record
         :param label: A unique label for this :class:`DSFSRVRecord`
         :param weight: Weight for this :class:`DSFSRVRecord`
@@ -1428,6 +1489,7 @@ class DSFSSHFPRecord(_DSFRecord, SSHFPRecord):
     """An :class:`SSHFPRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
+
     def __init__(self, fptype, algorithm, fingerprint, ttl=0, label=None,
                  weight=1, automation='auto', endpoints=None,
                  endpoint_up_count=None, eligible=True, **kwargs):
@@ -1448,8 +1510,9 @@ class DSFSSHFPRecord(_DSFRecord, SSHFPRecord):
             Record status to be 'up'
         :param eligible: Indicates whether or not the Record can be served
         """
-        SSHFPRecord.__init__(self, None, None, algorithm=algorithm, fptype=fptype, fingerprint=fingerprint, ttl=ttl,
-                           create=False)
+        SSHFPRecord.__init__(self, None, None, algorithm=algorithm,
+                             fptype=fptype, fingerprint=fingerprint, ttl=ttl,
+                             create=False)
         _DSFRecord.__init__(self, label, weight, automation, endpoints,
                             endpoint_up_count, eligible, **kwargs)
         self._record_type = 'DSFSSHFPRecord'
@@ -1468,14 +1531,13 @@ class DSFSSHFPRecord(_DSFRecord, SSHFPRecord):
         super(DSFSSHFPRecord, self)._update_record(api_args, publish=publish)
 
 
-
-
 class DSFTXTRecord(_DSFRecord, TXTRecord):
     """An :class:`TXTRecord` object which is able to store additional data
     for use by a :class:`TrafficDirector` service.
     """
-    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto', 
-                 endpoints=None, endpoint_up_count=None, eligible=True, 
+
+    def __init__(self, txtdata, ttl=0, label=None, weight=1, automation='auto',
+                 endpoints=None, endpoint_up_count=None, eligible=True,
                  **kwargs):
         """Create a :class:`DSFTXTRecord` object
 
@@ -1499,11 +1561,11 @@ class DSFTXTRecord(_DSFRecord, TXTRecord):
         self._record_type = 'DSFTXTRecord'
 
 
-
 class DSFRecordSet(object):
     """A Collection of DSFRecord Type objects belonging to a
     :class:`DSFFailoverChain`
     """
+
     def __init__(self, rdata_class, label=None, ttl=None, automation=None,
                  serve_count=None, fail_count=None, trouble_count=None,
                  eligible=None, dsf_monitor_id=None, records=None, **kwargs):
@@ -1520,10 +1582,10 @@ class DSFRecordSet(object):
             :class:`DSFRecordSet`
         :param fail_count: The number of Records that must not be okay before
             this :class:`DSFRecordSet` becomes ineligible.
-        :param trouble_count: The number of Records that must not be okay before
-            this :class:`DSFRecordSet` becomes in trouble.
-        :param eligible: Indicates whether or not this :class:`DSFRecordSet` can
-            be served.
+        :param trouble_count: The number of Records that must not be okay
+            before this :class:`DSFRecordSet` becomes in trouble.
+        :param eligible: Indicates whether or not this :class:`DSFRecordSet`
+            can be served.
         :param dsf_monitor_id: The unique system id of the DSF Monitor attached
             to this :class:`DSFRecordSet`
         :param records: A list of :class:`DSFRecord`'s within this
@@ -1557,7 +1619,8 @@ class DSFRecordSet(object):
             if key != 'records':
                 setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._service_id is not None and self._dsf_record_set_id is not None:
+        if (self._service_id is not None and
+                self._dsf_record_set_id is not None):
             self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
                                                      self._dsf_record_set_id)
 
@@ -1573,9 +1636,12 @@ class DSFRecordSet(object):
         api_args = {}
         api_args = self.to_json(skip_svc=True)
         if self._records:
-            api_args['records'] = [record.to_json(skip_svc=True) for record in self._records]
+            api_args['records'] = [record.to_json(skip_svc=True) for record in
+                                   self._records]
         if self._dsf_record_set_failover_chain_id:
-            api_args['dsf_record_set_failover_chain_id'] = self._dsf_record_set_failover_chain_id
+            api_args[
+                'dsf_record_set_failover_chain_id'] = \
+                self._dsf_record_set_failover_chain_id
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'POST',
@@ -1601,14 +1667,13 @@ class DSFRecordSet(object):
                                                        api_args)
         self._build(response['data'])
 
-    def _update(self, api_args, publish = True):
+    def _update(self, api_args, publish=True):
         """Private update method"""
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
-
 
     def _build(self, data):
         """Private build method"""
@@ -1631,43 +1696,52 @@ class DSFRecordSet(object):
 
     __repr__ = __unicode__ = __str__
 
-
     def publish(self):
         """Publish changes to :class:`TrafficDirector`."""
         uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
+        api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
 
     def refresh(self):
-        """Pulls data down from Dynect System and repopulates :class:`DSFRecordSet` """
+        """Pulls data down from Dynect System and repopulates
+        :class:`DSFRecordSet`
+        """
         self._get(self._service_id, self._dsf_record_set_id)
 
-    def add_to_failover_chain(self, failover_chain, service=None, publish=True):
-        """
-        Creates and links this :class:`DSFRecordSet` to the passed in :class:`DSFFailoverChain` Object
-        :param failover_chain: Can either be the _dsf_record_set_failover_chain_id or a :class:`DSFFailoverChain` Object.
-        :param service: Only necessary is rs_chain is passed in as a string. This can be a :class:`TrafficDirector`
-        Object. or the _service_id
+    def add_to_failover_chain(self, failover_chain, service=None,
+                              publish=True):
+        """Creates and links this :class:`DSFRecordSet` to the passed in
+        :class:`DSFFailoverChain` Object
+
+        :param failover_chain: Can either be the
+            dsf_record_set_failover_chain_id or a
+            :class:`DSFFailoverChain` Object.
+        :param service: Only necessary is rs_chain is passed in as a string.
+            This can be a :class:`TrafficDirector` Object. or the _service_id
         :param publish: Publish on execution (Default = True)
         """
         if isinstance(failover_chain, DSFFailoverChain):
-            _dsf_record_set_failover_chain_id = failover_chain._dsf_record_set_failover_chain_id
+            _dsf_record_set_failover_chain_id = \
+                failover_chain._dsf_record_set_failover_chain_id
             _service_id = failover_chain._service_id
         elif type(failover_chain) is str or type(failover_chain) is unicode:
             if service is None:
-                raise Exception('If passing failover_chain as a string, you must provide the service_id as service=')
+                msg = ('If passing failover_chain as a string, you must '
+                       'provide the service_id as service=')
+                raise Exception(msg)
             _dsf_record_set_failover_chain_id = failover_chain
         else:
             raise Exception('Could not make sense of Failover Chain Type')
         if service:
-            _service_id = _checkType(service)
+            _service_id = _check_type(service)
 
         if self._dsf_record_set_failover_chain_id:
-            raise Exception('Records Set already attached to Failover Chain: {}.'.format(
+            raise Exception(
+                'Records Set already attached to Failover Chain: {}.'.format(
                     self._dsf_record_set_failover_chain_id))
-        self._dsf_record_set_failover_chain_id = _dsf_record_set_failover_chain_id
-
+        self._dsf_record_set_failover_chain_id = \
+            _dsf_record_set_failover_chain_id
         self._post(_service_id, publish=publish)
 
     @property
@@ -1687,6 +1761,7 @@ class DSFRecordSet(object):
     def label(self):
         """A unique label for this :class:`DSFRecordSet`"""
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = {'label': value}
@@ -1708,6 +1783,7 @@ class DSFRecordSet(object):
         """Default TTL for :class:`DSFRecord`'s within this
             :class:`DSFRecordSet`"""
         return self._ttl
+
     @ttl.setter
     def ttl(self, value):
         api_args = {'ttl': value}
@@ -1723,6 +1799,7 @@ class DSFRecordSet(object):
     def automation(self):
         """Defines how eligible can be changed in response to monitoring"""
         return self._automation
+
     @automation.setter
     def automation(self, value):
         api_args = {'automation': value}
@@ -1738,6 +1815,7 @@ class DSFRecordSet(object):
     def serve_count(self):
         """How many Records to serve out of this :class:`DSFRecordSet`"""
         return self._serve_count
+
     @serve_count.setter
     def serve_count(self, value):
         api_args = {'serve_count': value}
@@ -1773,6 +1851,7 @@ class DSFRecordSet(object):
         :class:`DSFRecordSet` becomes in trouble.
         """
         return self._trouble_count
+
     @trouble_count.setter
     def trouble_count(self, value):
         api_args = {'trouble_count': value}
@@ -1786,8 +1865,9 @@ class DSFRecordSet(object):
 
     @property
     def eligible(self):
-        """Indicates whether or not this :class:`DSFRecordSet` can be served."""
+        """Indicates whether or not this :class:`DSFRecordSet` can be served"""
         return self._eligible
+
     @eligible.setter
     def eligible(self, value):
         api_args = {'eligible': value}
@@ -1808,15 +1888,18 @@ class DSFRecordSet(object):
 
     @dsf_monitor_id.setter
     def dsf_monitor_id(self, value):
-        """allows you to manually set the monitor_id, Legacy function for backward compatability"""
+        """allows you to manually set the monitor_id, Legacy function for
+        backward compatability
+        """
         api_args = {'dsf_monitor_id': value}
         self._update(api_args)
         if self._implicitPublish:
             self._dsf_monitor_id = value
 
     def set_monitor(self, monitor):
-        """ For attaching a :class:`DSFMonitor` to this record_set
-        :param monitor: a :class:`DSFMonitor` or string of the dsf_monitor_id to attach to this record_set
+        """For attaching a :class:`DSFMonitor` to this record_set
+        :param monitor: a :class:`DSFMonitor` or string of the dsf_monitor_id
+            to attach to this record_set
         """
         if isinstance(monitor, DSFMonitor):
             _monitor_id = monitor._dsf_monitor_id
@@ -1828,10 +1911,10 @@ class DSFRecordSet(object):
         self._update(api_args)
         self._dsf_monitor_id = _monitor_id
 
-
     @property
     def dsf_id(self):
-        """The unique system id of the :class:`TrafficDirector` This :class:`DSFRecordSet` is attached to
+        """The unique system id of the :class:`TrafficDirector` This
+        :class:`DSFRecordSet` is attached to
         """
         return self._service_id
 
@@ -1841,16 +1924,19 @@ class DSFRecordSet(object):
         return self._dsf_record_set_id
 
     @property
-    def implicitPublish(self):
-        "Toggle for this specific :class:`DSFRecordSet` for turning on and off implicit Publishing for record Updates."
+    def implicit_publish(self):
+        """Toggle for this specific :class:`DSFRecordSet` for turning on and
+        off implicit Publishing for record Updates.
+        """
         return self._implicitPublish
 
-    @implicitPublish.setter
-    def implicitPublish(self, value):
-        if value != True and value != False:
+    @implicit_publish.setter
+    def implicit_publish(self, value):
+        if not isinstance(value, bool):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
 
+    implicitPublish = implicit_publish
 
     def to_json(self, svc_id=None, skip_svc=False):
         """Convert this :class:`DSFRecordSet` to a JSON blob"""
@@ -1878,7 +1964,8 @@ class DSFRecordSet(object):
         if self._dsf_monitor_id:
             json_blob['dsf_monitor_id'] = self._dsf_monitor_id
         if self._records:
-            json_blob['records'] = [rec.to_json(svc_id) for rec in self._records]
+            json_blob['records'] = [rec.to_json(svc_id) for rec in
+                                    self._records]
         else:
             json_blob['records'] = []
         return json_blob
@@ -1891,6 +1978,7 @@ class DSFRecordSet(object):
 
 class DSFFailoverChain(object):
     """docstring for DSFFailoverChain"""
+
     def __init__(self, label=None, core=None, record_sets=None, **kwargs):
         """Create a :class:`DSFFailoverChain` object
 
@@ -1921,10 +2009,12 @@ class DSFFailoverChain(object):
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._service_id is not None and self._dsf_response_pool_id is not None:
+        if (self._service_id is not None and
+                self._dsf_response_pool_id is not None):
             r_pid = self._dsf_record_set_failover_chain_id
-            self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
-                                                                  r_pid)
+            self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(
+                self._service_id,
+                r_pid)
 
     def _post(self, dsf_id, dsf_response_pool_id, publish=True):
         """Create a new :class:`DSFFailoverChain` on the Dynect System
@@ -1936,15 +2026,17 @@ class DSFFailoverChain(object):
         """
         self._service_id = dsf_id
         self._dsf_response_pool_id = dsf_response_pool_id
-        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
-                                                              self._dsf_response_pool_id)
+        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(
+            self._service_id, self._dsf_response_pool_id
+        )
         api_args = {}
         if self._label:
             api_args['label'] = self._label
         if self._core:
             api_args['core'] = self._core
         if self._record_sets:
-            api_args['record_sets'] = [set.to_json(skip_svc=True) for set in self._record_sets]
+            api_args['record_sets'] = [set.to_json(skip_svc=True) for set in
+                                       self._record_sets]
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(self.uri, 'POST',
@@ -1960,9 +2052,11 @@ class DSFFailoverChain(object):
             this :class:`DSFFailoverChain`.
         """
         self._service_id = dsf_id
-        self._dsf_record_set_failover_chain_id = dsf_record_set_failover_chain_id
-        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(self._service_id,
-                                                              self._dsf_record_set_failover_chain_id)
+        self._dsf_record_set_failover_chain_id = \
+            dsf_record_set_failover_chain_id
+        self.uri = '/DSFRecordSetFailoverChain/{}/{}/'.format(
+            self._service_id, self._dsf_record_set_failover_chain_id
+        )
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
@@ -1975,10 +2069,12 @@ class DSFFailoverChain(object):
 
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
-        self.uri = 'DSFRecordSetFailoverChain/{}/{}'.format(self._service_id, self._dsf_record_set_failover_chain_id)
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self.uri = 'DSFRecordSetFailoverChain/{}/{}'.format(
+            self._service_id, self._dsf_record_set_failover_chain_id
+        )
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
-
 
     def _build(self, data):
         """Private build method"""
@@ -1996,29 +2092,31 @@ class DSFFailoverChain(object):
         str.append('Label: {}'.format(self.label))
         if self._dsf_record_set_failover_chain_id:
             str.append('ID: {}'.format(self._dsf_record_set_failover_chain_id))
-        return ("<DSFFailoverChain>: {}".format(', '.join(str)))
+        return "<DSFFailoverChain>: {}".format(', '.join(str))
 
     __repr__ = __unicode__ = __str__
-
 
     def publish(self):
         """Publish changes to :class:`TrafficDirector`."""
         uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
+        api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
 
     def refresh(self):
-        """Pulls data down from Dynect System and repopulates :class:`DSFFailoverChain` """
+        """Pulls data down from Dynect System and repopulates
+        :class:`DSFFailoverChain`
+        """
         self._get(self._service_id, self._dsf_record_set_failover_chain_id)
 
-
     def add_to_response_pool(self, response_pool, service=None, publish=True):
-        """
-        Creates and Adds this :class:`DSFFailoverChain` to a :class:`TrafficDirector` service.
-        :param response_pool: Can either be the response_pool_id or a :class:`DSFResponsePool` Object.
-        :param service: Only necessary when response_pool is passed as a string. Can either be
-         the service_id or a :class:`TrafficDirector` Object
+        """Creates and Adds this :class:`DSFFailoverChain` to a
+        :class:`TrafficDirector` service.
+
+        :param response_pool: Can either be the response_pool_id or a
+            :class:`DSFResponsePool` Object.
+        :param service: Only necessary when response_pool is passed as a
+            string. Can either be the service_id or a :class:`TrafficDirector`
         :param publish: Publish on execution (Default = True)
         """
         if isinstance(response_pool, DSFResponsePool):
@@ -2026,23 +2124,27 @@ class DSFFailoverChain(object):
             _service_id = response_pool._service_id
         elif type(response_pool) is str or type(response_pool) is unicode:
             if service is None:
-                raise Exception('If passing response_pool as a string, you must provide the service_id as service=')
+                msg = ('If passing response_pool as a string, you must '
+                       'provide the service_id as service=')
+                raise Exception(msg)
             _response_pool_id = response_pool
         else:
             raise Exception('Could not make sense of Response Pool Type')
 
         if service:
-            _service_id = _checkType(service)
+            _service_id = _check_type(service)
 
         if self._dsf_response_pool_id:
-            raise Exception('Records Set already attached to response pool: {}.'.format(self._dsf_response_pool_id))
+            raise Exception(
+                'Records Set already attached to response pool: {}.'.format(
+                    self._dsf_response_pool_id))
         self._post(_service_id, _response_pool_id, publish=publish)
-
 
     @property
     def label(self):
         """A unique label for this :class:`DSFFailoverChain`"""
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = {'label': value}
@@ -2056,6 +2158,7 @@ class DSFFailoverChain(object):
         core record sets.
         """
         return self._core
+
     @core.setter
     def core(self, value):
         api_args = {'core': value}
@@ -2065,7 +2168,8 @@ class DSFFailoverChain(object):
 
     @property
     def record_sets(self):
-        """A list of :class:`DSFRecordSet` connected to this :class:`DSFFailvoerChain`
+        """A list of :class:`DSFRecordSet` connected to this
+        :class:`DSFFailvoerChain`
         """
         return self._record_sets
 
@@ -2081,22 +2185,26 @@ class DSFFailoverChain(object):
         if self._label:
             json_blob['label'] = self._label
         if self._dsf_record_set_failover_chain_id:
-            json_blob['dsf_record_set_failover_chain_id'] = self._dsf_record_set_failover_chain_id
+            json_blob['dsf_record_set_failover_chain_id'] = \
+                self._dsf_record_set_failover_chain_id
         if self._core:
             json_blob['core'] = self._core
         if self.record_sets:
-            json_blob['record_sets'] = [rs.to_json(svc_id) for rs in self.record_sets]
+            json_blob['record_sets'] = [rs.to_json(svc_id) for rs in
+                                        self.record_sets]
         return json_blob
 
     @property
     def dsf_id(self):
-        """The unique system id of the :class:`TrafficDirector` This :class:`DSFFailoverChain` is attached to
+        """The unique system id of the :class:`TrafficDirector` This
+        :class:`DSFFailoverChain` is attached to
         """
         return self._service_id
 
     @property
     def response_pool_id(self):
-        """The unique system id of the :class:`DSFResponsePool` this :class:`DSFFailoverChain` is attached to
+        """The unique system id of the :class:`DSFResponsePool` this
+        :class:`DSFFailoverChain` is attached to
         """
         return self._dsf_response_pool_id
 
@@ -2106,16 +2214,19 @@ class DSFFailoverChain(object):
         """
         return self._dsf_record_set_failover_chain_id
 
-    @property
-    def implicitPublish(self):
-        "Toggle for this specific :class:`DSFFailoverChain` for turning on and off implicit Publishing for record Updates."
+    def implicit_publish(self):
+        """Toggle for this specific :class:`DSFFailoverChain` for turning on
+        and off implicit Publishing for record Updates.
+        """
         return self._implicitPublish
 
-    @implicitPublish.setter
-    def implicitPublish(self, value):
-        if value != True and value != False:
+    @implicit_publish.setter
+    def implicit_publish(self, value):
+        if not isinstance(value, bool):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
+
+    implicitPublish = implicit_publish
 
     def delete(self):
         """Delete this :class:`DSFFailoverChain` from the Dynect System"""
@@ -2125,6 +2236,7 @@ class DSFFailoverChain(object):
 
 class DSFResponsePool(object):
     """docstring for DSFResponsePool"""
+
     def __init__(self, label, core_set_count=1, eligible=True,
                  automation='auto', dsf_ruleset_id=None, index=None,
                  rs_chains=None, **kwargs):
@@ -2152,7 +2264,7 @@ class DSFResponsePool(object):
         self._dsf_ruleset_id = dsf_ruleset_id
         self._dsf_response_pool_id = None
         self._index = index
-        self._implicitPublish=True
+        self._implicitPublish = True
         if isinstance(rs_chains, list) and len(rs_chains) > 0 and \
                 isinstance(rs_chains[0], dict):
             # Clear Failover Chains
@@ -2166,7 +2278,8 @@ class DSFResponsePool(object):
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
         # If dsf_id and dsf_response_pool_id were specified in kwargs
-        if self._service_id is not None and self._dsf_response_pool_id is not None:
+        if (self._service_id is not None and
+                self._dsf_response_pool_id is not None):
             r_pid = self._dsf_response_pool_id
             self.uri = '/DSFResponsePool/{}/{}/'.format(self._service_id,
                                                         r_pid)
@@ -2174,8 +2287,8 @@ class DSFResponsePool(object):
     def _post(self, service_id, publish=True):
         """Create a new :class:`DSFResponsePool` on the DynECT System
 
-        :param service_id: the id of the DSF service this :class:`DSFResponsePool`
-            is attached to
+        :param service_id: the id of the DSF service this
+            :class:`DSFResponsePool` is attached to
         """
         self.service_id = service_id
         uri = '/DSFResponsePool/{}/'.format(self.service_id)
@@ -2187,7 +2300,8 @@ class DSFResponsePool(object):
         if self._index:
             api_args['index'] = self._index
         if self._rs_chains:
-            api_args['rs_chains'] = [chain.to_json(skip_svc=True) for chain in self.rs_chains]
+            api_args['rs_chains'] = [chain.to_json(skip_svc=True) for chain in
+                                     self.rs_chains]
         if publish:
             api_args['publish'] = 'Y'
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
@@ -2197,8 +2311,8 @@ class DSFResponsePool(object):
 
     def _get(self, service_id, dsf_response_pool_id):
         """Get an existing :class:`DSFResponsePool` from the DynECT System
-        :param service_id: the id of the DSF service this :class:`DSFResponsePool`
-            is attached to
+        :param service_id: the id of the DSF service this
+            :class:`DSFResponsePool` is attached to
         :param dsf_response_pool_id: the id of this :class:`DSFResponsePool`
         """
         self.service_id = service_id
@@ -2214,11 +2328,12 @@ class DSFResponsePool(object):
         """Make the API call to update the :class:`DSFResponsePool`
         :param api_args: arguments to be pased to the API call
         """
-
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
-        self.uri = 'DSFResponsePool/{}/{}'.format(self._service_id, self._dsf_response_pool_id)
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self.uri = 'DSFResponsePool/{}/{}'.format(self._service_id,
+                                                  self._dsf_response_pool_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -2237,37 +2352,42 @@ class DSFResponsePool(object):
         str.append('Label: {}'.format(self.label))
         if self._dsf_response_pool_id:
             str.append('ID: {}'.format(self._dsf_response_pool_id))
-        return ("<DSFResponsePool>: {}".format(', '.join(str)))
+        return "<DSFResponsePool>: {}".format(', '.join(str))
 
     __repr__ = __unicode__ = __str__
 
+    def create(self, service):
+        """Adds this :class:`DSFResponsePool` to the passed in
+        :class:`TrafficDirector`
 
-    def create(self, service, publish=True):
-        """Adds this :class:`DSFResponsePool` to the passed in :class:`TrafficDirector`
-        :param service: a :class:`TrafficDirector` or id string for the :class:`TrafficDirector`
-        you wish to add this :class:`DSFResponsePool` to.
-        :param publish: publish at execution time. Default = True
+        :param service: a :class:`TrafficDirector` or id string for the
+            :class:`TrafficDirector` you wish to add this
+            :class:`DSFResponsePool` to.
         """
         if self._dsf_response_pool_id:
-            raise Exception('Response Pool Already Exists. ID: {}'.format(self._dsf_response_pool_id))
-        _service_id = _checkType(service)
+            raise Exception('Response Pool Already Exists. ID: {}'.format(
+                self._dsf_response_pool_id))
+        _service_id = _check_type(service)
         self._post(_service_id)
 
     def publish(self):
         """Publish changes to :class:`TrafficDirector`."""
         uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
+        api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
 
     def refresh(self):
-        """Pulls data down from Dynect System and repopulates :class:`DSFResponsePool` """
+        """Pulls data down from Dynect System and repopulates
+        :class:`DSFResponsePool`
+        """
         self._get(self._service_id, self._dsf_response_pool_id)
 
     @property
     def label(self):
         """A unique label for this :class:`DSFResponsePool`"""
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = {'label': value}
@@ -2281,6 +2401,7 @@ class DSFResponsePool(object):
         will be set to fail
         """
         return self._core_set_count
+
     @core_set_count.setter
     def core_set_count(self, value):
         api_args = {'core_set_count': value}
@@ -2293,6 +2414,7 @@ class DSFResponsePool(object):
         """Indicates whether or not the :class:`DSFResponsePool` can be served
         """
         return self._eligible
+
     @eligible.setter
     def eligible(self, value):
         api_args = {'eligible': value}
@@ -2304,6 +2426,7 @@ class DSFResponsePool(object):
     def automation(self):
         """Defines how eligiblity can be changed in response to monitoring"""
         return self._automation
+
     @automation.setter
     def automation(self, value):
         api_args = {'automation': value}
@@ -2313,8 +2436,8 @@ class DSFResponsePool(object):
 
     @property
     def ruleset_ids(self):
-        """List of Unique system ids of the :class:`DSFRuleset`s this :class:`DSFResponsePool` is
-        attached to
+        """List of Unique system ids of the :class:`DSFRuleset`s this
+        :class:`DSFResponsePool` is attached to
         """
         self._get(self._service_id, self._dsf_response_pool_id)
         return [ruleset['dsf_ruleset_id'] for ruleset in self._rulesets]
@@ -2325,10 +2448,10 @@ class DSFResponsePool(object):
         """
         return self._dsf_response_pool_id
 
-
     @property
     def dsf_id(self):
-        """The unique system id of the :class:`TrafficDirector` This :class:`DSFResponsePool` is attached to
+        """The unique system id of the :class:`TrafficDirector` This
+        :class:`DSFResponsePool` is attached to
         """
         return self._service_id
 
@@ -2338,7 +2461,6 @@ class DSFResponsePool(object):
         :class:`DSFResponsePool`
         """
         return self._rs_chains
-
 
     @property
     def rs_chains(self):
@@ -2365,16 +2487,19 @@ class DSFResponsePool(object):
             json_blob['service_id'] = svc_id
         return json_blob
 
-    @property
-    def implicitPublish(self):
-        "Toggle for this specific :class:`DSFResponsePool` for turning on and off implicit Publishing for record Updates."
+    def implicit_publish(self):
+        """Toggle for this specific :class:`DSFResponsePool` for turning on and
+        off implicit Publishing for record Updates.
+        """
         return self._implicitPublish
 
-    @implicitPublish.setter
-    def implicitPublish(self, value):
-        if value != True and value != False:
+    @implicit_publish.setter
+    def implicit_publish(self, value):
+        if not isinstance(value, bool):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
+
+    implicitPublish = implicit_publish
 
     def delete(self):
         """Delete this :class:`DSFResponsePool` from the DynECT System"""
@@ -2384,8 +2509,10 @@ class DSFResponsePool(object):
 
 class DSFRuleset(object):
     """docstring for DSFRuleset"""
-    def __init__(self, label, criteria_type, response_pools, criteria=None, failover=None,
-                **kwargs):
+
+    def __init__(self, label, criteria_type, response_pools, criteria=None,
+                 failover=None,
+                 **kwargs):
         """Create a :class:`DSFRuleset` object
 
         :param label: A unique label for this :class:`DSFRuleset`
@@ -2405,7 +2532,7 @@ class DSFRuleset(object):
         self._criteria = criteria
         self._failover = failover
         self._ordering = None
-        self._implicitPublish=True
+        self._implicitPublish = True
         if isinstance(response_pools, list) and len(response_pools) > 0 and \
                 isinstance(response_pools[0], dict):
             self._response_pools = []
@@ -2437,7 +2564,8 @@ class DSFRuleset(object):
         if self._ordering is not None:
             api_args['ordering'] = self._ordering
         if self._response_pools:
-            api_args['response_pools'] = [pool.to_json(skip_svc=True) for pool in self.response_pools]
+            api_args['response_pools'] = [pool.to_json(skip_svc=True) for pool
+                                          in self.response_pools]
 
         if publish:
             api_args['publish'] = 'Y'
@@ -2462,7 +2590,6 @@ class DSFRuleset(object):
                                                        api_args)
         self._build(response['data'])
 
-
     def _update(self, api_args, publish=True):
         """Make the API call to update the current record type
         :param api_args: arguments to be pased to the API call
@@ -2470,8 +2597,10 @@ class DSFRuleset(object):
 
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
-        self.uri = 'DSFRuleset/{}/{}'.format(self._service_id, self._dsf_ruleset_id)
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self.uri = 'DSFRuleset/{}/{}'.format(self._service_id,
+                                             self._dsf_ruleset_id)
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
         self._build(response['data'])
 
     def _build(self, data):
@@ -2483,24 +2612,26 @@ class DSFRuleset(object):
                 setattr(self, '_' + key, val)
             if key == 'response_pools':
                 for response_pool in val:
-                    self._response_pools.append(DSFResponsePool(**response_pool))
+                    self._response_pools.append(
+                        DSFResponsePool(**response_pool))
 
     def __str__(self):
         str = list()
         str.append('Label: {}'.format(self.label))
         if self._dsf_ruleset_id:
             str.append('ID: {}'.format(self._dsf_ruleset_id))
-        return ("<DSFRuleSet>: {}".format(', '.join(str)))
+        return "<DSFRuleSet>: {}".format(', '.join(str))
 
     __repr__ = __unicode__ = __str__
 
-
     def add_response_pool(self, response_pool, index=0, publish=True):
-        """
-        Adds passed in :class:`DSFResponsePool` to this :class:`DSFRuleSet`
+        """Adds passed in :class:`DSFResponsePool` to this :class:`DSFRuleSet`.
         By default this adds it to the front of the list.
-        :param response_pool: Can either be the response_pool_id or a :class:`DSFResponsePool` Object.
-        :param index: where in the list of response pools to place this pool. 0 is the first position, 0 is the default.
+
+        :param response_pool: Can either be the response_pool_id or a
+            :class:`DSFResponsePool` Object.
+        :param index: where in the list of response pools to place this pool.
+            0 is the first position, 0 is the default.
         :param publish: Publish on execution (Default = True)
         """
         if isinstance(response_pool, DSFResponsePool):
@@ -2515,24 +2646,28 @@ class DSFRuleset(object):
         hit = False
         for pIndex, old_pool in enumerate(self._response_pools):
             if pIndex == index:
-                api_args['response_pools'].append({'dsf_response_pool_id': _response_pool_id})
+                api_args['response_pools'].append(
+                    {'dsf_response_pool_id': _response_pool_id})
                 hit = True
-            api_args['response_pools'].append({'dsf_response_pool_id': old_pool._dsf_response_pool_id})
-        #If the index was greater than what was available, just append to the end.
+            api_args['response_pools'].append(
+                {'dsf_response_pool_id': old_pool._dsf_response_pool_id})
+        # If the index was greater than what was available, just append to the
+        # end.
         if not hit:
-            api_args['response_pools'].append({'dsf_response_pool_id': _response_pool_id})
+            api_args['response_pools'].append(
+                {'dsf_response_pool_id': _response_pool_id})
         self._update(api_args, publish)
 
     def remove_response_pool(self, response_pool, publish=True):
-        """
-        Removes passed in :class:`DSFResponsePool` from this :class:`DSFRuleSet`.
-        :param service: Can either be the service_id or a `TrafficDirector` Object
-        :param response_pool: Can either be the response_pool_id or a `DSFResponsePool` Object.
+        """Removes passed in :class:`DSFResponsePool` from this
+        :class:`DSFRuleSet`
+
+        :param response_pool: Can either be the response_pool_id or a
+            `DSFResponsePool` Object.
         :param publish: Publish on execution (Default = True)
         """
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
-            _service_id = response_pool._service_id
         elif type(response_pool) is str or type(response_pool) is unicode:
             _response_pool_id = response_pool
         else:
@@ -2541,37 +2676,42 @@ class DSFRuleset(object):
         self.refresh()
         api_args = dict()
         api_args['response_pools'] = list()
-        system_pool_ids = [pool._dsf_response_pool_id for pool in self._response_pools]
+        system_pool_ids = [pool._dsf_response_pool_id for pool in
+                           self._response_pools]
         for pool_id in system_pool_ids:
             if pool_id != _response_pool_id:
-                api_args['response_pools'].append({'dsf_response_pool_id': pool_id})
+                api_args['response_pools'].append(
+                    {'dsf_response_pool_id': pool_id})
         self._update(api_args, publish)
 
     def add_failover_ip(self, ip, publish=True):
-        """
-        Adds passed in :class:`DSFResponsePool` to the end of this :class:`DSFRuleSet`
-        This effectively creates a special new Record chain with a single IP. It can be accessed
-        as a responce pool with label equal to the ip passed in.
-        :param service: Can either be the service_id or a `TrafficDirector` Object
+        """Adds passed in :class:`DSFResponsePool` to the end of this
+        :class:`DSFRuleSet`. This effectively creates a special new Record
+        chain with a single IP. It can be accessed as a responce pool with
+        label equal to the ip passed in.
+
         :param publish: Publish on execution (Default = True)
         """
         api_args = dict()
         api_args['response_pools'] = list()
         for old_pool in self._response_pools:
-            api_args['response_pools'].append({'dsf_response_pool_id': old_pool._dsf_response_pool_id})
+            api_args['response_pools'].append(
+                {'dsf_response_pool_id': old_pool._dsf_response_pool_id})
         api_args['response_pools'].append({'failover': ip})
         self._update(api_args, publish)
 
     def order_response_pools(self, pool_list, publish=True):
-        """
-        For reordering the ruleset list. simply pass in a ``list`` of :class:`DSFResponcePool`s in the order
-        you wish them to failover.
+        """For reordering the ruleset list. simply pass in a ``list`` of
+        :class:`DSFResponcePool`s in the order you wish them to failover.
+
         :param pool_list: ordered ``list`` of :class:`DSFResponcePool`
         :param publish: Publish on execution. default = True
         """
 
         if not isinstance(pool_list, list):
-            raise Exception('You must pass in an ordered list of response pool objects, or ids.')
+            msg = ('You must pass in an ordered list of response pool '
+                   'objects, or ids.')
+            raise Exception(msg)
         _pool_list = list()
 
         for list_item in pool_list:
@@ -2582,34 +2722,38 @@ class DSFRuleset(object):
         api_args = dict()
         api_args['response_pools'] = list()
         for pool_id in _pool_list:
-            api_args['response_pools'].append({'dsf_response_pool_id': pool_id})
+            api_args['response_pools'].append(
+                {'dsf_response_pool_id': pool_id})
         self._update(api_args, publish)
 
-
-    def create(self, service, index = None, publish=True):
+    def create(self, service, index=None, publish=True):
         """Adds this :class:`DSFRuleset` to the passed in :class:`TrafficDirector`
-        :param service: a :class:`TrafficDirector` or id string for the :class:`TrafficDirector`
-        you wish to add this :class:`DSFRuleset` to.
+
+        :param service: a :class:`TrafficDirector` or id string for the
+            :class:`TrafficDirector` you wish to add this :class:`DSFRuleset`
+            to.
         :param index: in what position to serve this ruleset. 0 = first.
         :param publish: publish at execution time. Default = True
         """
         if self._dsf_ruleset_id:
-            raise Exception('Rule Set Already Exists. ID: {}'.format(self._dsf_ruleset_id))
-        _service_id = _checkType(service)
+            raise Exception(
+                'Rule Set Already Exists. ID: {}'.format(self._dsf_ruleset_id))
+        _service_id = _check_type(service)
         if index is not None:
             self._ordering = index
         self._post(_service_id, publish)
 
-
     def publish(self):
         """Publish changes to :class:`TrafficDirector`."""
         uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
+        api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
 
     def refresh(self):
-        """Pulls data down from Dynect System and repopulates :class:`DSFRuleset` """
+        """Pulls data down from Dynect System and repopulates
+        :class:`DSFRuleset`
+        """
         self._get(self._service_id, self._dsf_ruleset_id)
 
     @property
@@ -2630,6 +2774,7 @@ class DSFRuleset(object):
         :class:`DSFRuleset`
         """
         return self._criteria_type
+
     @criteria_type.setter
     def criteria_type(self, value):
         api_args = {'criteria_type': value}
@@ -2643,6 +2788,7 @@ class DSFRuleset(object):
         criteria_type
         """
         return self._criteria
+
     @criteria.setter
     def criteria(self, value):
         api_args = dict()
@@ -2664,7 +2810,8 @@ class DSFRuleset(object):
 
     @property
     def dsf_id(self):
-        """The unique system id of the :class:`TrafficDirector` This :class:`DSFRuleset` is attached to
+        """The unique system id of the :class:`TrafficDirector` This
+        :class:`DSFRuleset` is attached to
         """
         return self._service_id
 
@@ -2674,17 +2821,19 @@ class DSFRuleset(object):
         """
         return self._dsf_ruleset_id
 
-    @property
-    def implicitPublish(self):
-        "Toggle for this specific :class:`DSFRuleset` for turning on and off implicit Publishing for record Updates."
+    def implicit_publish(self):
+        """Toggle for this specific :class:`DSFRuleset` for turning on and
+        off implicit Publishing for record Updates.
+        """
         return self._implicitPublish
 
-    @implicitPublish.setter
-    def implicitPublish(self, value):
-        if value != True and value != False:
+    @implicit_publish.setter
+    def implicit_publish(self, value):
+        if not isinstance(value, bool):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
 
+    implicitPublish = implicit_publish
 
     @property
     def _json(self, svc_id=None, skip_svc=False):
@@ -2696,7 +2845,8 @@ class DSFRuleset(object):
         pool_json = [pool.to_json(svc_id) for pool in self._response_pools]
         if self._failover:
             pool_json.append({'failover': self._failover})
-        json_blob = {'label': self._label, 'criteria_type': self._criteria_type,
+        json_blob = {'label': self._label,
+                     'criteria_type': self._criteria_type,
                      'criteria': self._criteria,
                      'response_pools': pool_json}
         if svc_id and not skip_svc:
@@ -2714,13 +2864,15 @@ class DSFRuleset(object):
 
 class DSFMonitorEndpoint(object):
     """An Endpoint object to be passed to a :class:`DSFMonitor`"""
+
     def __init__(self, address, label, active='Y', site_prefs=None):
         """Create a :class:`DSFMonitorEndpoint` object
 
         :param address: The address to monitor.
         :param label: A label to identify this :class:`DSFMonitorEndpoint`.
-        :param active: Indicates whether or not this :class:`DSFMonitorEndpoint`
-            endpoint is active. Must be one of True, False, 'Y', or 'N'
+        :param active: Indicates whether or not this
+            :class:`DSFMonitorEndpoint` endpoint is active. Must be one of
+            True, False, 'Y', or 'N'
         :param site_prefs: A ``list`` of site codes from which this
             :class:`DSFMonitorEndpoint` will be monitored
         """
@@ -2766,6 +2918,7 @@ class DSFMonitorEndpoint(object):
             this :class:`DSFMonitorEndpoint`
         """
         return self._active
+
     @active.setter
     def active(self, value):
         valid_input = ('Y', 'N', True, False)
@@ -2778,6 +2931,7 @@ class DSFMonitorEndpoint(object):
     @property
     def label(self):
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = self._json
@@ -2787,6 +2941,7 @@ class DSFMonitorEndpoint(object):
     @property
     def address(self):
         return self._address
+
     @address.setter
     def address(self, value):
         api_args = self._json
@@ -2796,6 +2951,7 @@ class DSFMonitorEndpoint(object):
     @property
     def site_prefs(self):
         return self._site_prefs
+
     @site_prefs.setter
     def site_prefs(self, value):
         api_args = self._json
@@ -2805,6 +2961,7 @@ class DSFMonitorEndpoint(object):
 
 class DSFMonitor(object):
     """A Monitor for a :class:`TrafficDirector` Service"""
+
     def __init__(self, *args, **kwargs):
         """Create a new :class:`DSFMonitor` object
 
@@ -2814,8 +2971,8 @@ class DSFMonitor(object):
         :param response_count: The number of responses to determine whether or
             not the endpoint is 'up' or 'down'
         :param probe_interval: How often to run this :class:`DSFMonitor`
-        :param retries: How many retries this :class:`DSFMonitor` should attempt
-            on failure before giving up.
+        :param retries: How many retries this :class:`DSFMonitor` should
+            attempt on failure before giving up.
         :param active: Indicates if this :class:`DSFMonitor` is active
         :param options: Additional options pertaining to this
             :class:`DSFMonitor`
@@ -2827,8 +2984,9 @@ class DSFMonitor(object):
         self._monitor_id = None
         self._label = self._protocol = self._response_count = None
         self._probe_interval = self._retries = self._active = None
-        self._options = self._dsf_monitor_id = self._timeout = self._port = None
-        self._path = self._host = self._header = self._expected = None
+        self._options = self._dsf_monitor_id = self._timeout = None
+        self._port = self._path = self._host = self._header = None
+        self._expected = None
         self._endpoints = []
         if 'api' in kwargs:
             del kwargs['api']
@@ -2921,6 +3079,7 @@ class DSFMonitor(object):
     def dsf_monitor_id(self):
         """The unique system id of this :class:`DSFMonitor`"""
         return self._dsf_monitor_id
+
     @dsf_monitor_id.setter
     def dsf_monitor_id(self, value):
         pass
@@ -2929,6 +3088,7 @@ class DSFMonitor(object):
     def label(self):
         """A unique label to identify this :class:`DSFMonitor`"""
         return self._label
+
     @label.setter
     def label(self, value):
         self._label = value
@@ -2941,6 +3101,7 @@ class DSFMonitor(object):
         'SMTP', or 'TCP'
         """
         return self._protocol
+
     @protocol.setter
     def protocol(self, value):
         self._protocol = value
@@ -2949,9 +3110,11 @@ class DSFMonitor(object):
 
     @property
     def response_count(self):
-        """The minimum number of agents reporting the host as up for failover not to occur. Must be 0, 1 or 2
+        """The minimum number of agents reporting the host as up for failover
+        not to occur. Must be 0, 1 or 2
         """
         return self._response_count
+
     @response_count.setter
     def response_count(self, value):
         self._response_count = value
@@ -2962,6 +3125,7 @@ class DSFMonitor(object):
     def probe_interval(self):
         """How often to run this :class:`DSFMonitor`"""
         return self._probe_interval
+
     @probe_interval.setter
     def probe_interval(self, value):
         self._probe_interval = value
@@ -2974,6 +3138,7 @@ class DSFMonitor(object):
         before giving up.
         """
         return self._retries
+
     @retries.setter
     def retries(self, value):
         self._retries = value
@@ -2986,6 +3151,7 @@ class DSFMonitor(object):
         return either 'Y' or 'N'
         """
         return self._active
+
     @active.setter
     def active(self, value):
         self._active = value
@@ -2999,6 +3165,7 @@ class DSFMonitor(object):
         """
         self._get(self.dsf_monitor_id)
         return self._endpoints
+
     @endpoints.setter
     def endpoints(self, value):
         pass
@@ -3007,6 +3174,7 @@ class DSFMonitor(object):
     def options(self):
         """Additional options pertaining to this :class:`DSFMonitor`"""
         return self._options
+
     @options.setter
     def options(self, value):
         self._options = value
@@ -3015,7 +3183,10 @@ class DSFMonitor(object):
 
     def __str__(self):
         """str override"""
-        return force_unicode('<DSFMonitor>: {}, ID: {}').format(self._label, self._dsf_monitor_id)
+        return force_unicode('<DSFMonitor>: {}, ID: {}').format(
+            self._label, self._dsf_monitor_id
+        )
+
     __repr__ = __unicode__ = __str__
 
     def delete(self):
@@ -3024,15 +3195,16 @@ class DSFMonitor(object):
         self.uri = '/DSFMonitor/{}/'.format(self._dsf_monitor_id)
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
+
 class DSFNotifier(object):
     def __init__(self, *args, **kwargs):
         """ Create a :class:`Notifier` object
+
         :param label:
         :param recipients: ``list`` of Contact Names
         :param dsf_services:
         :param monitor_services:
         """
-
         self._label = self._notifier_id = self._recipients = None
         self._services = None
         if 'api' in kwargs:
@@ -3049,24 +3221,28 @@ class DSFNotifier(object):
             self._post(*args, **kwargs)
         self.uri = '/Notifier/'
 
-    def _post(self, label, dsf_services=None, monitor_services=None, recipients=None):
+    def _post(self, label, dsf_services=None, monitor_services=None,
+              recipients=None):
         """Create a new :class:`TrafficDirector` on the DynECT System"""
         uri = '/Notifier/'
         api_args = {}
         if recipients:
             api_args['recipients'] = list()
             for recipient in recipients:
-                api_args['recipients'].append({'recipient': recipient, 'format':'email'})
+                api_args['recipients'].append(
+                    {'recipient': recipient, 'format': 'email'})
 
         if dsf_services or monitor_services:
             api_args['services'] = list()
 
         if dsf_services:
-            api_args['services'] += [{'service_class': 'DSF', 'service_id': service_id} for
-                                     service_id in dsf_services]
+            api_args['services'] += [
+                {'service_class': 'DSF', 'service_id': service_id} for
+                service_id in dsf_services]
         if monitor_services:
-            api_args['services'] += [{'service_class': 'Monitor', 'service_id': service_id} for
-                                     service_id in monitor_services]
+            api_args['services'] += [
+                {'service_class': 'Monitor', 'service_id': service_id} for
+                service_id in monitor_services]
 
         self._label = label
         api_args['label'] = label
@@ -3083,14 +3259,12 @@ class DSFNotifier(object):
                                                        api_args)
         self._build(response['data'])
 
-
     def _update(self, api_args):
         """Private update method"""
         self.uri = '/Notifier/{}/'.format(self._notifier_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
-
 
     def _build(self, data):
         for key, val in data.items():
@@ -3110,7 +3284,6 @@ class DSFNotifier(object):
     def recipients(self):
         return self._recipients
 
-
     def add_recipient(self, new_recipient, format='email'):
         recipients = self._recipients
         for recipient in recipients:
@@ -3121,7 +3294,8 @@ class DSFNotifier(object):
         self._update(api_args)
 
     def del_recipient(self, recipient):
-        recipients = [srecipient for srecipient in self._recipients if srecipient['recipient'] != recipient]
+        recipients = [srecipient for srecipient in self._recipients if
+                      srecipient['recipient'] != recipient]
         for recipient in recipients:
             recipient.pop('details', None)
             recipient.pop('features', None)
@@ -3130,28 +3304,36 @@ class DSFNotifier(object):
 
     @property
     def dsf_service_ids(self):
-        return [service['service_id'] for service in self._services if service['service_class'] == 'DSF']
+        return [service['service_id'] for service in self._services if
+                service['service_class'] == 'DSF']
 
     @property
     def monitor_service_ids(self):
-        return [service['service_id'] for service in self._services if service['service_class'] == 'Monitor']
-
+        return [service['service_id'] for service in self._services if
+                service['service_class'] == 'Monitor']
 
     def to_json(self):
         json_blob = {}
         if self._label:
-             json_blob['label'] = self._label
+            json_blob['label'] = self._label
         if self._recipients:
-             json_blob['recipients'] = [recipient['recipient'] for recipient in self._recipients]
+            json_blob['recipients'] = [recipient['recipient'] for recipient in
+                                       self._recipients]
         if self._services:
-             json_blob['dsf_services'] = [dsf['service_id'] for dsf in self._services if dsf['service_class'] == 'DSF']
-             json_blob['monitor_services'] = [mon['service_id'] for mon in self._services if
-                                              mon['service_class'] == 'Monitor']
+            json_blob['dsf_services'] = [dsf['service_id'] for dsf in
+                                         self._services if
+                                         dsf['service_class'] == 'DSF']
+            json_blob['monitor_services'] = [mon['service_id'] for mon in
+                                             self._services if
+                                             mon['service_class'] == 'Monitor']
         return json_blob
 
     def __str__(self):
         """str override"""
-        return force_unicode('<DSFNotifier>: {}, ID: {}').format(self._label, self._notifier_id)
+        return force_unicode('<DSFNotifier>: {}, ID: {}').format(
+            self._label, self._notifier_id
+        )
+
     __repr__ = __unicode__ = __str__
 
     def delete(self):
@@ -3162,14 +3344,12 @@ class DSFNotifier(object):
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
 
-
-
-
 class TrafficDirector(object):
     """Traffic Director is a DNS based traffic routing and load balancing
     service that is Geolocation aware and can support failover by monitoring
     endpoints.
     """
+
     def __init__(self, *args, **kwargs):
         """Create a :class:`TrafficDirector` object
 
@@ -3215,30 +3395,35 @@ class TrafficDirector(object):
         if ttl:
             api_args['ttl'] = self._ttl
         if nodes:
-            _nodeList=[]
+            _nodeList = []
             if isinstance(nodes, list):
                 for node in nodes:
                     if isinstance(node, dyn.tm.zones.Node):
-                        _nodeList.append({'zone':node.zone, 'fqdn':node.fqdn})
+                        _nodeList.append(
+                            {'zone': node.zone, 'fqdn': node.fqdn})
                     elif isinstance(node, dict):
                         _nodeList.append(node)
-            elif isinstance(nodes,dict):
+            elif isinstance(nodes, dict):
                 _nodeList.append(nodes)
             elif isinstance(nodes, dyn.tm.zones.Node):
-                _nodeList.append({'zone':nodes.zone, 'fqdn':nodes.fqdn})
-            self._nodes=_nodeList
+                _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
+            self._nodes = _nodeList
             api_args['nodes'] = self._nodes
         if notifiers:
             api_args['notifiers'] = []
             for notifier in notifiers:
                 if isinstance(notifier, DSFNotifier):
-                    api_args['notifiers'].append({'notifier_id':notifier._notifier_id})
+                    api_args['notifiers'].append(
+                        {'notifier_id': notifier._notifier_id})
                 elif isinstance(notifier, Notifier):
-                    api_args['notifiers'].append({'notifier_id':notifier._notifier_id})
+                    api_args['notifiers'].append(
+                        {'notifier_id': notifier._notifier_id})
                 elif type(notifier) is str or type(notifier) is unicode:
-                    api_args['notifiers'].append({'notifier_id':notifier})
+                    api_args['notifiers'].append({'notifier_id': notifier})
                 else:
-                    raise Exception('notifiers must be a list containing DSFNotifier objects, or notifier_id strings.')
+                    msg = ('notifiers must be a list containing DSFNotifier '
+                           'objects, or notifier_id strings.')
+                    raise Exception(msg)
         if rulesets:
             api_args['rulesets'] = [rule._json for rule in self._rulesets]
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
@@ -3250,7 +3435,8 @@ class TrafficDirector(object):
             if key == 'notifiers':
                 self._notifiers = []
                 for notifier in val:
-                    self._notifiers.append(DSFNotifier(None, td=False, **notifier))
+                    self._notifiers.append(
+                        DSFNotifier(None, td=False, **notifier))
             elif key == 'rulesets':
                 # Clear Rulesets
                 self._rulesets = APIList(DynectSession.get_session, 'rulesets')
@@ -3260,7 +3446,8 @@ class TrafficDirector(object):
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
                 # nodes are now returned as Node Objects
-                self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in val]
+                self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn'])
+                               for node in val]
             else:
                 setattr(self, '_' + key, val)
         self.uri = '/DSF/{}/'.format(self._service_id)
@@ -3275,7 +3462,7 @@ class TrafficDirector(object):
                                                        api_args)
         self._build(response['data'])
 
-    def _update(self, api_args, publish = True):
+    def _update(self, api_args, publish=True):
         """Private update method"""
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
@@ -3287,12 +3474,14 @@ class TrafficDirector(object):
     def publish(self):
         """Publish changes to :class:`TrafficDirector`."""
         uri = '/DSF/{}/'.format(self._service_id)
-        api_args = {'publish':'Y'}
+        api_args = {'publish': 'Y'}
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
 
     def refresh(self):
-        """Pulls data down from Dynect System and repopulates :class:`TrafficDirector` """
+        """Pulls data down from Dynect System and repopulates
+        :class:`TrafficDirector`
+        """
         self._get(self._service_id)
 
     @property
@@ -3328,8 +3517,8 @@ class TrafficDirector(object):
         self._update(api_args)
 
     def add_notifier(self, notifier):
-        """Links the :class:`DSFNotifier` with the specified id to this Traffic Director
-        service
+        """Links the :class:`DSFNotifier` with the specified id to this
+        Traffic Director service
         """
         if isinstance(notifier, DSFNotifier):
             _notifier_id = notifier._notifier_id
@@ -3338,14 +3527,15 @@ class TrafficDirector(object):
         elif type(notifier) is str or type(notifier) is unicode:
             _notifier_id = notifier
         else:
-            raise Exception("Cannot sensibly determine Notifier type, must be DSFNotifier, or notifier_id string")
+            msg = ('Cannot sensibly determine Notifier type, must be '
+                   'DSFNotifier, or notifier_id string')
+            raise Exception(msg)
         api_args = {'add_notifier': True, 'notifier_id': _notifier_id}
         self._update(api_args)
 
-
     def del_notifier(self, notifier):
-        """Links the :class:`DSFNotifier` with the specified id to this Traffic Director
-        service
+        """Links the :class:`DSFNotifier` with the specified id to this
+        Traffic Director service
         """
         if isinstance(notifier, DSFNotifier):
             _notifier_id = notifier._notifier_id
@@ -3354,11 +3544,13 @@ class TrafficDirector(object):
         elif type(notifier) is str or type(notifier) is unicode:
             _notifier_id = notifier
         else:
-            raise Exception("Cannot sensibly determine Notifier type, must be DSFNotifier, or notifier_id string")
+            msg = ('Cannot sensibly determine Notifier type, must be '
+                   'DSFNotifier, or notifier_id string')
+            raise Exception(msg)
         self.refresh()
-        safeNotifiers= [{'notifier_id': notifier._notifier_id} for notifier in self._notifiers
-                        if notifier._notifier_id != _notifier_id]
-
+        safeNotifiers = [{'notifier_id': notifier._notifier_id} for notifier in
+                         self._notifiers
+                         if notifier._notifier_id != _notifier_id]
 
         api_args = {'notifiers': safeNotifiers}
         self._update(api_args)
@@ -3371,12 +3563,14 @@ class TrafficDirector(object):
         self._update(api_args)
 
     def replace_all_rulesets(self, rulesets):
+        """This request will replace all rulesets with a new list of rulesets.
+
+        :param rulesets: a list of rulesets :class:DSFRuleset to be published
+        to the service Warning! This call takes extra time as it is several
+        api calls.
         """
-            This request will replace all rulesets with a new list of rulesets.
-            :param rulesets: a list of rulesets :class:DSFRuleset to be published to the service
-            Warning! This call takes extra time as it is several api calls.
-            """
-        if (type(rulesets) is list or type(rulesets) is tuple) and isinstance(rulesets[0], DSFRuleset):
+        if (type(rulesets) is list or type(rulesets) is tuple) and isinstance(
+                rulesets[0], DSFRuleset):
             old_rulesets = self.all_rulesets
             for old_rule in old_rulesets:
                 old_rule.delete()
@@ -3384,15 +3578,18 @@ class TrafficDirector(object):
                 new_rule._dsf_ruleset_id = None
                 new_rule.create(self)
         else:
-            raise Exception("rulesets parameter must be a list of DSFRuleset objects")
+            raise Exception(
+                "rulesets parameter must be a list of DSFRuleset objects")
 
     def replace_one_ruleset(self, ruleset):
+        """This request will replace a single ruleset and maintain the order
+        of the list.
+
+        Warning! This call takes extra time as it is several api calls.
+
+        :param ruleset: A single object of :class:DSFRuleset` The replacement
+        is keyed by the DSFRuleset label value.
         """
-            This request will replace a single ruleset and maintain the order of the list.
-            :param ruleset: A single object of :class:DSFRuleset`
-            The replacement is keyed by the DSFRuleset label value
-            Warning! This call takes extra time as it is several api calls.
-            """
         if isinstance(ruleset, DSFRuleset):
             old_rulesets = self.all_rulesets
             old_rule = None
@@ -3410,7 +3607,9 @@ class TrafficDirector(object):
             else:
                 ruleset.create(self)
         else:
-            raise Exception("rulesets parameter must be a single object of class DSFRuleset")
+            msg = ('rulesets parameter must be a single object of class '
+                   'DSFRuleset')
+            raise Exception(msg)
 
     @property
     def service_id(self):
@@ -3426,6 +3625,7 @@ class TrafficDirector(object):
                 for rs_chains in response_pool.rs_chains
                 for record_set in rs_chains.record_sets
                 for record in record_set.records]
+
     @records.setter
     def records(self, value):
         pass
@@ -3440,6 +3640,7 @@ class TrafficDirector(object):
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains
                 for record_set in rs_chains.record_sets]
+
     @record_sets.setter
     def record_sets(self, value):
         pass
@@ -3452,6 +3653,7 @@ class TrafficDirector(object):
         self.refresh()
         return [response_pool for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools]
+
     @response_pools.setter
     def response_pools(self, value):
         pass
@@ -3465,8 +3667,9 @@ class TrafficDirector(object):
         return [rs_chains for ruleset in self._rulesets
                 for response_pool in ruleset.response_pools
                 for rs_chains in response_pool.rs_chains]
+
     @failover_chains.setter
-    def rs_chains(self, value):
+    def failover_chains(self, value):
         pass
 
     @property
@@ -3484,6 +3687,7 @@ class TrafficDirector(object):
         """
         self.refresh()
         return self._rulesets
+
     @rulesets.setter
     def rulesets(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
@@ -3494,15 +3698,16 @@ class TrafficDirector(object):
         self._rulesets.uri = self.uri
 
     def order_rulesets(self, ruleset_list, publish=True):
-        """
-        For reordering the ruleset list. simply pass in a ``list`` of :class:`DSFRulesets`s in the order
-        you wish them to be served.
+        """For reordering the ruleset list. simply pass in a ``list`` of
+        :class:`DSFRulesets`s in the order you wish them to be served.
+
         :param ruleset_list: ordered ``list`` of :class:`DSFRulesets`
         :param publish: Publish on execution. default = True
         """
-
         if not isinstance(ruleset_list, list):
-            raise Exception('You must pass in an ordered list of response pool objects, or ids.')
+            msg = ('You must pass in an ordered list of response pool '
+                   'objects, or ids.')
+            raise Exception(msg)
         _ruleset_list = list()
 
         for list_item in ruleset_list:
@@ -3516,17 +3721,20 @@ class TrafficDirector(object):
             api_args['rulesets'].append({'dsf_ruleset_id': ruleset_id})
         self._update(api_args, publish)
 
-
     @property
-    def nodeObjects(self):
-        """A list of :class:`Node` Objects that are linked
-        to this :class:`TrafficDirector` service"""
+    def node_objects(self):
+        """A list of :class:`Node` Objects that are linked to this
+        :class:`TrafficDirector` service
+        """
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+                       in response['data']]
         return self._nodes
+
+    nodeObjects = node_objects
 
     @property
     def nodes(self):
@@ -3536,62 +3744,72 @@ class TrafficDirector(object):
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
-        return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+                       in response['data']]
+        return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in
+                response['data']]
 
     @nodes.setter
     def nodes(self, nodes):
         """A :class:`Node` Object, a zone, FQDN pair in a hash, or a list
         containing those two things (can be mixed) that are to be
         linked to this :class:`TrafficDirector` service. This overwrites
-        whatever nodes are already linked to this :class:`TrafficDirector` service ."""
-        _nodeList=[]
+        whatever nodes are already linked to this :class:`TrafficDirector`
+        service
+        """
+        _nodeList = []
         if isinstance(nodes, list):
             for node in nodes:
                 if isinstance(node, dyn.tm.zones.Node):
-                    _nodeList.append({'zone':node.zone, 'fqdn':node.fqdn})
+                    _nodeList.append({'zone': node.zone, 'fqdn': node.fqdn})
                 elif isinstance(node, dict):
                     _nodeList.append(node)
-        elif isinstance(nodes,dict):
+        elif isinstance(nodes, dict):
             _nodeList.append(nodes)
         elif isinstance(nodes, dyn.tm.zones.Node):
-            _nodeList.append({'zone':nodes.zone, 'fqdn':nodes.fqdn})
+            _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'nodes': _nodeList, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'PUT',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+                       in response['data']]
 
     def add_node(self, node):
-        """A :class:`Node` object, or a zone, FQDN pair in a hash
-        to be added to this :class:`TrafficDirector` service:"""
+        """A :class:`Node` object, or a zone, FQDN pair in a hash to be added
+        to this :class:`TrafficDirector` service
+        """
         if isinstance(node, dyn.tm.zones.Node):
-            _node = {'zone':node.zone, 'fqdn':node.fqdn}
+            _node = {'zone': node.zone, 'fqdn': node.fqdn}
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+                       in response['data']]
 
     def remove_node(self, node):
-        """A :class:`Node` object, or a zone, FQDN pair in a hash
-        to be removed to this :class:`TrafficDirector` service:"""
+        """A :class:`Node` object, or a zone, FQDN pair in a hash to be
+        removed to this :class:`TrafficDirector` service
+        """
         if isinstance(node, dyn.tm.zones.Node):
-            _node = {'zone':node.zone, 'fqdn':node.fqdn}
+            _node = {'zone': node.zone, 'fqdn': node.fqdn}
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node in response['data']]
+        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+                       in response['data']]
 
     @property
     def label(self):
         """A unique label for this :class:`TrafficDirector` service"""
         return self._label
+
     @label.setter
     def label(self, value):
         api_args = {'label': value}
@@ -3605,6 +3823,7 @@ class TrafficDirector(object):
         if not isinstance(self._ttl, int):
             self._ttl = int(self._ttl)
         return self._ttl
+
     @ttl.setter
     def ttl(self, value):
         api_args = {'ttl': value}
@@ -3612,16 +3831,19 @@ class TrafficDirector(object):
         if self._implicitPublish:
             self._ttl = value
 
-    @property
-    def implicitPublish(self):
-        "Toggle for this specific :class:`TrafficDirector` for turning on and off implicit Publishing for record Updates."
+    def implicit_publish(self):
+        """Toggle for this specific :class:`TrafficDirector` for turning on and
+        off implicit Publishing for record Updates.
+        """
         return self._implicitPublish
 
-    @implicitPublish.setter
-    def implicitPublish(self, value):
-        if value != True and value != False:
+    @implicit_publish.setter
+    def implicit_publish(self, value):
+        if not isinstance(value, bool):
             raise Exception('Value must be True or False')
         self._implicitPublish = value
+
+    implicitPublish = implicit_publish
 
     def delete(self):
         """Delete this :class:`TrafficDirector` from the DynECT System"""
@@ -3631,7 +3853,9 @@ class TrafficDirector(object):
 
     def __str__(self):
         """str override"""
-        return force_unicode('<TrafficDirector>: {}, ID: {}').format(self._label, self._service_id)
+        return force_unicode('<TrafficDirector>: {}, ID: {}').format(
+            self._label, self._service_id)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

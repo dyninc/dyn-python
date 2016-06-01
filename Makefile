@@ -3,7 +3,7 @@ PACKAGE=dyn
 .PHONY: clean
 
 init:
-	pip install -r testing-requirements.txt
+	pip install -r test-requirements.txt
 
 style:
 	flake8 $(PACKAGE)

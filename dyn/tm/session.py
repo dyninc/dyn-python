@@ -214,10 +214,11 @@ class DynectSession(SessionEngine):
             username = self._active_user_session['user_name']
         if password is None:
             password = self._active_user_session['password']
-        password = self.__cipher.decrypt(password)
+        non_line_args = {'customer_name': customer, 'user_name': username,
+                    'password': password}
 
         api_args = {'customer_name': customer, 'user_name': username,
-                    'password': password}
+                    'password': self.__cipher.decrypt(password)}
         try:
             response = self.execute('/Session/', 'POST', api_args)
         except IOError:
@@ -226,7 +227,7 @@ class DynectSession(SessionEngine):
             self.logger.error('An error was encountered authenticating to Dyn')
             raise DynectAuthError(response['msgs'])
         else:
-            self.add_user_session(api_args)
+            self.add_user_session(non_line_args)
             self.logger.info('DynectSession Authentication Successful')
 
     def log_out(self):

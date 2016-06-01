@@ -214,6 +214,7 @@ class DynectSession(SessionEngine):
             username = self._active_user_session['user_name']
         if password is None:
             password = self._active_user_session['password']
+        password = self.__cipher.decrypt(password)
 
         api_args = {'customer_name': customer, 'user_name': username,
                     'password': password}
@@ -241,8 +242,6 @@ class DynectSession(SessionEngine):
     def __auth_data(self):
         """A dict of the authdata required to authenticate as this user"""
         authdata = self._active_user_session
-        if authdata is not None:
-            authdata['password'] = self.__cipher.decrypt(authdata['password'])
         return authdata
 
     def __str__(self):

@@ -3,7 +3,9 @@
 Traffic Director (DSF) service.
 """
 import dyn.tm.zones
-from dyn.compat import force_unicode
+
+from collections import Iterable
+from dyn.compat import force_unicode, string_types
 from dyn.tm.utils import APIList, Active
 from dyn.tm.errors import DynectInvalidArgumentError
 from dyn.tm.records import *  # NOQA
@@ -241,7 +243,7 @@ def get_dsf_monitor(monitor_id):
 def _check_type(service):
     if isinstance(service, TrafficDirector):
         _service_id = service.service_id
-    elif type(service) is str or type(service) is unicode:
+    elif isinstance(service, string_types):
         _service_id = service
     else:
         raise Exception('Value must be string, or TrafficDirector Object')
@@ -432,7 +434,7 @@ class _DSFRecord(object):
         if isinstance(record_set, DSFRecordSet):
             _record_set_id = record_set._dsf_record_set_id
             _service_id = record_set._service_id
-        elif type(record_set) is str or type(record_set) is unicode:
+        elif isinstance(record_set, string_types):
             if service is None:
                 msg = ('When record_set as a string, you must provide the '
                        'service_id as service=')
@@ -1692,7 +1694,7 @@ class DSFRecordSet(object):
         str.append('Label: {}'.format(self.label))
         if self._dsf_record_set_id:
             str.append('ID: {}'.format(self._dsf_record_set_id))
-        return ("<DSFRecordSet>: {}".format(', '.join(str)))
+        return '<DSFRecordSet>: {}'.format(', '.join(str))
 
     __repr__ = __unicode__ = __str__
 
@@ -1725,7 +1727,7 @@ class DSFRecordSet(object):
             _dsf_record_set_failover_chain_id = \
                 failover_chain._dsf_record_set_failover_chain_id
             _service_id = failover_chain._service_id
-        elif type(failover_chain) is str or type(failover_chain) is unicode:
+        elif isinstance(failover_chain, string_types):
             if service is None:
                 msg = ('If passing failover_chain as a string, you must '
                        'provide the service_id as service=')
@@ -1903,7 +1905,7 @@ class DSFRecordSet(object):
         """
         if isinstance(monitor, DSFMonitor):
             _monitor_id = monitor._dsf_monitor_id
-        elif type(monitor) is str or type(monitor) is unicode:
+        elif isinstance(monitor, string_types):
             _monitor_id = monitor
         else:
             raise Exception('Could not make sense of Monitor Type')
@@ -2122,7 +2124,7 @@ class DSFFailoverChain(object):
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
             _service_id = response_pool._service_id
-        elif type(response_pool) is str or type(response_pool) is unicode:
+        elif isinstance(response_pool, string_types):
             if service is None:
                 msg = ('If passing response_pool as a string, you must '
                        'provide the service_id as service=')
@@ -2636,7 +2638,7 @@ class DSFRuleset(object):
         """
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
-        elif type(response_pool) is str or type(response_pool) is unicode:
+        elif isinstance(response_pool, string_types):
             _response_pool_id = response_pool
         else:
             raise Exception('Could not make sense of Response Pool Type')
@@ -2668,7 +2670,7 @@ class DSFRuleset(object):
         """
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
-        elif type(response_pool) is str or type(response_pool) is unicode:
+        elif isinstance(response_pool, string_types):
             _response_pool_id = response_pool
         else:
             raise Exception('Could not make sense of Response Pool Type')
@@ -2717,7 +2719,7 @@ class DSFRuleset(object):
         for list_item in pool_list:
             if isinstance(list_item, DSFResponsePool):
                 _pool_list.append(list_item._dsf_response_pool_id)
-            elif type(list_item) is str or type(list_item) is unicode:
+            elif isinstance(list_item, string_types):
                 _pool_list.append(list_item)
         api_args = dict()
         api_args['response_pools'] = list()
@@ -2792,7 +2794,7 @@ class DSFRuleset(object):
     @criteria.setter
     def criteria(self, value):
         api_args = dict()
-        if type(value) is dict:
+        if isinstance(value, dict):
             if value.get('geoip'):
                 for key, val in value['geoip'].items():
                     if len(val) != 0:
@@ -3418,7 +3420,7 @@ class TrafficDirector(object):
                 elif isinstance(notifier, Notifier):
                     api_args['notifiers'].append(
                         {'notifier_id': notifier._notifier_id})
-                elif type(notifier) is str or type(notifier) is unicode:
+                elif isinstance(notifier, string_types):
                     api_args['notifiers'].append({'notifier_id': notifier})
                 else:
                     msg = ('notifiers must be a list containing DSFNotifier '
@@ -3524,7 +3526,7 @@ class TrafficDirector(object):
             _notifier_id = notifier._notifier_id
         elif isinstance(notifier, Notifier):
             _notifier_id = notifier._notifier_id
-        elif type(notifier) is str or type(notifier) is unicode:
+        elif isinstance(notifier, string_types):
             _notifier_id = notifier
         else:
             msg = ('Cannot sensibly determine Notifier type, must be '
@@ -3541,7 +3543,7 @@ class TrafficDirector(object):
             _notifier_id = notifier._notifier_id
         elif isinstance(notifier, Notifier):
             _notifier_id = notifier._notifier_id
-        elif type(notifier) is str or type(notifier) is unicode:
+        elif isinstance(notifier, string_types):
             _notifier_id = notifier
         else:
             msg = ('Cannot sensibly determine Notifier type, must be '
@@ -3569,8 +3571,8 @@ class TrafficDirector(object):
         to the service Warning! This call takes extra time as it is several
         api calls.
         """
-        if (type(rulesets) is list or type(rulesets) is tuple) and isinstance(
-                rulesets[0], DSFRuleset):
+        if isinstance(rulesets, Iterable) and isinstance(rulesets[0],
+                                                         DSFRuleset):
             old_rulesets = self.all_rulesets
             for old_rule in old_rulesets:
                 old_rule.delete()
@@ -3713,7 +3715,7 @@ class TrafficDirector(object):
         for list_item in ruleset_list:
             if isinstance(list_item, DSFRuleset):
                 _ruleset_list.append(list_item._dsf_ruleset_id)
-            elif type(list_item) is str or type(list_item) is unicode:
+            elif isinstance(list_item, string_types):
                 _ruleset_list.append(list_item)
         api_args = dict()
         api_args['rulesets'] = list()
@@ -3831,6 +3833,7 @@ class TrafficDirector(object):
         if self._implicitPublish:
             self._ttl = value
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`TrafficDirector` for turning on and
         off implicit Publishing for record Updates.

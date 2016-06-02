@@ -221,7 +221,7 @@ class DynectSession(SessionEngine):
             password = self._active_user_session['password']
         password = self.__cipher.decrypt(password)
         api_args = {'customer_name': customer, 'user_name': username,
-                    'password': password}
+                    'password': self.__cipher.decrypt(password)}
         try:
             response = self.execute('/Session/', 'POST', api_args)
         except IOError:

@@ -220,7 +220,6 @@ class DynectSession(SessionEngine):
         if password is None:
             password = self._active_user_session['password']
         password = self.__cipher.decrypt(password)
-
         api_args = {'customer_name': customer, 'user_name': username,
                     'password': password}
         try:

@@ -3548,11 +3548,11 @@ class TrafficDirector(object):
                    'DSFNotifier, or notifier_id string')
             raise Exception(msg)
         self.refresh()
-        safeNotifiers = [{'notifier_id': notifier._notifier_id} for notifier in
-                         self._notifiers
-                         if notifier._notifier_id != _notifier_id]
+        safe_notifiers = [{'notifier_id': notif._notifier_id} for notif in
+                          self._notifiers
+                          if notif._notifier_id != _notifier_id]
 
-        api_args = {'notifiers': safeNotifiers}
+        api_args = {'notifiers': safe_notifiers}
         self._update(api_args)
 
     def remove_orphans(self):
@@ -3787,7 +3787,7 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [dyn.tm.zones.Node(nd['zone'], nd['fqdn']) for nd
                        in response['data']]
 
     def remove_node(self, node):
@@ -3802,7 +3802,7 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [dyn.tm.zones.Node(nd['zone'], nd['fqdn']) for nd
                        in response['data']]
 
     @property

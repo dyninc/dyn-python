@@ -814,7 +814,7 @@ class RTTM(object):
         if recovery_delay:
             api_args['recovery_delay'] = self._recovery_delay
         if region:
-            api_args['region'] = [region._json for region in self._region]
+            api_args['region'] = [reg._json for reg in self._region]
         if monitor:
             api_args['monitor'] = self._monitor.to_json()
         if performance_monitor:

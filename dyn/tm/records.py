@@ -33,6 +33,7 @@ class DNSRecord(object):
         self.create = create
         self.api_args = {'rdata': {}}
         self._implicitPublish = True
+        self._note = None
 
     def _create_record(self, api_args):
         """Make the API call to create the current record type

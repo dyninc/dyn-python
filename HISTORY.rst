@@ -1,5 +1,7 @@
 Release History
 ---------------
+1.6.4 (2016-05-20)
+*Added Publish Notes to Traffic Director Service. User created Zone Notes can now be generated on a Traffic Director Publish. This includes in line setter publishes, or full Service level publishes.
 
 1.6.3 (2016-3-21)
 ++++++++++++++++

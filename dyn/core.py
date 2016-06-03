@@ -79,7 +79,7 @@ class SessionEngine(Singleton):
     uri_root = '/'
 
     def __init__(self, host=None, port=443, ssl=True, history=False,
-        proxy_host=None, proxy_port=None, proxy_user=None, proxy_pass=None, timeout=300):
+        proxy_host=None, proxy_port=None, proxy_user=None, proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
         :param host: DynECT API server address
@@ -109,7 +109,6 @@ class SessionEngine(Singleton):
         self._encoding = locale.getdefaultlocale()[-1] or 'UTF-8'
         self._token = self._conn = self._last_response = None
         self._permissions = None
-        self._connection_timeout = timeout
 
     @classmethod
     def new_session(cls, *args, **kwargs):
@@ -188,7 +187,7 @@ class SessionEngine(Singleton):
                                                                                      self.proxy_host,
                                                                                      self.proxy_port)
                 self.logger.info(msg)
-                self._conn = HTTPSConnection(self.proxy_host, self.proxy_port, timeout=self._connection_timeout)
+                self._conn = HTTPSConnection(self.proxy_host, self.proxy_port, timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
             else:
                 msg = 'Establishing unencrypted connection to {}:{} with proxy {}:{}'.format(self.host,
@@ -196,19 +195,19 @@ class SessionEngine(Singleton):
                                                                                              self.proxy_host,
                                                                                              self.proxy_port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.proxy_host, self.proxy_port, timeout=self._connection_timeout)
+                self._conn = HTTPConnection(self.proxy_host, self.proxy_port, timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
         else:
             if self.ssl:
                 msg = 'Establishing SSL connection to {}:{}'.format(self.host,
                                                                     self.port)
                 self.logger.info(msg)
-                self._conn = HTTPSConnection(self.host, self.port, timeout=self._connection_timeout)
+                self._conn = HTTPSConnection(self.host, self.port, timeout=300)
             else:
                 msg = 'Establishing unencrypted connection to {}:{}'.format(self.host,
                                                                             self.port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.host, self.port, timeout=self._connection_timeout)
+                self._conn = HTTPConnection(self.host, self.port, timeout=300)
 
     def _process_response(self, response, method, final=False):
         """API Method. Process an API response for failure, incomplete, or

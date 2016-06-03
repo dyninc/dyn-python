@@ -2216,6 +2216,7 @@ class DSFFailoverChain(object):
         """
         return self._dsf_record_set_failover_chain_id
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`DSFFailoverChain` for turning on
         and off implicit Publishing for record Updates.
@@ -2489,6 +2490,7 @@ class DSFResponsePool(object):
             json_blob['service_id'] = svc_id
         return json_blob
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`DSFResponsePool` for turning on and
         off implicit Publishing for record Updates.
@@ -2823,6 +2825,7 @@ class DSFRuleset(object):
         """
         return self._dsf_ruleset_id
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`DSFRuleset` for turning on and
         off implicit Publishing for record Updates.

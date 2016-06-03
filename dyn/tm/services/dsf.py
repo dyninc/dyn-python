@@ -2277,7 +2277,7 @@ class DSFResponsePool(object):
         """
         self.service_id = service_id
         uri = '/DSFResponsePool/{}/'.format(self.service_id)
-        api_args = {'publish': 'Y', 'label': self._label,
+        api_args = {'publish': 'N', 'label': self._label,
                     'core_set_count': self._core_set_count,
                     'eligible': self._eligible, 'automation': self._automation}
         if self._dsf_ruleset_id:

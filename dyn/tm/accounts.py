@@ -371,12 +371,14 @@ class User(object):
         super(User, self).__init__()
         self._user_name = user_name
         self.uri = '/User/{}/'.format(self._user_name)
+        self._permission_report_uri = '/UserPermissionReport/'
         self._password = self._email = self._first_name = self._last_name = None
         self._nickname = self._organization = self._phone = self._address = None
         self._address_2 = self._city = self._country = self._fax = None
         self._notify_email = self._pager_email = self._post_code = None
-        self._group_name = self._permission = self._zone = self._forbid = None
+        self._group_name = self._permission = self._forbid = None
         self._status = self._website = None
+        self._zone = []
         self.permissions = []
         self.permission_groups = []
         self.groups = []
@@ -434,6 +436,17 @@ class User(object):
                                                        api_args)
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
+
+        api_args = {'user_name': self._user_name}
+        response = DynectSession.get_session().execute(self._permission_report_uri, 'POST',
+                                                       api_args)
+
+        for val in response['data']['allowed']:
+            print(val)
+            self.permissions.append(val['name'])
+            for zone in val['zone']:
+                if zone['zone_name'] not in self._zone:
+                    self._zone.append(zone['zone_name'])
 
     def _update(self, api_args=None):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
@@ -618,7 +631,7 @@ class User(object):
         """A list of permissions assigned to this
         :class:`~dyn.tm.accounts.User`
         """
-        return self._permission
+        return self.permissions
     @permission.setter
     def permission(self, value):
         api_args = {'permission': value}
@@ -679,9 +692,10 @@ class User(object):
 
         :param permission: the permission to add
         """
-        self.permissions.append(permission)
-        uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
-        DynectSession.get_session().execute(uri, 'POST')
+        if permission not in self.permissions:
+            self.permissions.append(permission)
+            uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
+            DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions(self, permissions=None):
         """Replaces the list of permissions for this
@@ -748,6 +762,42 @@ class User(object):
         if group in self.permissions:
             self.permission_groups.remove(group)
         uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
+        DynectSession.get_session().execute(uri, 'DELETE')
+
+    def add_zone(self, zone):
+        """Add individual zones to this :class:`~dyn.tm.accounts.User`
+
+        :param zone: the zone to add
+        """
+        if zone not in self._zone:
+            self._zone.append(zone)
+            uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
+            DynectSession.get_session().execute(uri, 'POST')
+
+    def replace_zone(self, zones):
+        """Remove this specific zones from the
+        :class:`~dyn.tm.accounts.User`
+
+        :param zones: array of the zones to be updated
+        """
+        api_args = {}
+        if zones is not None:
+            api_args['zones'] = zones
+            self._zone = zones
+        else:
+            self._zone = []
+        uri = '/UserZoneEntry/{}/'.format(self._user_name)
+        DynectSession.get_session().execute(uri, 'PUT')
+
+    def delete_zone(self, zone):
+        """Remove this specific zones from the
+        :class:`~dyn.tm.accounts.User`
+
+        :param zone: the zone to remove
+        """
+        if zone in self._zone:
+            self._zone.remove(zone)
+        uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
         DynectSession.get_session().execute(uri, 'DELETE')
 
     def add_forbid_rule(self, permission, zone=None):

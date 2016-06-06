@@ -2,8 +2,6 @@
 """This module contains wrappers for interfacing with every element of a
 Traffic Director (DSF) service.
 """
-import dyn.tm.zones
-
 from collections import Iterable
 from dyn.compat import force_unicode, string_types
 from dyn.tm.utils import APIList, Active
@@ -3522,6 +3520,179 @@ class DSFNotifier(object):
         self.uri = '/Notifier/{}/'.format(self._notifier_id)
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
+class DSFNode(object):
+    """DSFNode object. Represents a valid fqdn node within a zone. It should be
+    noted that simply creating a :class:`DSFNode` object does not actually create
+    anything on the DynECT System. The only way to actively create a
+    :class:`DSFNode` on the DynECT System is by attaching either a record or a
+    service to it.
+    """
+
+    def __init__(self, zone, fqdn=None):
+        """Create a :class:`Node` object
+
+        :param zone: name of the zone that this Node belongs to
+        :param fqdn: the fully qualified domain name of this zone
+        """
+        super(DSFNode, self).__init__()
+        self.zone = zone
+        self.fqdn = fqdn or self.zone + '.'
+        self.records = {}
+
+        self.recs = {'A': ARecord, 'AAAA': AAAARecord,
+                     'ALIAS': ALIASRecord,'CDS': CDSRecord,
+                     'CDNSKEY': CDNSKEYRecord, 'CSYNC': CSYNCRecord,
+                     'CERT': CERTRecord, 'CNAME': CNAMERecord,
+                     'DHCID': DHCIDRecord, 'DNAME': DNAMERecord,
+                     'DNSKEY': DNSKEYRecord, 'DS': DSRecord,
+                     'KEY': KEYRecord, 'KX': KXRecord,
+                     'LOC': LOCRecord, 'IPSECKEY': IPSECKEYRecord,
+                     'MX': MXRecord, 'NAPTR': NAPTRRecord,
+                     'PTR': PTRRecord, 'PX': PXRecord,
+                     'NSAP': NSAPRecord, 'RP': RPRecord,
+                     'NS': NSRecord, 'SOA': SOARecord,
+                     'SPF': SPFRecord, 'SRV': SRVRecord,
+                     'TLSA': TLSARecord, 'TXT': TXTRecord,
+                     'SSHFP': SSHFPRecord, 'UNKNOWN': UNKNOWNRecord}
+
+    def add_record(self, record_type='A', *args, **kwargs):
+        """Adds an a record with the provided data to this :class:`Node`
+
+        :param record_type: The type of record you would like to add.
+            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
+            'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
+            'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
+            'SRV', and 'TXT'.
+        :param args: Non-keyword arguments to pass to the Record constructor
+        :param kwargs: Keyword arguments to pass to the Record constructor
+        """
+        # noinspection PyCallingNonCallable
+        rec = self.recs[record_type](self.zone, self.fqdn, *args, **kwargs)
+        if record_type in self.records:
+            self.records[record_type].append(rec)
+        else:
+            self.records[record_type] = [rec]
+        return rec
+
+    def get_all_records(self):
+        """Retrieve a list of all record resources for the specified node and
+        zone combination as well as all records from any Base_Record below that
+        point on the zone hierarchy
+        """
+        self.records = {}
+        uri = '/AllRecord/{}/'.format(self.zone)
+        if self.fqdn is not None:
+            uri += '{}/'.format(self.fqdn)
+        api_args = {'detail': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        # Strip out empty record_type lists
+        record_lists = {label: rec_list for label, rec_list in
+                        response['data'].items() if rec_list != []}
+        for key, record_list in record_lists.items():
+            search = key.split('_')[0].upper()
+            try:
+                constructor = self.recs[search]
+            except KeyError:
+                constructor = self.recs['UNKNOWN']
+            list_records = []
+            for record in record_list:
+                del record['zone']
+                fqdn = record['fqdn']
+                del record['fqdn']
+                # Unpack rdata
+                for r_key, r_val in record['rdata'].items():
+                    record[r_key] = r_val
+                record['create'] = False
+                list_records.append(constructor(self.zone, fqdn, **record))
+            self.records[key] = list_records
+        return self.records
+
+    def get_all_records_by_type(self, record_type):
+        """Get a list of all :class:`DNSRecord` of type ``record_type`` which
+        are owned by this node.
+
+        :param record_type: The type of :class:`DNSRecord` you wish returned.
+            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
+            'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
+            'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
+            'SRV', and 'TXT'.
+        :return: A list of :class:`DNSRecord`'s
+        """
+        names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'CERT': 'CERTRecord',
+                 'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
+                 'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
+                 'DS': 'DSRecord', 'KEY': 'KEYRecord', 'KX': 'KXRecord',
+                 'LOC': 'LOCRecord', 'IPSECKEY': 'IPSECKEYRecord',
+                 'MX': 'MXRecord', 'NAPTR': 'NAPTRRecord', 'PTR': 'PTRRecord',
+                 'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
+                 'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
+                 'SRV': 'SRVRecord', 'TLSA': 'TLSARecord', 'TXT': 'TXTRecord',
+                 'SSHFP': 'SSHFPRecord', 'ALIAS': 'ALIASRecord'}
+        constructor = self.recs[record_type]
+        uri = '/{}/{}/{}/'.format(names[record_type], self.zone,
+                                  self.fqdn)
+        api_args = {'detail': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        records = []
+        for record in response['data']:
+            fqdn = record['fqdn']
+            del record['fqdn']
+            del record['zone']
+            # Unpack rdata
+            for key, val in record['rdata'].items():
+                record[key] = val
+            del record['rdata']
+            record['create'] = False
+            records.append(constructor(self.zone, fqdn, **record))
+        return records
+
+    def get_any_records(self):
+        """Retrieve a list of all recs"""
+        if self.fqdn is None:
+            return
+        api_args = {'detail': 'Y'}
+        uri = '/ANYRecord/{}/{}/'.format(self.zone, self.fqdn)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        # Strip out empty record_type lists
+        record_lists = {label: rec_list for label, rec_list in
+                        response['data'].items() if rec_list != []}
+        for key, record_list in record_lists.items():
+            search = key.split('_')[0].upper()
+            try:
+                constructor = self.recs[search]
+            except KeyError:
+                constructor = self.recs['UNKNOWN']
+            list_records = []
+            for record in record_list:
+                del record['zone']
+                del record['fqdn']
+                # Unpack rdata
+                for r_key, r_val in record['rdata'].items():
+                    record[r_key] = r_val
+                record['create'] = False
+                list_records.append(
+                    constructor(self.zone, self.fqdn, **record))
+            self.records[key] = list_records
+        return self.records
+
+    def delete(self):
+        """Delete this node, any records within this node, and any nodes
+        underneath this node
+        """
+        uri = '/Node/{}/{}'.format(self.zone, self.fqdn)
+        DynectSession.get_session().execute(uri, 'DELETE', {})
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<DSFNode>: {}').format(self.fqdn)
+
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
+
+
 
 class TrafficDirector(object):
     """Traffic Director is a DNS based traffic routing and load balancing
@@ -3580,14 +3751,14 @@ class TrafficDirector(object):
             _nodeList = []
             if isinstance(nodes, list):
                 for node in nodes:
-                    if isinstance(node, dyn.tm.zones.Node):
+                    if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
                         _nodeList.append(
                             {'zone': node.zone, 'fqdn': node.fqdn})
                     elif isinstance(node, dict):
                         _nodeList.append(node)
             elif isinstance(nodes, dict):
                 _nodeList.append(nodes)
-            elif isinstance(nodes, dyn.tm.zones.Node):
+            elif isinstance(nodes, DSFNode) or type(nodes).__name__ == 'Node':
                 _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
             self._nodes = _nodeList
             api_args['nodes'] = self._nodes
@@ -3628,7 +3799,7 @@ class TrafficDirector(object):
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
                 # nodes are now returned as Node Objects
-                self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn'])
+                self._nodes = [DSFNode(node['zone'], node['fqdn'])
                                for node in val]
             else:
                 setattr(self, '_' + key, val)
@@ -3928,14 +4099,14 @@ class TrafficDirector(object):
 
     @property
     def node_objects(self):
-        """A list of :class:`Node` Objects that are linked to this
+        """A list of :class:`DSFNode` Objects that are linked to this
         :class:`TrafficDirector` service
         """
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [DSFNode(node['zone'], node['fqdn']) for node
                        in response['data']]
         return self._nodes
 
@@ -3949,14 +4120,14 @@ class TrafficDirector(object):
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [DSFNode(node['zone'], node['fqdn']) for node
                        in response['data']]
         return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in
                 response['data']]
 
     @nodes.setter
     def nodes(self, nodes):
-        """A :class:`Node` Object, a zone, FQDN pair in a hash, or a list
+        """A :class:`DSFNode` Object, a Zone & FQDN pair in a hash, or a list
         containing those two things (can be mixed) that are to be
         linked to this :class:`TrafficDirector` service. This overwrites
         whatever nodes are already linked to this :class:`TrafficDirector`
@@ -3965,26 +4136,26 @@ class TrafficDirector(object):
         _nodeList = []
         if isinstance(nodes, list):
             for node in nodes:
-                if isinstance(node, dyn.tm.zones.Node):
+                if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
                     _nodeList.append({'zone': node.zone, 'fqdn': node.fqdn})
                 elif isinstance(node, dict):
                     _nodeList.append(node)
         elif isinstance(nodes, dict):
             _nodeList.append(nodes)
-        elif isinstance(nodes, dyn.tm.zones.Node):
+        elif isinstance(nodes, DSFNode) or type(node).__name__ == 'Node':
             _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'nodes': _nodeList, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'PUT',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [DSFNode(node['zone'], node['fqdn']) for node
                        in response['data']]
 
     def add_node(self, node):
-        """A :class:`Node` object, or a zone, FQDN pair in a hash to be added
+        """A :class:`DSFNode` object, or a zone, FQDN pair in a hash to be added
         to this :class:`TrafficDirector` service
         """
-        if isinstance(node, dyn.tm.zones.Node):
+        if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
             _node = {'zone': node.zone, 'fqdn': node.fqdn}
         elif isinstance(node, dict):
             _node = node
@@ -3992,14 +4163,14 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(nd['zone'], nd['fqdn']) for nd
+        self._nodes = [DSFNode(nd['zone'], nd['fqdn']) for nd
                        in response['data']]
 
     def remove_node(self, node):
-        """A :class:`Node` object, or a zone, FQDN pair in a hash to be
+        """A :class:`DSFNode` object, or a zone, FQDN pair in a hash to be
         removed to this :class:`TrafficDirector` service
         """
-        if isinstance(node, dyn.tm.zones.Node):
+        if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
             _node = {'zone': node.zone, 'fqdn': node.fqdn}
         elif isinstance(node, dict):
             _node = node
@@ -4007,7 +4178,7 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(nd['zone'], nd['fqdn']) for nd
+        self._nodes = [DSFNode(nd['zone'], nd['fqdn']) for nd
                        in response['data']]
 
     @property

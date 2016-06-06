@@ -401,7 +401,7 @@ class Zone(object):
         constructors = {'ActiveFailover': ActiveFailover,
                         'DDNS': DynamicDNS,
                         'DNSSEC': DNSSEC,
-                        'DSF': dsf.TrafficDirector,
+                        'DSF': TrafficDirector,
                         'GSLB': GSLB,
                         'RDNS': ReverseDNS,
                         'RTTM': RTTM,

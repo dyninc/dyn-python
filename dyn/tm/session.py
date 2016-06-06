@@ -48,6 +48,7 @@ class DynectSession(SessionEngine):
         self.customer = customer
         self.username = username
         self.password = self.__cipher.encrypt(password)
+        self._open_sessions = {}
         self.connect()
         if auto_auth:
             self.authenticate()
@@ -72,7 +73,8 @@ class DynectSession(SessionEngine):
         self._conn.close()
         self._conn.connect()
         # Need to get a new Session token
-        self.execute('/REST/Session/', 'POST', self.__auth_data)
+        # self.execute('/REST/Session/', 'POST', self.__auth_data)
+        self.authenticate()
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
         return self.execute(uri, method, raw_args, final=True)
@@ -140,9 +142,39 @@ class DynectSession(SessionEngine):
         if self._permissions is None:
             self._permissions = self.user_permissions_report()
         return self._permissions
+
     @permissions.setter
     def permissions(self, value):
         pass
+
+    def __add_open_session(self):
+        """Add new open session to hash of open sessions"""
+        self._open_sessions[self.username] = {
+            'user_name': self.username,
+            'password': self.password,
+            'customer_name': self.customer,
+            'token': self._token
+        }
+
+    def get_open_sessions(self):
+        return self._open_sessions
+
+    def set_active_session(self, username):
+        """Set the active session from the hash of open sessions"""
+        if username in self._open_sessions:
+            self.username = self._open_sessions[username]['user_name']
+            self.password = self._open_sessions[username]['password']
+            self.customer = self._open_sessions[username]['customer_name']
+            self._token = self._open_sessions[username]['token']
+        else:
+            raise ValueError("No open sessions for {0}".format(username))
+
+    def new_user_session(self, customer, username, password):
+        """Authenticate a new user"""
+        self.customer = customer
+        self.username = username
+        self.password = self.__cipher.encrypt(password)
+        self.authenticate()
 
     def authenticate(self):
         """Authenticate to the DynectSession service with the provided
@@ -158,11 +190,25 @@ class DynectSession(SessionEngine):
             self.logger.error('An error was encountered authenticating to Dyn')
             raise DynectAuthError(response['msgs'])
         else:
+            self.__add_open_session()
             self.logger.info('DynectSession Authentication Successful')
 
-    def log_out(self):
-        """Log the current session out from the DynECT API system"""
+    def log_out_active_session(self):
+        """Log the active session out from the DynECT API system"""
         self.execute('/Session/', 'DELETE', {})
+        del self._open_sessions[self.username]
+
+        for user in self._open_sessions.keys():
+            self.set_active_session(user)
+            break
+
+    def log_out(self):
+        """Log the current session(s) out from the DynECT API system"""
+        for user in self._open_sessions.keys():
+            if self.username != user:
+                self.set_active_session(user)
+            self.log_out_active_session()
+
         self.close_session()
 
     @property

@@ -4142,7 +4142,7 @@ class TrafficDirector(object):
                     _nodeList.append(node)
         elif isinstance(nodes, dict):
             _nodeList.append(nodes)
-        elif isinstance(nodes, DSFNode) or type(node).__name__ == 'Node':
+        elif isinstance(nodes, DSFNode) or type(nodes).__name__ == 'Node':
             _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'nodes': _nodeList, 'publish': 'Y'}

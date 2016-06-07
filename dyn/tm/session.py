@@ -171,10 +171,16 @@ class DynectSession(SessionEngine):
 
     def new_user_session(self, customer, username, password):
         """Authenticate a new user"""
+        original_username = self.username
         self.customer = customer
         self.username = username
         self.password = self.__cipher.encrypt(password)
-        self.authenticate()
+        try:
+            self.authenticate()
+        except DynectAuthError as e:
+            # revert user if auth failed
+            self.set_active_session(original_username)
+            raise e
 
     def authenticate(self):
         """Authenticate to the DynectSession service with the provided
@@ -182,6 +188,7 @@ class DynectSession(SessionEngine):
         """
         api_args = {'customer_name': self.customer, 'user_name': self.username,
                     'password': self.__cipher.decrypt(self.password)}
+
         try:
             response = self.execute('/Session/', 'POST', api_args)
         except IOError:

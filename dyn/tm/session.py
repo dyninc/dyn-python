@@ -48,7 +48,6 @@ class DynectSession(SessionEngine):
         self.customer = customer
         self.username = username
         self.password = self.__cipher.encrypt(password)
-        self._open_sessions = {}
         self.connect()
         if auto_auth:
             self.authenticate()
@@ -65,6 +64,10 @@ class DynectSession(SessionEngine):
         """
         self.log_out()
 
+    def _encrypt(self, data):
+        """Accessible method for subclass to encrypt with existing AESCipher"""
+        return self.__cipher.encrypt(data)
+
     def _handle_error(self, uri, method, raw_args):
         """Handle the processing of a connection error with the api"""
         # Our token is no longer valid because our session was killed
@@ -73,8 +76,7 @@ class DynectSession(SessionEngine):
         self._conn.close()
         self._conn.connect()
         # Need to get a new Session token
-        # self.execute('/REST/Session/', 'POST', self.__auth_data)
-        self.authenticate()
+        self.execute('/REST/Session/', 'POST', self.__auth_data)
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
         return self.execute(uri, method, raw_args, final=True)
@@ -147,6 +149,68 @@ class DynectSession(SessionEngine):
     def permissions(self, value):
         pass
 
+    def authenticate(self):
+        """Authenticate to the DynectSession service with the provided
+        credentials
+        """
+        api_args = {'customer_name': self.customer, 'user_name': self.username,
+                    'password': self.__cipher.decrypt(self.password)}
+
+        try:
+            response = self.execute('/Session/', 'POST', api_args)
+        except IOError:
+            raise DynectAuthError('Unable to access the API host')
+        if response['status'] != 'success':
+            self.logger.error('An error was encountered authenticating to Dyn')
+            raise DynectAuthError(response['msgs'])
+        else:
+            self.logger.info('DynectSession Authentication Successful')
+
+    def log_out(self):
+        """Log the current session out from the DynECT API system"""
+        self.execute('/Session/', 'DELETE', {})
+        self.close_session()
+
+    @property
+    def __auth_data(self):
+        """A dict of the authdata required to authenticate as this user"""
+        return {'customer_name': self.customer, 'user_name': self.username,
+                'password': self.__cipher.decrypt(self.password)}
+
+    def __str__(self):
+        """str override"""
+        header = super(DynectSession, self).__str__()
+        return header + force_unicode(': {}, {}').format(self.customer,
+                                                         self.username)
+
+
+class DynectMultiSession(DynectSession):
+
+    def __init__(self, customer, username, password, host='api.dynect.net',
+                 port=443, ssl=True, api_version='current', auto_auth=True,
+                 key=None, history=False, proxy_host=None, proxy_port=None,
+                 proxy_user=None, proxy_pass=None):
+
+        self._open_sessions = {}
+
+        super(DynectMultiSession, self).__init__(customer, username, password, host=host,
+                                                 port=port, ssl=ssl, api_version=api_version, auto_auth=auto_auth,
+                                                 key=key, history=history, proxy_host=proxy_host, proxy_port=proxy_port,
+                                                 proxy_user=proxy_user, proxy_pass=proxy_pass)
+
+    def _handle_error(self, uri, method, raw_args):
+        """Handle the processing of a connection error with the api"""
+        # Our token is no longer valid because our session was killed
+        self._token = None
+        # Need to force a re-connect on next execute
+        self._conn.close()
+        self._conn.connect()
+        # Need to get a new Session token and update the open session
+        self.authenticate()
+        # Then try the current call again and Specify final as true so
+        # if we fail again we can raise the actual error
+        return self.execute(uri, method, raw_args, final=True)
+
     def __add_open_session(self):
         """Add new open session to hash of open sessions"""
         self._open_sessions[self.username] = {
@@ -174,31 +238,17 @@ class DynectSession(SessionEngine):
         original_username = self.username
         self.customer = customer
         self.username = username
-        self.password = self.__cipher.encrypt(password)
+        self.password = self._encrypt(password)
         try:
             self.authenticate()
         except DynectAuthError as e:
-            # revert user if auth failed
+            # revert active user session if auth failed
             self.set_active_session(original_username)
             raise e
 
     def authenticate(self):
-        """Authenticate to the DynectSession service with the provided
-        credentials
-        """
-        api_args = {'customer_name': self.customer, 'user_name': self.username,
-                    'password': self.__cipher.decrypt(self.password)}
-
-        try:
-            response = self.execute('/Session/', 'POST', api_args)
-        except IOError:
-            raise DynectAuthError('Unable to access the API host')
-        if response['status'] != 'success':
-            self.logger.error('An error was encountered authenticating to Dyn')
-            raise DynectAuthError(response['msgs'])
-        else:
-            self.__add_open_session()
-            self.logger.info('DynectSession Authentication Successful')
+        super(DynectMultiSession, self).authenticate()
+        self.__add_open_session()
 
     def log_out_active_session(self):
         """Log the active session out from the DynECT API system"""
@@ -217,15 +267,3 @@ class DynectSession(SessionEngine):
             self.log_out_active_session()
 
         self.close_session()
-
-    @property
-    def __auth_data(self):
-        """A dict of the authdata required to authenticate as this user"""
-        return {'customer_name': self.customer, 'user_name': self.username,
-                'password': self.__cipher.decrypt(self.password)}
-
-    def __str__(self):
-        """str override"""
-        header = super(DynectSession, self).__str__()
-        return header + force_unicode(': {}, {}').format(self.customer,
-                                                         self.username)

@@ -1,7 +1,7 @@
 Release History
 ---------------
 
-1.6.4 (2016-5-31)
+1.6.5 (2016-6-10)
 ++++++++++++++++
 *Added support for adding/replacing/removing zone permissions
 *Update user get to support permissions and zone permissions

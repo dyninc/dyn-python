@@ -376,10 +376,10 @@ class User(object):
         self._nickname = self._organization = self._phone = self._address = None
         self._address_2 = self._city = self._country = self._fax = None
         self._notify_email = self._pager_email = self._post_code = None
-        self._group_name = self._permission = self._forbid = None
+        self._group_name = self._forbid = None
         self._status = self._website = None
         self._zone = []
-        self.permissions = []
+        self._permissions = []
         self.permission_groups = []
         self.groups = []
         if 'api' in kwargs:
@@ -418,7 +418,7 @@ class User(object):
         self._pager_email = pager_email
         self._post_code = post_code
         self._group_name = group_name
-        self._permission = permission
+        self._permissions = permission
         self._zone = zone
         self._forbid = forbid
         self._status = status
@@ -437,13 +437,15 @@ class User(object):
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
+        self._update_permissions()
+
+    def _update_permissions(self):
         api_args = {'user_name': self._user_name}
         response = DynectSession.get_session().execute(self._permission_report_uri, 'POST',
                                                        api_args)
 
         for val in response['data']['allowed']:
-            print(val)
-            self.permissions.append(val['name'])
+            self._permissions.append(val['name'])
             for zone in val['zone']:
                 if zone['zone_name'] not in self._zone:
                     self._zone.append(zone['zone_name'])
@@ -631,7 +633,7 @@ class User(object):
         """A list of permissions assigned to this
         :class:`~dyn.tm.accounts.User`
         """
-        return self.permissions
+        return self._permissions
     @permission.setter
     def permission(self, value):
         api_args = {'permission': value}
@@ -692,8 +694,8 @@ class User(object):
 
         :param permission: the permission to add
         """
-        if permission not in self.permissions:
-            self.permissions.append(permission)
+        if permission not in self._permissions:
+            self._permissions.append(permission)
             uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
             DynectSession.get_session().execute(uri, 'POST')
 
@@ -708,9 +710,9 @@ class User(object):
         api_args = {}
         if permissions is not None:
             api_args['permissions'] = permissions
-            self.permissions = permissions
+            self._permissions = permissions
         else:
-            self.permissions = []
+            self._permissions = []
         uri = '/UserPermissionEntry/{}/'.format(self._user_name)
         DynectSession.get_session().execute(uri, 'PUT', api_args)
 
@@ -720,8 +722,8 @@ class User(object):
 
         :param permission: the permission to remove
         """
-        if permission in self.permissions:
-            self.permissions.remove(permission)
+        if permission in self._permissions:
+            self._permissions.remove(permission)
         uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
         DynectSession.get_session().execute(uri, 'DELETE')
 

@@ -123,42 +123,6 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
                                                    'POST', api_args)
     return response['data']
 
-def get_queries_per_day(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
-                zones=None):
-
-
-    """Generates a report with information about Queries Per Second (QPS).
-
-    :param start_ts: datetime.datetime instance identifying point in time for
-        the QPS report
-    :param end_ts: datetime.datetime instance indicating the end of the data
-        range for the report. Defaults to datetime.datetime.now()
-    :param breakdown: By default, most data is aggregated together.
-        Valid values ('hosts', 'rrecs', 'zones').
-    :param hosts: List of hosts to include in the report.
-    :param rrecs: List of record types to include in report.
-    :param zones: List of zones to include in report.
-    :return: A *str* with CSV data
-    """
-    end_ts = end_ts or datetime.now()
-    api_args = {'start_ts': unix_date(start_ts),
-                'end_ts': unix_date(end_ts)}
-    if breakdown is not None:
-        api_args['breakdown'] = breakdown
-    if hosts is not None:
-        api_args['hosts'] = hosts
-    if rrecs is not None:
-        api_args['rrecs'] = rrecs
-    if zones is not None:
-        api_args['zones'] = zones
-    response = DynectSession.get_session().execute('/QPSReport/',
-                                                   'POST', api_args)
-    start_midnight = datetime.combine(start_ts, time.min)
-    end_midnight = datetime.combine(end_ts, time.min)
-    csv = response['data']['csv']
-    print(csv)
-    return response['data']
-
 
 def get_zone_notes(zone_name, offset=None, limit=None):
     """Generates a report containing the Zone Notes for given zone.

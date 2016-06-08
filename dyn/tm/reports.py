@@ -4,7 +4,7 @@ REST API
 """
 from datetime import datetime
 
-from .utils import unix_date
+from .utils import unix_date, format_csv
 from .session import DynectSession
 
 __author__ = 'elarochelle'
@@ -121,6 +121,68 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     response = DynectSession.get_session().execute('/QPSReport/',
                                                    'POST', api_args)
     return response['data']
+
+
+def get_qps_hourly(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+                   zones=None):
+    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+    rows = format_csv(rows)
+
+    hourly = []
+    hr = -1
+    hrcount = 0
+
+    for row in rows:
+        epoch = float(row['Timestamp'])
+        dt = datetime.fromtimestamp(epoch)
+        hour = dt.hour
+        queries = row['Queries']
+
+        if hour != hr:
+            if hr > -1:
+                hourly.append({'hour': hr, 'queries': hrcount})
+            hr = hour
+            hrcount = 0
+
+        hrcount += int(queries)
+
+    if hr > -1:
+        hourly.append({'hour': hr, 'queries': hrcount})
+
+    return hourly
+
+
+def get_qps_daily(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+                  zones=None):
+    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+    rows = format_csv(rows)
+
+    daily = []
+    dy = -1
+    dycount = 0
+
+    for row in rows:
+        epoch = float(row['Timestamp'])
+        dt = datetime.fromtimestamp(epoch)
+        day = dt.day
+        queries = row['Queries']
+
+        if day != dy:
+            if dy > -1:
+                daily.append({'day': dy, 'queries': dycount})
+            dy = day
+            hrcount = 0
+
+        dycount += int(queries)
+
+    if dy > -1:
+        daily.append({'day': dy, 'queries': dycount})
+
+    return daily
 
 
 def get_zone_notes(zone_name, offset=None, limit=None):

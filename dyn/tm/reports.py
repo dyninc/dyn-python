@@ -11,6 +11,11 @@ __author__ = 'elarochelle'
 __all__ = ['get_check_permission', 'get_dnssec_timeline', 'get_qps',
            'get_rttm_log', 'get_rttm_rrset', 'get_zone_notes']
 
+breakdown_map = {
+    "hosts": "Hostname",
+    "rrecs": "Record Type",
+    "zones": "Zone"
+}
 
 def get_check_permission(permission, zone_name=None):
     """Returns a list of allowed and forbidden permissions for the currently
@@ -123,64 +128,112 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     return response['data']
 
 
-def get_qps_hourly(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
                    zones=None):
-    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
-
-    rows = response['csv'].encode('utf-8').split('\n')[:-1]
-    rows = format_csv(rows)
-
-    hourly = []
-    hr = -1
-    hrcount = 0
-
-    for row in rows:
-        epoch = float(row['Timestamp'])
-        dt = datetime.fromtimestamp(epoch)
-        hour = dt.hour
-        queries = row['Queries']
-
-        if hour != hr:
-            if hr > -1:
-                hourly.append({'hour': hr, 'queries': hrcount})
-            hr = hour
-            hrcount = 0
-
-        hrcount += int(queries)
-
-    if hr > -1:
-        hourly.append({'hour': hr, 'queries': hrcount})
-
-    return hourly
+    pass
 
 
-def get_qps_daily(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
                   zones=None):
+    """
+    A helper method which formats the QPS CSV return data into Queries Per Day
+
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the QPS report
+    :param end_ts: datetime.datetime instance indicating the end of the data
+        range for the report. Defaults to datetime.datetime.now()
+    :param breakdown: By default, most data is aggregated together.
+        Valid values ('hosts', 'rrecs', 'zones').
+    :param hosts: List of hosts to include in the report.
+    :param rrecs: List of record types to include in report.
+    :param zones: List of zones to include in report.
+    :return: A JSON Object made up of the count of queries by day.
+
+    {
+        "data": [
+            {
+                "day": "06/08/16",
+                "queries": 296,
+                "timestamp": 1465358400
+            }
+            ...
+        ]
+    }
+
+    If the 'breakdown' parameter is passed, the data will be formatted by queries per day per 'breakdown'
+
+    {
+        "zone1.com": [
+            {
+                "day": "06/08/16",
+                "queries": 106,
+                "timestamp": 1465358400
+            },
+            {
+                "day": "06/09/16",
+                "queries": 109,
+                "timestamp": 1465444800
+            }
+        ]
+        ...
+    }
+
+    """
+    # make normal API request for QPS
     response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
 
+    # split response data
     rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+    # format data into manageable json
     rows = format_csv(rows)
 
-    daily = []
-    dy = -1
-    dycount = 0
+    daily = {}
+    day = None
+    current_breakdown_value = None
+    day_query_count = 0
+
+    # if we have a breakdown
+    if breakdown is not None:
+        # order keys by breakdown (zones, rrecs, or hosts) and timestamp
+        rows = sorted(rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
 
     for row in rows:
-        epoch = float(row['Timestamp'])
-        dt = datetime.fromtimestamp(epoch)
-        day = dt.day
+        epoch = int(row['Timestamp'])
         queries = row['Queries']
+        bd = row[breakdown_map[breakdown]] if breakdown is not None else None
+        dt = datetime.fromtimestamp(epoch)
 
-        if day != dy:
-            if dy > -1:
-                daily.append({'day': dy, 'queries': dycount})
-            dy = day
-            hrcount = 0
+        # if this is the first time, or a new day, or a new breakdown value
+        if (day is None or day.day != dt.day) or \
+                (breakdown is not None and bd != current_breakdown_value):
+            # not the first time
+            if day is not None:
+                # key for data based on if there is a breakdown value or not
+                daily_key = current_breakdown_value if current_breakdown_value is not None else 'data'
 
-        dycount += int(queries)
+                if daily_key not in daily:
+                    daily[daily_key] = []
 
-    if dy > -1:
-        daily.append({'day': dy, 'queries': dycount})
+                # insert data for (breakdown) day
+                daily[daily_key].append({'timestamp': int(datetime(day.year, day.month, day.day).strftime("%s")), 'day': day.strftime('%x'), 'queries': day_query_count})
+
+            # next
+            day = dt
+            current_breakdown_value = bd
+            day_query_count = 0
+
+        # increment query count for today
+        day_query_count += int(queries)
+
+    # repeat for last iteration
+    if day is not None:
+        daily_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+        if daily_key not in daily:
+            daily[daily_key] = []
+
+        daily[daily_key].append({'timestamp': int(datetime(day.year, day.month, day.day).strftime("%s")), 'day': day.strftime('%x'), 'queries': day_query_count})
 
     return daily
 

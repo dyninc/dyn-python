@@ -17,6 +17,7 @@ breakdown_map = {
     "zones": "Zone"
 }
 
+
 def get_check_permission(permission, zone_name=None):
     """Returns a list of allowed and forbidden permissions for the currently
     logged in user based on the provided permissions array.
@@ -130,7 +131,111 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
 
 def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
                    zones=None):
-    pass
+    """
+    A helper method which formats the QPS CSV return data into Queries Per Hour
+
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the QPS report
+    :param end_ts: datetime.datetime instance indicating the end of the data
+        range for the report. Defaults to datetime.datetime.now()
+    :param breakdown: By default, most data is aggregated together.
+        Valid values ('hosts', 'rrecs', 'zones').
+    :param hosts: List of hosts to include in the report.
+    :param rrecs: List of record types to include in report.
+    :param zones: List of zones to include in report.
+    :return: A JSON Object made up of the count of queries by day.
+
+    {
+        "data": [
+            {
+                "hour": "06/08/16 10:00",
+                "queries": 16,
+                "timestamp": 1465394400
+            },
+            {
+                "hour": "06/08/16 11:00",
+                "queries": 13,
+                "timestamp": 1465398000
+            }
+            ...
+        ]
+    }
+
+    If the 'breakdown' parameter is passed, the data will be formatted by queries per hour per 'breakdown'
+
+    {
+        "zone1.com": [
+            {
+                "hour": "06/08/16 20:00",
+                "queries": 106,
+                "timestamp": 1465430400
+            },
+            {
+                "hour": "06/09/16 00:00",
+                "queries": 1,
+                "timestamp": 1465444800
+            }
+            ...
+        ]
+        ...
+    }
+
+    """
+
+    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+    rows = format_csv(rows)
+
+    hourly = {}
+    hour = None
+    current_breakdown_value = None
+    hour_query_count = 0
+
+    # if we have a breakdown
+    if breakdown is not None:
+        # order keys by breakdown (zones, rrecs, or hosts) and timestamp
+        rows = sorted(rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
+
+    for row in rows:
+        epoch = int(row['Timestamp'])
+        queries = row['Queries']
+        bd = row[breakdown_map[breakdown]] if breakdown is not None else None
+        dt = datetime.fromtimestamp(epoch)
+
+        # if this is the first time, or a new day, or a new breakdown value
+        if (hour is None or hour.hour != dt.hour or (hour.hour == dt.hour and hour.day != dt.day)) or \
+                (breakdown is not None and bd != current_breakdown_value):
+            if hour is not None:
+                # key for data based on if there is a breakdown value or not
+                hourly_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+                if hourly_key not in hourly:
+                    hourly[hourly_key] = []
+
+                # insert data for (breakdown) hour
+                hourly[hourly_key].append({'timestamp': int(datetime(hour.year, hour.month, hour.day, hour.hour).strftime("%s")), 'hour': hour.strftime('%x %H:00'), 'queries': hour_query_count})
+
+            # next
+            hour = dt
+            current_breakdown_value = bd
+            hour_query_count = 0
+
+        hour_query_count += int(queries)
+
+    if hour is not None:
+        # key for data based on if there is a breakdown value or not
+        hourly_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+        if hourly_key not in hourly:
+            hourly[hourly_key] = []
+
+        # insert data for (breakdown) hour
+        hourly[hourly_key].append(
+            {'timestamp': int(datetime(hour.year, hour.month, hour.day, hour.hour).strftime("%s")), 'hour': hour.strftime('%x %H:00'), 'queries': hour_query_count})
+
+    return hourly
 
 
 def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,

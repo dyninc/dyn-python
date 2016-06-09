@@ -13,4 +13,6 @@ List Functions
 .. autofunction:: dyn.tm.reports.get_rttm_log
 .. autofunction:: dyn.tm.reports.get_rttm_rrset
 .. autofunction:: dyn.tm.reports.get_qps
+.. autofunction:: dyn.tm.reports.get_qph
+.. autofunction:: dyn.tm.reports.get_qpd
 .. autofunction:: dyn.tm.reports.get_zone_notes

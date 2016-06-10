@@ -137,7 +137,9 @@ def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     :param start_ts: datetime.datetime instance identifying point in time for
         the QPS report
     :param end_ts: datetime.datetime instance indicating the end of the data
-        range for the report. Defaults to datetime.datetime.now()
+        range for the report. Defaults to datetime.datetime.now(). If this is
+        greater than 2 days after the start_ts, the requests will be broken up
+        into 2 day time periods
     :param breakdown: By default, most data is aggregated together.
         Valid values ('hosts', 'rrecs', 'zones').
     :param hosts: List of hosts to include in the report.
@@ -185,18 +187,19 @@ def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     dates = []
 
     # break up requests to a maximum of 2 day range
-    if end_ts is not None:
-        delta = end_ts - start_ts
-        max_days = timedelta(days=2)
+    if end_ts is None:
+        end_ts = datetime.now()
 
-        if delta.days > 2:
-            last_date = start_ts
+    delta = end_ts - start_ts
+    if delta.days > 2:
+        max_days = timedelta(days=2)
+        last_date = start_ts
+        temp_date = last_date + max_days
+        while temp_date < end_ts:
+            dates.append((last_date, temp_date))
+            last_date = temp_date
             temp_date = last_date + max_days
-            while temp_date < end_ts:
-                dates.append((last_date, temp_date))
-                last_date = temp_date
-                temp_date = last_date + max_days
-            dates.append((last_date, end_ts))
+        dates.append((last_date, end_ts))
 
     if len(dates) == 0:
         dates.append((start_ts, end_ts))
@@ -268,7 +271,9 @@ def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     :param start_ts: datetime.datetime instance identifying point in time for
         the QPS report
     :param end_ts: datetime.datetime instance indicating the end of the data
-        range for the report. Defaults to datetime.datetime.now()
+        range for the report. Defaults to datetime.datetime.now(). If this is
+        greater than 2 days after the start_ts, the requests will be broken up
+        into 2 day time periods
     :param breakdown: By default, most data is aggregated together.
         Valid values ('hosts', 'rrecs', 'zones').
     :param hosts: List of hosts to include in the report.
@@ -309,19 +314,20 @@ def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     dates = []
 
     # break up requests to a maximum of 2 day range
-    if end_ts is not None:
-        delta = end_ts - start_ts
-        max_days = timedelta(days=2)
+    if end_ts is None:
+        end_ts = datetime.now()
 
-        if delta.days > 2:
-            last_date = start_ts
+    delta = end_ts - start_ts
+    if delta.days > 2:
+        max_days = timedelta(days=2)
+        last_date = start_ts
+        temp_date = last_date + max_days
+        while temp_date < end_ts:
+            dates.append((last_date, temp_date))
+            last_date = temp_date
             temp_date = last_date + max_days
-            while temp_date < end_ts:
-                dates.append((last_date, temp_date))
-                last_date = temp_date
-                temp_date = last_date + max_days
-            dates.append((last_date, end_ts))
-            
+        dates.append((last_date, end_ts))
+
     if len(dates) == 0:
         dates.append((start_ts, end_ts))
 

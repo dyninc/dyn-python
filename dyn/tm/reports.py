@@ -2,7 +2,7 @@
 """This module contains interfaces for all Report generation features of the
 REST API
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .utils import unix_date, format_csv
 from .session import DynectSession
@@ -182,11 +182,33 @@ def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
 
     """
 
-    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+    dates = []
 
-    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+    # break up requests to a maximum of 2 day range
+    if end_ts is not None:
+        delta = end_ts - start_ts
+        max_days = timedelta(days=2)
 
-    rows = format_csv(rows)
+        if delta.days > 2:
+            last_date = start_ts
+            temp_date = last_date + max_days
+            while temp_date < end_ts:
+                dates.append((last_date, temp_date))
+                last_date = temp_date
+                temp_date = last_date + max_days
+            dates.append((last_date, end_ts))
+
+    if len(dates) == 0:
+        dates.append((start_ts, end_ts))
+
+    formatted_rows = []
+
+    for start_date, end_date in dates:
+        response = get_qps(start_date, end_ts=end_date, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+        rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+        formatted_rows.extend(format_csv(rows))
 
     hourly = {}
     hour = None
@@ -198,7 +220,7 @@ def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
         # order keys by breakdown (zones, rrecs, or hosts) and timestamp
         rows = sorted(rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
 
-    for row in rows:
+    for row in formatted_rows:
         epoch = int(row['Timestamp'])
         queries = row['Queries']
         bd = row[breakdown_map[breakdown]] if breakdown is not None else None
@@ -284,14 +306,33 @@ def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     }
 
     """
-    # make normal API request for QPS
-    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+    dates = []
 
-    # split response data
-    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+    # break up requests to a maximum of 2 day range
+    if end_ts is not None:
+        delta = end_ts - start_ts
+        max_days = timedelta(days=2)
 
-    # format data into manageable json
-    rows = format_csv(rows)
+        if delta.days > 2:
+            last_date = start_ts
+            temp_date = last_date + max_days
+            while temp_date < end_ts:
+                dates.append((last_date, temp_date))
+                last_date = temp_date
+                temp_date = last_date + max_days
+            dates.append((last_date, end_ts))
+            
+    if len(dates) == 0:
+        dates.append((start_ts, end_ts))
+
+    formatted_rows = []
+
+    for start_date, end_date in dates:
+        response = get_qps(start_date, end_ts=end_date, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+        rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+        formatted_rows.extend(format_csv(rows))
 
     daily = {}
     day = None
@@ -303,7 +344,7 @@ def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
         # order keys by breakdown (zones, rrecs, or hosts) and timestamp
         rows = sorted(rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
 
-    for row in rows:
+    for row in formatted_rows:
         epoch = int(row['Timestamp'])
         queries = row['Queries']
         bd = row[breakdown_map[breakdown]] if breakdown is not None else None

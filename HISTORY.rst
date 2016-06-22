@@ -1,7 +1,19 @@
 Release History
 ---------------
+
+1.7.0 (2016-06-22)
+++++++++++++++++++
+*Bug fix for implicit publishes in the DSF service with Publish Notes.
+*Added `dyn.tm.dsf.DSFNode` Node type for DSF services. `dyn.tm.dsf.TrafficDirector` should now accept this node type,
+ as well as produce it. Regular `dyn.tm.zones.Node` objects can still be passed in, but they will no longer be generated
+ as output.
+*Python3 compatability fixes as well as a through linting.
+
+
 1.6.4 (2016-05-20)
-*Added Publish Notes to Traffic Director Service. User created Zone Notes can now be generated on a Traffic Director Publish. This includes in line setter publishes, or full Service level publishes.
+++++++++++++++++++
+*Added Publish Notes to Traffic Director Service. User created Zone Notes can now be generated on a Traffic Director
+ Publish. This includes in line setter publishes, or full Service level publishes.
 
 1.6.3 (2016-3-21)
 ++++++++++++++++

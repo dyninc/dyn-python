@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import logging
-
-from ..utils import Active
-from ..session import DynectSession
-from ...compat import force_unicode
+from dyn.compat import force_unicode
+from dyn.tm.utils import Active
+from dyn.tm.session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['ReverseDNS']
@@ -96,6 +94,7 @@ class ReverseDNS(object):
         attribute
         """
         return self._zone
+
     @zone.setter
     def zone(self, value):
         pass
@@ -106,6 +105,7 @@ class ReverseDNS(object):
         attribute
         """
         return self._fqdn
+
     @fqdn.setter
     def fqdn(self, value):
         pass
@@ -122,6 +122,7 @@ class ReverseDNS(object):
             this :class:`ReverseDNS` Service
         """
         return self._active
+
     @active.setter
     def active(self, value):
         deactivate = ('N', False)
@@ -136,6 +137,7 @@ class ReverseDNS(object):
         """The unique System id for this service. This is a read-only property.
         """
         return self._iptrack_id
+
     @iptrack_id.setter
     def iptrack_id(self, value):
         pass
@@ -144,6 +146,7 @@ class ReverseDNS(object):
     def record_types(self):
         """Types of records to track"""
         return self._record_types
+
     @record_types.setter
     def record_types(self, value):
         self._record_types = value
@@ -153,8 +156,11 @@ class ReverseDNS(object):
 
     @property
     def hosts(self):
-        """Hostnames of zones in your account where you want to track records"""
+        """Hostnames of zones in your account where you want to track
+        records
+        """
         return self._hosts
+
     @hosts.setter
     def hosts(self, value):
         self._hosts = value
@@ -166,6 +172,7 @@ class ReverseDNS(object):
     def ttl(self):
         """TTL for the created PTR records. Omit to use zone default"""
         return int(self._ttl)
+
     @ttl.setter
     def ttl(self, value):
         self._ttl = value
@@ -180,6 +187,7 @@ class ReverseDNS(object):
         PTR records, any others won't
         """
         return self._netmask
+
     @netmask.setter
     def netmask(self, value):
         self._netmask = value

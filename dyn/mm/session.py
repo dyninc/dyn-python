@@ -6,9 +6,10 @@ own respective functionality.
 """
 import locale
 # API Libs
-from ..core import SessionEngine
-from ..compat import urlencode, pathname2url, json, prepare_for_loads
-from .errors import *
+from dyn.core import SessionEngine
+from dyn.compat import urlencode, pathname2url, json, prepare_for_loads
+from dyn.mm.errors import (EmailKeyError, EmailInvalidArgumentError,
+                           EmailObjectError)
 
 __author__ = 'jnappi'
 
@@ -20,7 +21,8 @@ class MMSession(SessionEngine):
     uri_root = '/rest/json'
 
     def __init__(self, apikey, host='emailapi.dynect.net', port=443, ssl=True,
-                 proxy_host=None, proxy_port=None, proxy_user=None, proxy_pass=None):
+                 proxy_host=None, proxy_port=None, proxy_user=None,
+                 proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
 
@@ -33,7 +35,8 @@ class MMSession(SessionEngine):
         :param proxy_user: A username to connect to the proxy with if required
         :param proxy_pass: A password to connect to the proxy with if required
         """
-        super(MMSession, self).__init__(host, port, ssl, proxy_host, proxy_port,
+        super(MMSession, self).__init__(host, port, ssl, proxy_host,
+                                        proxy_port,
                                         proxy_user, proxy_pass)
         self.apikey = apikey
         self.content_type = 'application/x-www-form-urlencoded'

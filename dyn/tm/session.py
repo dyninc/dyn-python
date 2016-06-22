@@ -5,10 +5,12 @@ methods that return various types of DynECT objects which will provide their
 own respective functionality.
 """
 # API Libs
-from ..core import SessionEngine
-from .errors import *
-from ..compat import force_unicode
-from ..encrypt import AESCipher
+from dyn.compat import force_unicode
+from dyn.core import SessionEngine
+from dyn.encrypt import AESCipher
+from dyn.tm.errors import (DynectAuthError, DynectCreateError,
+                           DynectUpdateError, DynectGetError,
+                           DynectDeleteError, DynectQueryTimeout)
 
 
 class DynectSession(SessionEngine):
@@ -23,6 +25,7 @@ class DynectSession(SessionEngine):
                  proxy_user=None, proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
+
         :param host: DynECT API server address
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
@@ -80,6 +83,7 @@ class DynectSession(SessionEngine):
     def _process_response(self, response, method, final=False):
         """Process an API response for failure, incomplete, or success and
         throw any appropriate errors
+
         :param response: the JSON response from the request being processed
         :param method: the HTTP method
         :param final: boolean flag representing whether or not to continue
@@ -111,6 +115,7 @@ class DynectSession(SessionEngine):
 
     def update_password(self, new_password):
         """Update the current users password
+
         :param new_password: The new password to use
         """
         uri = '/Password/'
@@ -120,6 +125,7 @@ class DynectSession(SessionEngine):
 
     def user_permissions_report(self, user_name=None):
         """Returns information regarding the requested user's permission access
+
         :param user_name: The user whose permissions will be returned. Defaults
             to the current user
         """
@@ -140,6 +146,7 @@ class DynectSession(SessionEngine):
         if self._permissions is None:
             self._permissions = self.user_permissions_report()
         return self._permissions
+
     @permissions.setter
     def permissions(self, value):
         pass

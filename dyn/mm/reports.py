@@ -3,10 +3,10 @@
 functionality of the Dyn Message Management API. While date ranges are not
 explicitly required for some calls, it is strongly recommended that you include
 a date range in any call that can accepts one. Without a starting and ending
-date, the call will retrieve data for all time, which can take a very long time.
-If you are specifically looking for data over your entire time, it is much more
-efficient to retrieve the data one piece (i.e. month) at a time rather than to
-retrieve it all at once.
+date, the call will retrieve data for all time, which can take a very long
+time. If you are specifically looking for data over your entire time, it is
+much more efficient to retrieve the data one piece (i.e. month) at a time
+rather than to retrieve it all at once.
 
 Also worth noting is Dyn's delivery data retention policy: "DynECT Email
 Delivery data retention policy states that detail data is kept for 30 days, and
@@ -28,6 +28,7 @@ class _Retrieval(object):
     thing that will change between classes is the URI.
     """
     uri = ''
+
     def __init__(self, starttime, endtime=None, startindex=0, sender=None,
                  xheaders=None):
         """Create a :class:`~dyn.mm.reports.Sent` object to perform the
@@ -84,6 +85,7 @@ class _Retrieval(object):
             response = MMSession.get_session().execute(uri, 'GET', args)
             self._count = response['count']
         return self._count
+
     @count.setter
     def count(self, value):
         pass
@@ -113,6 +115,7 @@ class _Unique(_Retrieval):
             response = MMSession.get_session().execute(uri, 'GET', args)
             self._count = response['unique']
         return self._unique
+
     @unique.setter
     def unique(self, value):
         pass
@@ -129,6 +132,7 @@ class _Unique(_Retrieval):
             response = MMSession.get_session().execute(uri, 'GET', args)
             self._count = response['unique']
         return self._unique_count
+
     @unique_count.setter
     def unique_count(self, value):
         pass

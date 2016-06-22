@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging
 from datetime import datetime
 
-from ..utils import APIList, Active, unix_date
-from ..errors import DynectInvalidArgumentError
-from ..session import DynectSession
-from ...compat import force_unicode
+from dyn.compat import force_unicode
+from dyn.tm.errors import DynectInvalidArgumentError
+from dyn.tm.session import DynectSession
+from dyn.tm.utils import APIList, Active, unix_date
 
 __author__ = 'jnappi'
 __all__ = ['get_all_dnssec', 'DNSSECKey', 'DNSSEC']
@@ -92,6 +91,7 @@ class DNSSECKey(object):
 
 class DNSSEC(object):
     """A DynECT System DNSSEC Service"""
+
     def __init__(self, zone, *args, **kwargs):
         """Create a :class:`DNSSEC` object
 
@@ -173,6 +173,7 @@ class DNSSEC(object):
         property
         """
         return self._zone
+
     @zone.setter
     def zone(self, value):
         pass
@@ -188,8 +189,9 @@ class DNSSEC(object):
         :returns: An :class:`Active` object representing the current state of
             this :class:`DNSSEC` Service
         """
-        self._get()  # Do a get to ensure the most up-to-date status is returned
+        self._get()  # Do a get to ensure an up-to-date status is returned
         return self._active
+
     @active.setter
     def active(self, value):
         deactivate = ('N', False)
@@ -203,6 +205,7 @@ class DNSSEC(object):
     def contact_nickname(self):
         """Name of contact to receive notifications"""
         return self._contact_nickname
+
     @contact_nickname.setter
     def contact_nickname(self, value):
         self._contact_nickname = value
@@ -215,10 +218,11 @@ class DNSSEC(object):
     def notify_events(self):
         """A list of events that trigger notifications. Valid values are:
         create (a new version of a key was created), expire (a key was
-        automatically expired), warning (early warnings (2 weeks, 1 week, 1 day)
-        of events)
+        automatically expired), warning (early warnings (2 weeks, 1 week, 1
+        day) of events)
         """
         return self._notify_events
+
     @notify_events.setter
     def notify_events(self, value):
         for val in value:
@@ -240,10 +244,12 @@ class DNSSEC(object):
         if self._keys is None or self._keys == []:
             self._get()
         return self._keys
+
     @keys.setter
     def keys(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
-            self._keys = APIList(DynectSession.get_session, 'keys', None, value)
+            self._keys = APIList(DynectSession.get_session, 'keys', None,
+                                 value)
         elif isinstance(value, APIList):
             self._keys = value
         self._keys.uri = self.uri

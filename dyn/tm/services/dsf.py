@@ -374,7 +374,7 @@ class _DSFRecord(object):
                                                        new_api_args)
         self._build(response['data'])
         # We hose the note if a publish was requested
-        if new_api_args['publish'] == 'Y':
+        if new_api_args.get('publish') == 'Y':
             self._note = None
 
     def _update(self, api_args, publish=True):
@@ -391,7 +391,7 @@ class _DSFRecord(object):
                                                        api_args)
         self._build(response['data'])
         # We hose the note if a publish was requested
-        if api_args['publish'] == 'Y':
+        if api_args.get('publish') == 'Y':
             self._note = None
 
     def _build(self, data):
@@ -1720,7 +1720,7 @@ class DSFRecordSet(object):
                                                        api_args)
         self._build(response['data'])
         # We hose the note if a publish was requested
-        if api_args['publish'] == 'Y':
+        if api_args.get('publish') == 'Y':
             self._note = None
 
     def _build(self, data):
@@ -2154,7 +2154,7 @@ class DSFFailoverChain(object):
                                                        api_args)
         self._build(response['data'])
         # We hose the note if a publish was requested
-        if api_args['publish'] == 'Y':
+        if api_args.get('publish') == 'Y':
             self._note = None
 
     def _build(self, data):
@@ -2451,7 +2451,7 @@ class DSFResponsePool(object):
                                                        api_args)
         self._build(response['data'])
         # We hose the note if a publish was requested
-        if api_args['publish'] == 'Y':
+        if api_args.get('publish') == 'Y':
             self._note = None
 
     def _build(self, data):
@@ -2753,7 +2753,7 @@ class DSFRuleset(object):
                                                        api_args)
         self._build(response['data'])
         # We hose the note if a publish was requested
-        if api_args['publish'] == 'Y':
+        if api_args.get('publish') == 'Y':
             self._note = None
 
     def _build(self, data):
@@ -3837,7 +3837,7 @@ class TrafficDirector(object):
         self._build(response['data'])
         # We hose the note if a publish was requested
         if api_args.get('publish', None):
-            if api_args['publish'] == 'Y':
+            if api_args.get('publish') == 'Y':
                 self._note = None
 
     def publish(self, notes=None):

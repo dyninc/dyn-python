@@ -216,7 +216,7 @@ class SessionEngine(Singleton):
                 msg = 'Establishing SSL connection to {}:{}'.format(self.host,
                                                                     self.port)
                 self.logger.info(msg)
-                self._conn = HTTPSConnection(self.host, self.port, 
+                self._conn = HTTPSConnection(self.host, self.port,
                                              timeout=300)
             else:
                 msg = 'Establishing unencrypted connection to {}:{}'.format(

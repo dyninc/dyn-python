@@ -2,13 +2,18 @@
 """This module contains wrappers for interfacing with every element of a
 Traffic Director (DSF) service.
 """
-import dyn.tm.zones
-
 from collections import Iterable
 from dyn.compat import force_unicode, string_types
 from dyn.tm.utils import APIList, Active
 from dyn.tm.errors import DynectInvalidArgumentError
-from dyn.tm.records import *  # NOQA
+from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
+                            CDNSKEYRecord, CSYNCRecord, CERTRecord,
+                            CNAMERecord, DHCIDRecord, DNAMERecord,
+                            DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
+                            LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,
+                            PTRRecord, PXRecord, NSAPRecord, RPRecord,
+                            NSRecord, SOARecord, SPFRecord, SRVRecord,
+                            TLSARecord, TXTRecord, SSHFPRecord, UNKNOWNRecord)
 from dyn.tm.session import DynectSession
 from dyn.tm.accounts import Notifier
 
@@ -311,12 +316,12 @@ class _DSFRecord(object):
         self._endpoint_up_count = endpoint_up_count
         self._eligible = eligible
         self._service_id = self._dsf_record_set_id = self.uri = None
-        self._dsf_record_id = self._status = None
+        self._dsf_record_id = self._status = self._note = None
         self._implicitPublish = True
         for key, val in kwargs.items():
             setattr(self, '_' + key, val)
 
-    def _post(self, dsf_id, record_set_id, publish=True):
+    def _post(self, dsf_id, record_set_id, publish=True, notes=None):
         """Create a new :class:`DSFRecord` on the DynECT System
 
         :param dsf_id: The unique system id for the DSF service associated with
@@ -332,6 +337,8 @@ class _DSFRecord(object):
         api_args = self.to_json(skip_svc=True)
         if publish:
             api_args['publish'] = 'Y'
+        if notes:
+            api_args['notes'] = notes
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -366,11 +373,16 @@ class _DSFRecord(object):
             self._record_type += 'Record'
         if publish and self._implicitPublish:
             new_api_args['publish'] = 'Y'
+        if self._note:
+            new_api_args['notes'] = self._note
         self.uri = 'DSFRecord/{}/{}'.format(self._service_id,
                                             self._dsf_record_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        new_api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if new_api_args.get('publish') == 'Y':
+            self._note = None
 
     def _update(self, api_args, publish=True):
         """API call to update non superclass record type parameters
@@ -378,11 +390,16 @@ class _DSFRecord(object):
         """
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        if self._note:
+            api_args['notes'] = self._note
         self.uri = 'DSFRecord/{}/{}'.format(self._service_id,
                                             self._dsf_record_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if api_args.get('publish') == 'Y':
+            self._note = None
 
     def _build(self, data):
         """Private build method
@@ -406,12 +423,33 @@ class _DSFRecord(object):
             else:
                 setattr(self, '_' + key, val)
 
-    def publish(self):
-        """Publish changes to :class:`TrafficDirector`."""
+    def publish(self, notes=None):
+        """Publish changes to :class:`TrafficDirector`.
+        :param notes: Optional Note that will be added to the
+        zone notes of zones attached to this service.
+        """
         uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'publish': 'Y'}
+        if self._note:
+            api_args['notes'] = self._note
+            self._note = None
+        # if notes are passed in, we override.
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    @property
+    def publish_note(self):
+        """Returns Current Publish Note, which will be used on the next
+        publish action"""
+        return self._note
+
+    @publish_note.setter
+    def publish_note(self, note):
+        """Adds this note to the next action which also performs a publish
+        """
+        self._note = note
 
     def refresh(self):
         """Pulls data down from Dynect System and repopulates
@@ -419,7 +457,8 @@ class _DSFRecord(object):
         """
         self._get(self._service_id, self._dsf_record_id)
 
-    def add_to_record_set(self, record_set, service=None):
+    def add_to_record_set(self, record_set, service=None,
+                          publish=True, notes=None):
         """Creates and links this :class:`DSFRecord` to passed in
         :class:`DSFRecordSet` Object
 
@@ -427,6 +466,8 @@ class _DSFRecord(object):
             :class:`DSFRecordSet` Object.
         :param service: Only necessary if record_set is passed in as a string.
             This can be a :class:`TrafficDirector` Object. or the _service_id
+        :param publish: Publish on execution (Default = True)
+        :param notes: Optional Zone publish Notes
         """
         if self._dsf_record_id:
             raise Exception('The record already exists in the system!')
@@ -444,7 +485,8 @@ class _DSFRecord(object):
             raise Exception('Could not make sense of Record Set Type')
         if service:
             _service_id = _check_type(service)
-        self._post(_service_id, _record_set_id, publish=True)
+        self._post(_service_id, _record_set_id, publish=True,
+                   notes=notes)
 
     @property
     def dsf_id(self):
@@ -590,9 +632,13 @@ class _DSFRecord(object):
 
     implicitPublish = implicit_publish  # NOQA
 
-    def delete(self):
-        """Delete this :class:`DSFRecord`"""
+    def delete(self, notes=None):
+        """Delete this :class:`DSFRecord`
+        :param notes: Optional zone publish notes
+        """
         api_args = {'publish': 'Y'}
+        if notes:
+            api_args['notes'] = notes
         uri = '/DSFRecord/{}/{}'.format(self._service_id, self._dsf_record_id)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
 
@@ -1605,7 +1651,7 @@ class DSFRecordSet(object):
         self._trouble_count = trouble_count
         self._eligible = eligible
         self._dsf_monitor_id = dsf_monitor_id
-        self._dsf_record_set_failover_chain_id = None
+        self._dsf_record_set_failover_chain_id = self._note = None
         self._implicitPublish = True
         if records is not None and len(records) > 0 and isinstance(records[0],
                                                                    dict):
@@ -1626,7 +1672,7 @@ class DSFRecordSet(object):
             self.uri = '/DSFRecordSet/{}/{}/'.format(self._service_id,
                                                      self._dsf_record_set_id)
 
-    def _post(self, service_id, publish=True):
+    def _post(self, service_id, publish=True, notes=None):
         """Create a new :class:`DSFRecordSet` on the DynECT System
 
         :param dsf_id: The unique system id of the DSF service this
@@ -1646,6 +1692,8 @@ class DSFRecordSet(object):
                 self._dsf_record_set_failover_chain_id
         if publish:
             api_args['publish'] = 'Y'
+        if notes:
+            api_args['notes'] = notes
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -1673,9 +1721,14 @@ class DSFRecordSet(object):
         """Private update method"""
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        if self._note:
+            api_args['notes'] = self._note
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if api_args.get('publish') == 'Y':
+            self._note = None
 
     def _build(self, data):
         """Private build method"""
@@ -1698,12 +1751,33 @@ class DSFRecordSet(object):
 
     __repr__ = __unicode__ = __str__
 
-    def publish(self):
-        """Publish changes to :class:`TrafficDirector`."""
+    def publish(self, notes=None):
+        """Publish changes to :class:`TrafficDirector`.
+        :param notes: Optional Note that will be added to the zone notes of
+                      zones attached to this service.
+        """
         uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'publish': 'Y'}
+        if self._note:
+            api_args['notes'] = self._note
+            self._note = None
+        # if notes are passed in, we override.
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    @property
+    def publish_note(self):
+        """Returns Current Publish Note, which will be
+        used on the next publish action"""
+        return self._note
+
+    @publish_note.setter
+    def publish_note(self, note):
+        """Adds this note to the next action which also performs a publish
+        """
+        self._note = note
 
     def refresh(self):
         """Pulls data down from Dynect System and repopulates
@@ -1712,7 +1786,7 @@ class DSFRecordSet(object):
         self._get(self._service_id, self._dsf_record_set_id)
 
     def add_to_failover_chain(self, failover_chain, service=None,
-                              publish=True):
+                              publish=True, notes=None):
         """Creates and links this :class:`DSFRecordSet` to the passed in
         :class:`DSFFailoverChain` Object
 
@@ -1722,6 +1796,7 @@ class DSFRecordSet(object):
         :param service: Only necessary is rs_chain is passed in as a string.
             This can be a :class:`TrafficDirector` Object. or the _service_id
         :param publish: Publish on execution (Default = True)
+        :param notes: Optional Zone publish Notes
         """
         if isinstance(failover_chain, DSFFailoverChain):
             _dsf_record_set_failover_chain_id = \
@@ -1744,7 +1819,7 @@ class DSFRecordSet(object):
                     self._dsf_record_set_failover_chain_id))
         self._dsf_record_set_failover_chain_id = \
             _dsf_record_set_failover_chain_id
-        self._post(_service_id, publish=publish)
+        self._post(_service_id, publish=publish, notes=notes)
 
     @property
     def records(self):
@@ -1972,9 +2047,13 @@ class DSFRecordSet(object):
             json_blob['records'] = []
         return json_blob
 
-    def delete(self):
-        """Delete this :class:`DSFRecordSet` from the Dynect System"""
+    def delete(self, notes=None):
+        """Delete this :class:`DSFRecordSet` from the Dynect System
+        :param notes: Optional zone publish notes
+        """
         api_args = {'publish': 'Y'}
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
@@ -1993,6 +2072,7 @@ class DSFFailoverChain(object):
         super(DSFFailoverChain, self).__init__()
         self._label = label
         self._core = core
+        self._note = None
         self._implicitPublish = True
         if isinstance(record_sets, list) and len(record_sets) > 0 and \
                 isinstance(record_sets[0], dict):
@@ -2018,7 +2098,7 @@ class DSFFailoverChain(object):
                 self._service_id,
                 r_pid)
 
-    def _post(self, dsf_id, dsf_response_pool_id, publish=True):
+    def _post(self, dsf_id, dsf_response_pool_id, publish=True, notes=None):
         """Create a new :class:`DSFFailoverChain` on the Dynect System
 
         :param dsf_id: The unique system id of the DSF service this
@@ -2041,6 +2121,8 @@ class DSFFailoverChain(object):
                                        self._record_sets]
         if publish:
             api_args['publish'] = 'Y'
+        if notes:
+            api_args['notes'] = notes
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
         self._build(response['data'])
@@ -2071,12 +2153,16 @@ class DSFFailoverChain(object):
 
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        if self._note:
+            api_args['notes'] = self._note
         self.uri = 'DSFRecordSetFailoverChain/{}/{}'.format(
-            self._service_id, self._dsf_record_set_failover_chain_id
-        )
+            self._service_id, self._dsf_record_set_failover_chain_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if api_args.get('publish') == 'Y':
+            self._note = None
 
     def _build(self, data):
         """Private build method"""
@@ -2098,12 +2184,33 @@ class DSFFailoverChain(object):
 
     __repr__ = __unicode__ = __str__
 
-    def publish(self):
-        """Publish changes to :class:`TrafficDirector`."""
+    def publish(self, notes=None):
+        """Publish changes to :class:`TrafficDirector`.
+        :param notes: Optional Note that will be added to the zone
+                      notes of zones attached to this service.
+        """
         uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'publish': 'Y'}
+        if self._note:
+            api_args['notes'] = self._note
+            self._note = None
+        # if notes are passed in, we override.
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    @property
+    def publish_note(self):
+        """Returns Current Publish Note, which will be
+        used on the next publish action"""
+        return self._note
+
+    @publish_note.setter
+    def publish_note(self, note):
+        """Adds this note to the next action which also performs a publish
+        """
+        self._note = note
 
     def refresh(self):
         """Pulls data down from Dynect System and repopulates
@@ -2111,7 +2218,8 @@ class DSFFailoverChain(object):
         """
         self._get(self._service_id, self._dsf_record_set_failover_chain_id)
 
-    def add_to_response_pool(self, response_pool, service=None, publish=True):
+    def add_to_response_pool(self, response_pool, service=None,
+                             publish=True, notes=None):
         """Creates and Adds this :class:`DSFFailoverChain` to a
         :class:`TrafficDirector` service.
 
@@ -2120,6 +2228,7 @@ class DSFFailoverChain(object):
         :param service: Only necessary when response_pool is passed as a
             string. Can either be the service_id or a :class:`TrafficDirector`
         :param publish: Publish on execution (Default = True)
+        :param notes: Optional Zone publish Notes
         """
         if isinstance(response_pool, DSFResponsePool):
             _response_pool_id = response_pool._dsf_response_pool_id
@@ -2140,7 +2249,8 @@ class DSFFailoverChain(object):
             raise Exception(
                 'Records Set already attached to response pool: {}.'.format(
                     self._dsf_response_pool_id))
-        self._post(_service_id, _response_pool_id, publish=publish)
+        self._post(_service_id, _response_pool_id, publish=publish,
+                   notes=notes)
 
     @property
     def label(self):
@@ -2216,6 +2326,7 @@ class DSFFailoverChain(object):
         """
         return self._dsf_record_set_failover_chain_id
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`DSFFailoverChain` for turning on
         and off implicit Publishing for record Updates.
@@ -2230,9 +2341,13 @@ class DSFFailoverChain(object):
 
     implicitPublish = implicit_publish
 
-    def delete(self):
-        """Delete this :class:`DSFFailoverChain` from the Dynect System"""
+    def delete(self, notes=None):
+        """Delete this :class:`DSFFailoverChain` from the Dynect System
+        :param notes: Optional zone publish notes
+        """
         api_args = {'publish': 'Y'}
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
@@ -2264,7 +2379,7 @@ class DSFResponsePool(object):
         self._eligible = eligible
         self._automation = automation
         self._dsf_ruleset_id = dsf_ruleset_id
-        self._dsf_response_pool_id = None
+        self._dsf_response_pool_id = self._note = None
         self._index = index
         self._implicitPublish = True
         if isinstance(rs_chains, list) and len(rs_chains) > 0 and \
@@ -2286,7 +2401,7 @@ class DSFResponsePool(object):
             self.uri = '/DSFResponsePool/{}/{}/'.format(self._service_id,
                                                         r_pid)
 
-    def _post(self, service_id, publish=True):
+    def _post(self, service_id, publish=True, notes=None):
         """Create a new :class:`DSFResponsePool` on the DynECT System
 
         :param service_id: the id of the DSF service this
@@ -2306,6 +2421,8 @@ class DSFResponsePool(object):
                                      self.rs_chains]
         if publish:
             api_args['publish'] = 'Y'
+        if notes:
+            api_args['notes'] = notes
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
         self.uri = '/DSFResponsePool/{}/{}/'.format(self.service_id,
@@ -2332,11 +2449,17 @@ class DSFResponsePool(object):
         """
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        if self._note:
+            api_args['notes'] = self._note
+
         self.uri = 'DSFResponsePool/{}/{}'.format(self._service_id,
                                                   self._dsf_response_pool_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if api_args.get('publish') == 'Y':
+            self._note = None
 
     def _build(self, data):
         """Private build method"""
@@ -2358,26 +2481,49 @@ class DSFResponsePool(object):
 
     __repr__ = __unicode__ = __str__
 
-    def create(self, service):
+    def create(self, service, publish=True, notes=None):
         """Adds this :class:`DSFResponsePool` to the passed in
         :class:`TrafficDirector`
-
         :param service: a :class:`TrafficDirector` or id string for the
             :class:`TrafficDirector` you wish to add this
             :class:`DSFResponsePool` to.
+        :param publish: publish at execution time. Default = True
+        :param notes: Optional Zone publish Notes
         """
         if self._dsf_response_pool_id:
             raise Exception('Response Pool Already Exists. ID: {}'.format(
                 self._dsf_response_pool_id))
         _service_id = _check_type(service)
-        self._post(_service_id)
+        self._post(_service_id, publish=publish, notes=notes)
 
-    def publish(self):
-        """Publish changes to :class:`TrafficDirector`."""
+    def publish(self, notes=None):
+        """Publish changes to :class:`TrafficDirector`.
+        :param notes: Optional Note that will be added to the
+        zone notes of zones attached to this service.
+        """
         uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'publish': 'Y'}
+        if self._note:
+            api_args['notes'] = self._note
+            self._note = None
+        # if notes are passed in, we override.
+        if notes:
+            api_args['notes'] = notes
+
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    @property
+    def publish_note(self):
+        """Returns Current Publish Note, which will
+        be used on the next publish action"""
+        return self._note
+
+    @publish_note.setter
+    def publish_note(self, note):
+        """Adds this note to the next action which also performs a publish
+        """
+        self._note = note
 
     def refresh(self):
         """Pulls data down from Dynect System and repopulates
@@ -2489,6 +2635,7 @@ class DSFResponsePool(object):
             json_blob['service_id'] = svc_id
         return json_blob
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`DSFResponsePool` for turning on and
         off implicit Publishing for record Updates.
@@ -2503,9 +2650,13 @@ class DSFResponsePool(object):
 
     implicitPublish = implicit_publish
 
-    def delete(self):
-        """Delete this :class:`DSFResponsePool` from the DynECT System"""
+    def delete(self, notes=None):
+        """Delete this :class:`DSFResponsePool` from the DynECT System
+        :param notes: Optional zone publish notes
+        """
         api_args = {'publish': 'Y'}
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
@@ -2533,8 +2684,9 @@ class DSFRuleset(object):
         self._criteria_type = criteria_type
         self._criteria = criteria
         self._failover = failover
-        self._ordering = None
+        self._ordering = self._note = None
         self._implicitPublish = True
+
         if isinstance(response_pools, list) and len(response_pools) > 0 and \
                 isinstance(response_pools[0], dict):
             self._response_pools = []
@@ -2551,7 +2703,7 @@ class DSFRuleset(object):
             self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
                                                    self._dsf_ruleset_id)
 
-    def _post(self, dsf_id, publish=True):
+    def _post(self, dsf_id, publish=True, notes=None):
         """Create a new :class:`DSFRuleset` on the DynECT System
 
         :param dsf_id: the id of the DSF service this :class:`DSFRuleset` is
@@ -2568,9 +2720,10 @@ class DSFRuleset(object):
         if self._response_pools:
             api_args['response_pools'] = [pool.to_json(skip_svc=True) for pool
                                           in self.response_pools]
-
         if publish:
             api_args['publish'] = 'Y'
+        if notes:
+            api_args['notes'] = notes
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
         self.uri = '/DSFRuleset/{}/{}/'.format(self._service_id,
@@ -2599,11 +2752,16 @@ class DSFRuleset(object):
 
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        if self._note:
+            api_args['notes'] = self._note
         self.uri = 'DSFRuleset/{}/{}'.format(self._service_id,
                                              self._dsf_ruleset_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if api_args.get('publish') == 'Y':
+            self._note = None
 
     def _build(self, data):
         """Private build method"""
@@ -2728,7 +2886,8 @@ class DSFRuleset(object):
                 {'dsf_response_pool_id': pool_id})
         self._update(api_args, publish)
 
-    def create(self, service, index=None, publish=True):
+    def create(self, service, index=None, publish=True, notes=None):
+
         """Adds this :class:`DSFRuleset` to the passed in :class:`TrafficDirector`
 
         :param service: a :class:`TrafficDirector` or id string for the
@@ -2736,6 +2895,7 @@ class DSFRuleset(object):
             to.
         :param index: in what position to serve this ruleset. 0 = first.
         :param publish: publish at execution time. Default = True
+        :param notes: Optional Zone publish Notes
         """
         if self._dsf_ruleset_id:
             raise Exception(
@@ -2743,14 +2903,35 @@ class DSFRuleset(object):
         _service_id = _check_type(service)
         if index is not None:
             self._ordering = index
-        self._post(_service_id, publish)
+        self._post(_service_id, publish=publish, notes=notes)
 
-    def publish(self):
-        """Publish changes to :class:`TrafficDirector`."""
+    def publish(self, notes=None):
+        """Publish changes to :class:`TrafficDirector`.
+        :param notes: Optional Note that will be added to the zone notes
+                      of zones attached to this service.
+        """
         uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'publish': 'Y'}
+        if self._note:
+            api_args['notes'] = self._note
+            self._note = None
+        # if notes are passed in, we override.
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    @property
+    def publish_note(self):
+        """Returns Current Publish Note, which will
+        be used on the next publish action"""
+        return self._note
+
+    @publish_note.setter
+    def publish_note(self, note):
+        """Adds this note to the next action which also performs a publish
+        """
+        self._note = note
 
     def refresh(self):
         """Pulls data down from Dynect System and repopulates
@@ -2823,6 +3004,7 @@ class DSFRuleset(object):
         """
         return self._dsf_ruleset_id
 
+    @property
     def implicit_publish(self):
         """Toggle for this specific :class:`DSFRuleset` for turning on and
         off implicit Publishing for record Updates.
@@ -2856,11 +3038,14 @@ class DSFRuleset(object):
 
         return json_blob
 
-    def delete(self):
+    def delete(self, notes=None):
         """Remove this :class:`DSFRuleset` from it's associated
         :class:`TrafficDirector` Service
+        :param notes: Optional zone publish notes
         """
         api_args = {'publish': 'Y'}
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
 
 
@@ -3215,7 +3400,7 @@ class DSFNotifier(object):
             return
         if 'td' in kwargs:
             del kwargs['td']
-            self._build(kwargs['notifier'])
+            self._build(kwargs['notifier'], link_id=kwargs['link_id'])
             return
         elif len(args) + len(kwargs) == 1:
             self._get(*args, **kwargs)
@@ -3268,9 +3453,10 @@ class DSFNotifier(object):
                                                        api_args)
         self._build(response['data'])
 
-    def _build(self, data):
+    def _build(self, data, link_id=None):
         for key, val in data.items():
             setattr(self, '_' + key, val)
+        self._link_id = link_id
 
     @property
     def label(self):
@@ -3281,6 +3467,11 @@ class DSFNotifier(object):
         api_args = {'label': value}
         self._update(api_args)
         self._label = value
+
+    @property
+    def link_id(self):
+        """ Link ID connecting thie Notifier to TD service """
+        return self._link_id
 
     @property
     def recipients(self):
@@ -3346,6 +3537,179 @@ class DSFNotifier(object):
         DynectSession.get_session().execute(self.uri, 'DELETE')
 
 
+class DSFNode(object):
+    """DSFNode object. Represents a valid fqdn node within a zone. It should be
+    noted that simply creating a :class:`DSFNode` object does not actually
+    create anything on the DynECT System. The only way to actively create a
+    :class:`DSFNode` on the DynECT System is by attaching either a record or a
+    service to it.
+    """
+
+    def __init__(self, zone, fqdn=None):
+        """Create a :class:`Node` object
+
+        :param zone: name of the zone that this Node belongs to
+        :param fqdn: the fully qualified domain name of this zone
+        """
+        super(DSFNode, self).__init__()
+        self.zone = zone
+        self.fqdn = fqdn or self.zone + '.'
+        self.records = {}
+
+        self.recs = {'A': ARecord, 'AAAA': AAAARecord,
+                     'ALIAS': ALIASRecord, 'CDS': CDSRecord,
+                     'CDNSKEY': CDNSKEYRecord, 'CSYNC': CSYNCRecord,
+                     'CERT': CERTRecord, 'CNAME': CNAMERecord,
+                     'DHCID': DHCIDRecord, 'DNAME': DNAMERecord,
+                     'DNSKEY': DNSKEYRecord, 'DS': DSRecord,
+                     'KEY': KEYRecord, 'KX': KXRecord,
+                     'LOC': LOCRecord, 'IPSECKEY': IPSECKEYRecord,
+                     'MX': MXRecord, 'NAPTR': NAPTRRecord,
+                     'PTR': PTRRecord, 'PX': PXRecord,
+                     'NSAP': NSAPRecord, 'RP': RPRecord,
+                     'NS': NSRecord, 'SOA': SOARecord,
+                     'SPF': SPFRecord, 'SRV': SRVRecord,
+                     'TLSA': TLSARecord, 'TXT': TXTRecord,
+                     'SSHFP': SSHFPRecord, 'UNKNOWN': UNKNOWNRecord}
+
+    def add_record(self, record_type='A', *args, **kwargs):
+        """Adds an a record with the provided data to this :class:`Node`
+
+        :param record_type: The type of record you would like to add.
+            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
+            'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
+            'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
+            'SRV', and 'TXT'.
+        :param args: Non-keyword arguments to pass to the Record constructor
+        :param kwargs: Keyword arguments to pass to the Record constructor
+        """
+        # noinspection PyCallingNonCallable
+        rec = self.recs[record_type](self.zone, self.fqdn, *args, **kwargs)
+        if record_type in self.records:
+            self.records[record_type].append(rec)
+        else:
+            self.records[record_type] = [rec]
+        return rec
+
+    def get_all_records(self):
+        """Retrieve a list of all record resources for the specified node and
+        zone combination as well as all records from any Base_Record below that
+        point on the zone hierarchy
+        """
+        self.records = {}
+        uri = '/AllRecord/{}/'.format(self.zone)
+        if self.fqdn is not None:
+            uri += '{}/'.format(self.fqdn)
+        api_args = {'detail': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        # Strip out empty record_type lists
+        record_lists = {label: rec_list for label, rec_list in
+                        response['data'].items() if rec_list != []}
+        for key, record_list in record_lists.items():
+            search = key.split('_')[0].upper()
+            try:
+                constructor = self.recs[search]
+            except KeyError:
+                constructor = self.recs['UNKNOWN']
+            list_records = []
+            for record in record_list:
+                del record['zone']
+                fqdn = record['fqdn']
+                del record['fqdn']
+                # Unpack rdata
+                for r_key, r_val in record['rdata'].items():
+                    record[r_key] = r_val
+                record['create'] = False
+                list_records.append(constructor(self.zone, fqdn, **record))
+            self.records[key] = list_records
+        return self.records
+
+    def get_all_records_by_type(self, record_type):
+        """Get a list of all :class:`DNSRecord` of type ``record_type`` which
+        are owned by this node.
+
+        :param record_type: The type of :class:`DNSRecord` you wish returned.
+            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
+            'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
+            'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
+            'SRV', and 'TXT'.
+        :return: A list of :class:`DNSRecord`'s
+        """
+        names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'CERT': 'CERTRecord',
+                 'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
+                 'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
+                 'DS': 'DSRecord', 'KEY': 'KEYRecord', 'KX': 'KXRecord',
+                 'LOC': 'LOCRecord', 'IPSECKEY': 'IPSECKEYRecord',
+                 'MX': 'MXRecord', 'NAPTR': 'NAPTRRecord', 'PTR': 'PTRRecord',
+                 'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
+                 'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
+                 'SRV': 'SRVRecord', 'TLSA': 'TLSARecord', 'TXT': 'TXTRecord',
+                 'SSHFP': 'SSHFPRecord', 'ALIAS': 'ALIASRecord'}
+        constructor = self.recs[record_type]
+        uri = '/{}/{}/{}/'.format(names[record_type], self.zone,
+                                  self.fqdn)
+        api_args = {'detail': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        records = []
+        for record in response['data']:
+            fqdn = record['fqdn']
+            del record['fqdn']
+            del record['zone']
+            # Unpack rdata
+            for key, val in record['rdata'].items():
+                record[key] = val
+            del record['rdata']
+            record['create'] = False
+            records.append(constructor(self.zone, fqdn, **record))
+        return records
+
+    def get_any_records(self):
+        """Retrieve a list of all recs"""
+        if self.fqdn is None:
+            return
+        api_args = {'detail': 'Y'}
+        uri = '/ANYRecord/{}/{}/'.format(self.zone, self.fqdn)
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        # Strip out empty record_type lists
+        record_lists = {label: rec_list for label, rec_list in
+                        response['data'].items() if rec_list != []}
+        for key, record_list in record_lists.items():
+            search = key.split('_')[0].upper()
+            try:
+                constructor = self.recs[search]
+            except KeyError:
+                constructor = self.recs['UNKNOWN']
+            list_records = []
+            for record in record_list:
+                del record['zone']
+                del record['fqdn']
+                # Unpack rdata
+                for r_key, r_val in record['rdata'].items():
+                    record[r_key] = r_val
+                record['create'] = False
+                list_records.append(
+                    constructor(self.zone, self.fqdn, **record))
+            self.records[key] = list_records
+        return self.records
+
+    def delete(self):
+        """Delete this node, any records within this node, and any nodes
+        underneath this node
+        """
+        uri = '/Node/{}/{}'.format(self.zone, self.fqdn)
+        DynectSession.get_session().execute(uri, 'DELETE', {})
+
+    def __str__(self):
+        """str override"""
+        return force_unicode('<DSFNode>: {}').format(self.fqdn)
+
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
+
+
 class TrafficDirector(object):
     """Traffic Director is a DNS based traffic routing and load balancing
     service that is Geolocation aware and can support failover by monitoring
@@ -3358,6 +3722,7 @@ class TrafficDirector(object):
         :param label: A unique label for this :class:`TrafficDirector` service
         :param ttl: The default TTL to be used across this service
         :param publish: If Y, service will be published on creation
+        :param notes: Optional Publish Zone Notes.
         :param nodes: A Node Object, a zone, FQDN pair in a hash, or a list
             containing those two things (can be mixed) that are to be
             linked to this :class:`TrafficDirector` service:
@@ -3372,6 +3737,7 @@ class TrafficDirector(object):
         self._notifiers = APIList(DynectSession.get_session, 'notifiers')
         self._nodes = APIList(DynectSession.get_session, 'nodes')
         self._rulesets = APIList(DynectSession.get_session, 'rulesets')
+        self._note = None
         self._implicitPublish = True
         if 'api' in kwargs:
             del kwargs['api']
@@ -3384,7 +3750,7 @@ class TrafficDirector(object):
         self._rulesets.uri = self.uri
 
     def _post(self, label, ttl=None, publish='Y', nodes=None, notifiers=None,
-              rulesets=None):
+              rulesets=None, notes=None):
         """Create a new :class:`TrafficDirector` on the DynECT System"""
         uri = '/DSF/'
         self._label = label
@@ -3393,21 +3759,23 @@ class TrafficDirector(object):
         self._notifiers = notifiers
         self._rulesets = rulesets
         api_args = {'label': self._label,
-                    'publish': publish}
+                    'publish': publish,
+                    'notes': notes}
         if ttl:
             api_args['ttl'] = self._ttl
         if nodes:
             _nodeList = []
             if isinstance(nodes, list):
                 for node in nodes:
-                    if isinstance(node, dyn.tm.zones.Node):
+                    if isinstance(node, DSFNode) or\
+                                  type(node).__name__ == 'Node':
                         _nodeList.append(
                             {'zone': node.zone, 'fqdn': node.fqdn})
                     elif isinstance(node, dict):
                         _nodeList.append(node)
             elif isinstance(nodes, dict):
                 _nodeList.append(nodes)
-            elif isinstance(nodes, dyn.tm.zones.Node):
+            elif isinstance(nodes, DSFNode) or type(nodes).__name__ == 'Node':
                 _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
             self._nodes = _nodeList
             api_args['nodes'] = self._nodes
@@ -3448,7 +3816,7 @@ class TrafficDirector(object):
                     self._rulesets.append(DSFRuleset(**ruleset))
             elif key == 'nodes':
                 # nodes are now returned as Node Objects
-                self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn'])
+                self._nodes = [DSFNode(node['zone'], node['fqdn'])
                                for node in val]
             else:
                 setattr(self, '_' + key, val)
@@ -3468,17 +3836,44 @@ class TrafficDirector(object):
         """Private update method"""
         if publish and self._implicitPublish:
             api_args['publish'] = 'Y'
+        if self._note:
+            api_args['notes'] = self._note
         self.uri = '/DSF/{}/'.format(self._service_id)
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+        # We hose the note if a publish was requested
+        if api_args.get('publish', None):
+            if api_args.get('publish') == 'Y':
+                self._note = None
 
-    def publish(self):
-        """Publish changes to :class:`TrafficDirector`."""
+    def publish(self, notes=None):
+        """Publish changes to :class:`TrafficDirector`.
+        :param notes: Optional Note that will be added to
+        the zone notes of zones attached to this service.
+        """
         uri = '/DSF/{}/'.format(self._service_id)
         api_args = {'publish': 'Y'}
+        if self._note:
+            api_args['notes'] = self._note
+            self._note = None
+        # if notes are passed in, we override.
+        if notes:
+            api_args['notes'] = notes
         DynectSession.get_session().execute(uri, 'PUT', api_args)
         self.refresh()
+
+    @property
+    def publish_note(self):
+        """Returns Current Publish Note, which will
+        be used on the next publish action"""
+        return self._note
+
+    @publish_note.setter
+    def publish_note(self, note):
+        """Adds this note to the next action which also performs a publish
+        """
+        self._note = note
 
     def refresh(self):
         """Pulls data down from Dynect System and repopulates
@@ -3518,9 +3913,10 @@ class TrafficDirector(object):
         api_args = {'revert': True}
         self._update(api_args)
 
-    def add_notifier(self, notifier):
-        """Links the :class:`DSFNotifier` with the specified id to this
-        Traffic Director service
+    def add_notifier(self, notifier, notes=None):
+        """Links the :class:`DSFNotifier` with the specified id
+        to this Traffic Director service, Accepts :class:`DSFNotifier`
+        or :class:`Notifier` or the notifier public id.
         """
         if isinstance(notifier, DSFNotifier):
             _notifier_id = notifier._notifier_id
@@ -3533,28 +3929,25 @@ class TrafficDirector(object):
                    'DSFNotifier, or notifier_id string')
             raise Exception(msg)
         api_args = {'add_notifier': True, 'notifier_id': _notifier_id}
+        if notes:
+            api_args['notes'] = notes
         self._update(api_args)
 
-    def del_notifier(self, notifier):
-        """Links the :class:`DSFNotifier` with the specified id to this
-        Traffic Director service
+    def del_notifier(self, notifier, notes=None):
+        """delinks the :class:`DSFNotifier` with the specified id to
+        this Traffic Director service. Accepts :class:`DSFNotifier` or
+        :class:`Notifier`.
         """
         if isinstance(notifier, DSFNotifier):
-            _notifier_id = notifier._notifier_id
+            _link_id = notifier._link_id
         elif isinstance(notifier, Notifier):
-            _notifier_id = notifier._notifier_id
-        elif isinstance(notifier, string_types):
-            _notifier_id = notifier
+            _link_id = notifier._link_id
         else:
-            msg = ('Cannot sensibly determine Notifier type, must be '
-                   'DSFNotifier, or notifier_id string')
-            raise Exception(msg)
-        self.refresh()
-        safe_notifiers = [{'notifier_id': notif._notifier_id} for notif in
-                          self._notifiers
-                          if notif._notifier_id != _notifier_id]
-
-        api_args = {'notifiers': safe_notifiers}
+            raise Exception("Cannot sensibly determine Notifier type,\
+                             must be DSFNotifier, or notifier_id string")
+        api_args = {'remove_notifier': True, 'link_id': _link_id}
+        if notes:
+            api_args['notes'] = notes
         self._update(api_args)
 
     def remove_orphans(self):
@@ -3725,14 +4118,14 @@ class TrafficDirector(object):
 
     @property
     def node_objects(self):
-        """A list of :class:`Node` Objects that are linked to this
+        """A list of :class:`DSFNode` Objects that are linked to this
         :class:`TrafficDirector` service
         """
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [DSFNode(node['zone'], node['fqdn']) for node
                        in response['data']]
         return self._nodes
 
@@ -3746,14 +4139,14 @@ class TrafficDirector(object):
         api_args = {}
         response = DynectSession.get_session().execute(uri, 'GET',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [DSFNode(node['zone'], node['fqdn']) for node
                        in response['data']]
         return [{'zone': node['zone'], 'fqdn': node['fqdn']} for node in
                 response['data']]
 
     @nodes.setter
     def nodes(self, nodes):
-        """A :class:`Node` Object, a zone, FQDN pair in a hash, or a list
+        """A :class:`DSFNode` Object, a Zone & FQDN pair in a hash, or a list
         containing those two things (can be mixed) that are to be
         linked to this :class:`TrafficDirector` service. This overwrites
         whatever nodes are already linked to this :class:`TrafficDirector`
@@ -3762,26 +4155,26 @@ class TrafficDirector(object):
         _nodeList = []
         if isinstance(nodes, list):
             for node in nodes:
-                if isinstance(node, dyn.tm.zones.Node):
+                if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
                     _nodeList.append({'zone': node.zone, 'fqdn': node.fqdn})
                 elif isinstance(node, dict):
                     _nodeList.append(node)
         elif isinstance(nodes, dict):
             _nodeList.append(nodes)
-        elif isinstance(nodes, dyn.tm.zones.Node):
+        elif isinstance(nodes, DSFNode) or type(nodes).__name__ == 'Node':
             _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
         uri = '/DSFNode/{}'.format(self._service_id)
         api_args = {'nodes': _nodeList, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'PUT',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(node['zone'], node['fqdn']) for node
+        self._nodes = [DSFNode(node['zone'], node['fqdn']) for node
                        in response['data']]
 
     def add_node(self, node):
-        """A :class:`Node` object, or a zone, FQDN pair in a hash to be added
+        """A :class:`DSFNode` object, or a zone, FQDN pair in a hash to be added
         to this :class:`TrafficDirector` service
         """
-        if isinstance(node, dyn.tm.zones.Node):
+        if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
             _node = {'zone': node.zone, 'fqdn': node.fqdn}
         elif isinstance(node, dict):
             _node = node
@@ -3789,14 +4182,14 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(nd['zone'], nd['fqdn']) for nd
+        self._nodes = [DSFNode(nd['zone'], nd['fqdn']) for nd
                        in response['data']]
 
     def remove_node(self, node):
-        """A :class:`Node` object, or a zone, FQDN pair in a hash to be
+        """A :class:`DSFNode` object, or a zone, FQDN pair in a hash to be
         removed to this :class:`TrafficDirector` service
         """
-        if isinstance(node, dyn.tm.zones.Node):
+        if isinstance(node, DSFNode) or type(node).__name__ == 'Node':
             _node = {'zone': node.zone, 'fqdn': node.fqdn}
         elif isinstance(node, dict):
             _node = node
@@ -3804,7 +4197,7 @@ class TrafficDirector(object):
         api_args = {'node': _node, 'publish': 'Y'}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)
-        self._nodes = [dyn.tm.zones.Node(nd['zone'], nd['fqdn']) for nd
+        self._nodes = [DSFNode(nd['zone'], nd['fqdn']) for nd
                        in response['data']]
 
     @property
@@ -3849,7 +4242,9 @@ class TrafficDirector(object):
     implicitPublish = implicit_publish
 
     def delete(self):
-        """Delete this :class:`TrafficDirector` from the DynECT System"""
+        """Delete this :class:`TrafficDirector` from the DynECT System
+        :param notes: Optional zone publish notes
+        """
         api_args = {}
         self.uri = '/DSF/{}/'.format(self._service_id)
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

@@ -22,35 +22,6 @@ For basic usage, you need not do anything more than simply
     >>> from dyn.tm.session import DynectSession
     >>> DynectSession('customer', 'user', 'password')
 
-To manage multiple user accounts call the `authenticate` method with another
-set of credentials
-::
-
-    >>> from dyn.tm.session import DynectSession
-    >>> s = DynectSession('customer', 'user_1', 'password_1')
-    >>> s.authenticate('customer', 'user_2', 'password_2')
-
-You can then view the dictionary of open user sessions by calling `get_open_sessions`
-and view the currently active session with `get_active_session`.
-
-Use `set_active_user` with the username to make calls with another open session.
-::
-
-    >>> current_sessions = ds.get_open_sessions()
-    >>> for user in current_sessions:
-    ...     ds.set_active_user(user)
-    ...     get_all_zones()
-
-    >>> s.log_out()
-
-`log_out` will remove all open sessions. If you need to logout of only one session,
-set it as the active session and call `log_out_active_user` on your DynectSession
-object.
-::
-
-    >>> ds.set_active_user('user_2')
-    >>> ds.log_out_active_user()
-
 Permissions
 -----------
 Using a :class:`~dyn.tm.session.DynectSession` instance, you can also verify

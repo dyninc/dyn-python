@@ -146,6 +146,7 @@ class DynectSession(SessionEngine):
         if self._permissions is None:
             self._permissions = self.user_permissions_report()
         return self._permissions
+
     @permissions.setter
     def permissions(self, value):
         pass

@@ -5,7 +5,12 @@ service should contact Concierge for any questions on adding a Geo Traffic
 Management  service to your zone. All other users should use Traffic Director
 (DSF) instead.
 """
-from dyn.tm.records import *  # NOQA
+from dyn.tm.records import (ARecord, AAAARecord, CERTRecord,
+                            CNAMERecord, DHCIDRecord, DNAMERecord,
+                            DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
+                            LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,
+                            PTRRecord, PXRecord, NSAPRecord, RPRecord,
+                            NSRecord, SPFRecord, SRVRecord, TXTRecord)
 from dyn.tm.session import DynectSession
 
 __author__ = 'jnappi'

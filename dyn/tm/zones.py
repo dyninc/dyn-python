@@ -8,9 +8,18 @@ from dyn.tm.utils import unix_date
 from dyn.compat import force_unicode
 from dyn.tm.errors import (DynectCreateError, DynectGetError,
                            DynectInvalidArgumentError)
-from dyn.tm.records import *  # NOQA
+from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
+                            CDNSKEYRecord, CSYNCRecord, CERTRecord,
+                            CNAMERecord, DHCIDRecord, DNAMERecord,
+                            DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
+                            LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,
+                            PTRRecord, PXRecord, NSAPRecord, RPRecord,
+                            NSRecord, SOARecord, SPFRecord, SRVRecord,
+                            TLSARecord, TXTRecord, SSHFPRecord, UNKNOWNRecord)
 from dyn.tm.session import DynectSession
-from dyn.tm.services import *  # NOQA
+from dyn.tm.services import (ActiveFailover, DynamicDNS, DNSSEC,
+                             TrafficDirector, GSLB, ReverseDNS, RTTM,
+                             HTTPRedirect)
 
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']

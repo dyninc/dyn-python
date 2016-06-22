@@ -6,7 +6,14 @@ from collections import Iterable
 from dyn.compat import force_unicode, string_types
 from dyn.tm.utils import APIList, Active
 from dyn.tm.errors import DynectInvalidArgumentError
-from dyn.tm.records import *  # NOQA
+from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
+                            CDNSKEYRecord, CSYNCRecord, CERTRecord,
+                            CNAMERecord, DHCIDRecord, DNAMERecord,
+                            DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
+                            LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,
+                            PTRRecord, PXRecord, NSAPRecord, RPRecord,
+                            NSRecord, SOARecord, SPFRecord, SRVRecord,
+                            TLSARecord, TXTRecord, SSHFPRecord, UNKNOWNRecord)
 from dyn.tm.session import DynectSession
 from dyn.tm.accounts import Notifier
 

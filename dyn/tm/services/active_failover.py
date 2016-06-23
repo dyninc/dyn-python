@@ -3,6 +3,7 @@ from dyn.compat import force_unicode
 from dyn.tm.utils import Active
 from dyn.tm.errors import DynectInvalidArgumentError
 from dyn.tm.session import DynectSession
+from dyn.tm.task import Task
 
 __author__ = 'jnappi'
 __all__ = ['HealthMonitor', 'ActiveFailover']
@@ -353,11 +354,16 @@ class ActiveFailover(object):
 
     def _build(self, data):
         """Build this object from the data returned in an API response"""
+        self._task_id = None
         for key, val in data.items():
             if key == 'monitor':
                 self._monitor = HealthMonitor(**val)
             elif key == 'active':
                 self._active = Active(val)
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
 
@@ -368,6 +374,13 @@ class ActiveFailover(object):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     @property
     def zone(self):

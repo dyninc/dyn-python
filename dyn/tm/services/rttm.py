@@ -5,6 +5,7 @@ from dyn.compat import force_unicode
 from dyn.tm.utils import APIList, Active, unix_date
 from dyn.tm.errors import DynectInvalidArgumentError
 from dyn.tm.session import DynectSession
+from dyn.tm.task import Task
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
@@ -282,6 +283,7 @@ class RegionPoolEntry(object):
         self.valid_modes = ('always', 'obey', 'remove', 'no')
         self._address = address
         self._label = label
+        self._task_id = None
         if weight not in range(1, 16):
             raise DynectInvalidArgumentError('weight', weight, '1-15')
         self._weight = weight
@@ -291,8 +293,7 @@ class RegionPoolEntry(object):
                                              self.valid_modes)
         self._serve_mode = serve_mode
         self._log = []
-        for key, val in kwargs.items():
-            setattr(self, key, val)
+        self._build(kwargs)
 
     def _update(self, args):
         """Private method for processing various updates"""
@@ -301,8 +302,7 @@ class RegionPoolEntry(object):
                                                          self._region_code,
                                                          self._address)
         response = DynectSession.get_session().execute(uri, 'PUT', args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def _get(self):
         uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone,
@@ -311,8 +311,26 @@ class RegionPoolEntry(object):
                                                          self._address)
         args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Build the variables in this object by pulling out the data from data
+        """
+        self._task_id = None
+        for key, val in data.items():
+            if key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
+            else:
+                setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     @property
     def logs(self):
@@ -439,6 +457,7 @@ class RTTMRegion(object):
                                    'EU West', 'EU Central', 'EU East',
                                    'global')
         self.valid_modes = ('ip', 'cname', 'region', 'global')
+        self._task_id = None
         self._zone = zone
         self._fqdn = fqdn
         if region_code not in self.valid_region_codes:
@@ -514,11 +533,23 @@ class RTTMRegion(object):
         self._build(response['data'])
 
     def _build(self, data):
+        self._task_id = None
         for key, val in data.items():
             if key == 'pool':
                 pass
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     @property
     def autopopulate(self):
@@ -743,6 +774,7 @@ class RTTM(object):
         self._syslog_status_fmt = self._syslog_rttm_fmt = None
         self._recovery_delay = None
         self._region = APIList(DynectSession.get_session, 'region')
+        self._task_id = None
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -846,6 +878,7 @@ class RTTM(object):
 
     def _build(self, data):
         """Build the neccesary substructures under this :class:`RTTM`"""
+        self._task_id = None
         for key, val in data.items():
             if key == 'region':
                 self._region = APIList(DynectSession.get_session, 'region')
@@ -879,9 +912,20 @@ class RTTM(object):
                 self._notify_events = [item.strip() for item in val.split(',')]
             elif key == 'active':
                 self._active = Active(val)
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
         self._region.uri = self.uri
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     def get_rrset_report(self, ts):
         """Generates a report of regional response sets for this RTTM service

@@ -431,7 +431,7 @@ class RTTMRegion(object):
 
     def __init__(self, zone, fqdn, region_code, pool, autopopulate=None,
                  ep=None, apmc=None, epmc=None, serve_count=None,
-                 failover_mode=None, failover_data=None):
+                 failover_mode=None, failover_data=None, task_id=None):
         """Create a :class:`RTTMRegion` object
 
         :param region_code: Name of the region
@@ -458,7 +458,7 @@ class RTTMRegion(object):
                                    'EU West', 'EU Central', 'EU East',
                                    'global')
         self.valid_modes = ('ip', 'cname', 'region', 'global')
-        self._task_id = None
+        self._task_id = task_id
         self._zone = zone
         self._fqdn = fqdn
         if region_code not in self.valid_region_codes:
@@ -888,6 +888,7 @@ class RTTM(object):
                     code = region.pop('region_code', None)
                     pool = region.pop('pool', None)
                     status = region.pop('status', None)
+
                     r = RTTMRegion(self._zone, self._fqdn, code, pool,
                                    **region)
                     r._status = status

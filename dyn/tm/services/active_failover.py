@@ -377,7 +377,8 @@ class ActiveFailover(object):
 
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        """:class:`Task` for most recent system action
+        on this :class:`ActiveFailover`."""
         if self._task_id:
             self._task_id.refresh()
         return self._task_id

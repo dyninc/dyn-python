@@ -370,7 +370,8 @@ class Zone(object):
 
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`Zone`."""
+        """:class:`Task` for most recent system action on this :class:`Zone`.
+        """
         if self._task_id:
             self._task_id.refresh()
         return self._task_id
@@ -792,11 +793,13 @@ class SecondaryZone(object):
                                                        api_args)
         self._build(response['data'])
 
-    def _update(self, api_args):
+    def _update(self, api_args, uri=None):
         """Update this :class:`ActiveFailover`, via the API, with the args in
         api_args
         """
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
+        if not uri:
+            uri = self.uri
+        response = DynectSession.get_session().execute(uri, 'PUT',
                                                        api_args)
         self._build(response['data'])
 
@@ -811,9 +814,11 @@ class SecondaryZone(object):
                 self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
+
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`SecondaryZone`."""
+        """:class:`Task` for most recent system action on this :class:`SecondaryZone`.
+        """
         if self._task_id:
             self._task_id.refresh()
         return self._task_id
@@ -903,7 +908,7 @@ class SecondaryZone(object):
         """Reports the serial of :class:`SecondaryZone`"""
         api_args = {}
         uri = '/Zone/{}/'.format(self._zone)
-        self._update(api_args)
+        self._update(api_args, uri)
         return self._serial
 
     def __str__(self):

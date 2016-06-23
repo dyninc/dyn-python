@@ -11,7 +11,8 @@ __author__ = 'mhowes'
 def get_tasks():
     response = DynectSession.get_session().execute('/Task', 'GET',
                                                    {})
-    return [Task(task.pop('task_id'), api=False, **task) for task in response['data']]
+    return [Task(task.pop('task_id'), api=False, **task)
+            for task in response['data']]
 
 
 class Task(object):
@@ -37,7 +38,8 @@ class Task(object):
         """Build this object from the data returned in an API response"""
         for key, val in data.items():
             if key == 'args':
-                self._args = [{varg['name'][1:]: varg['value']} for varg in val]
+                self._args = [{varg['name'][1:]: varg['value']}
+                              for varg in val]
             else:
                 setattr(self, '_' + key, val)
 

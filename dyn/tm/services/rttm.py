@@ -327,7 +327,8 @@ class RegionPoolEntry(object):
 
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        """:class:`Task` for most recent system
+        action on this :class:`ActiveFailover`."""
         if self._task_id:
             self._task_id.refresh()
         return self._task_id
@@ -546,7 +547,8 @@ class RTTMRegion(object):
 
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        """:class:`Task` for most recent system
+         action on this :class:`ActiveFailover`."""
         if self._task_id:
             self._task_id.refresh()
         return self._task_id
@@ -922,7 +924,8 @@ class RTTM(object):
 
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`ActiveFailover`."""
+        """:class:`Task` for most recent system
+         action on this :class:`ActiveFailover`."""
         if self._task_id:
             self._task_id.refresh()
         return self._task_id

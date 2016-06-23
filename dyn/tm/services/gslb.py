@@ -439,7 +439,7 @@ class GSLBRegion(object):
         :param fqdn: The fqdn of the specific node which will be monitored by
             this :class:`GSLBRegion`
         :param region_code: ISO region code of this :class:`GSLBRegion`
-        :param pool: The IP Pool list for this :class:`GSLBRegion`
+        :param pool: (*arg) The IP Pool list for this :class:`GSLBRegion`
         :param serve_count: How many records will be returned in each DNS
             response
         :param failover_mode: How the :class:`GSLBRegion` should failover. Must
@@ -448,12 +448,20 @@ class GSLBRegion(object):
             'ip', 'cname', 'region', 'global'
         """
         super(GSLBRegion, self).__init__()
+        self.valid_region_codes = ('US West', 'US Central', 'US East', 'Asia',
+                                   'EU West', 'EU Central', 'EU East',
+                                   'global')
+
+        self.valid_modes = ('ip', 'cname', 'region', 'global')
         self._zone = zone
         self._fqdn = fqdn
-        self._region_code = region_code
         self._pool = self._serve_count = self._failover_mode = None
         self._failover_data = None
         self._task_id = None
+        if region_code not in self.valid_region_codes:
+            raise DynectInvalidArgumentError('region_code', region_code,
+                                             self.valid_region_codes)
+        self._region_code = region_code
         self.uri = '/GSLBRegion/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                   self._region_code)
         self._pool = []
@@ -482,9 +490,17 @@ class GSLBRegion(object):
         api_args = {'pool': self._pool.to_json()}
         if serve_count:
             api_args['serve_count'] = self._serve_count
-        if failover_mode:
+        if self._failover_mode:
+            if self._failover_mode not in self.valid_modes:
+                raise DynectInvalidArgumentError('failover_mode',
+                                                 self._failover_mode,
+                                                 self.valid_modes)
             api_args['failover_mode'] = self._failover_mode
-        if failover_data:
+        if self._failover_data:
+            if self._failover_data not in self.valid_modes:
+                raise DynectInvalidArgumentError('failover_data',
+                                                 self._failover_data,
+                                                 self.valid_modes)
             api_args['failover_data'] = self._failover_data
         response = DynectSession.get_session()(uri, 'POST', api_args)
         self._build(response['data'])

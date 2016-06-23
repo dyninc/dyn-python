@@ -429,13 +429,11 @@ class RegionPoolEntry(object):
 class RTTMRegion(object):
     """docstring for RTTMRegion"""
 
-    def __init__(self, zone, fqdn, region_code, pool, autopopulate=None,
-                 ep=None, apmc=None, epmc=None, serve_count=None,
-                 failover_mode=None, failover_data=None, task_id=None):
+    def __init__(self, zone, fqdn, region_code, *args, **kwargs):
         """Create a :class:`RTTMRegion` object
 
         :param region_code: Name of the region
-        :param pool: The IP Pool list for this region
+        :param pool: (*arg) The IP Pool list for this region
         :param autopopulate: If set to Y, this region will automatically be
             filled in from the global pool, and any other options passed in for
             this region will be ignored
@@ -458,33 +456,34 @@ class RTTMRegion(object):
                                    'EU West', 'EU Central', 'EU East',
                                    'global')
         self.valid_modes = ('ip', 'cname', 'region', 'global')
-        self._task_id = task_id
+        self._task_id = None
         self._zone = zone
         self._fqdn = fqdn
+        self._autopopulate = self._ep = self._apmc = None
+        self._epmc = self._serve_count = self._failover_mode = None
+        self._failover_data = None
         if region_code not in self.valid_region_codes:
             raise DynectInvalidArgumentError('region_code', region_code,
                                              self.valid_region_codes)
         self._region_code = region_code
-        if len(pool) > 0 and isinstance(pool[0], dict):
-            pool_list = pool
-            pool = []
-            for item in pool_list:
-                rpe = RegionPoolEntry(**item)
-                rpe._zone = self._zone
-                rpe._fqdn = self._fqdn
-                rpe._region_code = self._region_code
-                pool.append(rpe)
-        self._pool = pool
-        self._autopopulate = autopopulate
-        self._ep = ep
-        self._apmc = apmc
-        self._epmc = epmc
-        self._serve_count = serve_count
-        self._failover_mode = failover_mode
-        self._failover_data = failover_data
-        self._status = None
+        self._pool = []
         self.uri = '/RTTMRegion/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                   self._region_code)
+        if len(args) == 0 and len(kwargs) == 0:
+            self._get()
+        if len(kwargs) > 0:
+            self._build(kwargs)
+        if len(args) > 0:
+            for pool in args[0]:
+                if isinstance(pool, dict):
+                    rpe = RegionPoolEntry(**pool)
+                    rpe._zone = self._zone
+                    rpe._fqdn = self._fqdn
+                    rpe._region_code = self._region_code
+                    self._pool.append(rpe)
+                else:
+                    self._pool.append(pool)
+        self._status = None
 
     def _post(self):
         """Create a new :class:`RTTMRegion` on the DynECT System"""

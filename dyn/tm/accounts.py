@@ -448,8 +448,8 @@ class User(object):
 
     def _update_permissions(self):
         api_args = {'user_name': self._user_name}
-        response = DynectSession.get_session().execute(self._permission_report_uri,
-                                                       'POST', api_args)
+        response = DynectSession.get_session().execute(
+            self._permission_report_uri, 'POST', api_args)
 
         for val in response['data']['allowed']:
             self._permissions.append(val['name'])
@@ -465,8 +465,8 @@ class User(object):
 
     def _get_permissions(self):
         api_args = {'user_name': self._user_name}
-        response = DynectSession.get_session().execute(self._permission_report_uri,
-                                                       'POST', api_args)
+        response = DynectSession.get_session().execute(
+            self._permission_report_uri, 'POST', api_args)
 
         for val in response['data']['allowed']:
             self._permissions.append(val['name'])

@@ -2,11 +2,9 @@
 """This module contains interfaces for all Account management features of the
 REST API
 """
-import logging
-
-from .errors import DynectInvalidArgumentError
-from .session import DynectSession
-from ..compat import force_unicode
+from dyn.tm.errors import DynectInvalidArgumentError
+from dyn.tm.session import DynectSession
+from dyn.compat import force_unicode
 
 __author__ = 'jnappi'
 __all__ = ['get_updateusers', 'get_users', 'get_permissions_groups',
@@ -86,7 +84,8 @@ def get_permissions_groups(search=None):
         map to an attribute a :class:`~dyn.tm.accounts.PermissionGroup`
         instance and the value mapped to by that key will be used as the search
         criteria for that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.PermissionGroup` objects"""
+    :return: a ``list`` of :class:`~dyn.tm.accounts.PermissionGroup` objects
+    """
     uri = '/PermissionGroup/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -113,7 +112,8 @@ def get_contacts(search=None):
         map to an attribute a :class:`~dyn.tm.accounts.Contact` instance and
         the value mapped to by that key will be used as the search criteria
         for that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.Contact` objects"""
+    :return: a ``list`` of :class:`~dyn.tm.accounts.Contact` objects
+    """
     uri = '/Contact/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -143,7 +143,8 @@ def get_notifiers(search=None):
         map to an attribute a :class:`~dyn.tm.accounts.Notifier` instance and
         the value mapped to by that key will be used as the search criteria for
         that key when searching.
-    :return: a ``list`` of :class:`~dyn.tm.accounts.Notifier` objects"""
+    :return: a ``list`` of :class:`~dyn.tm.accounts.Notifier` objects
+    """
     uri = '/Notifier/'
     api_args = {'detail': 'Y'}
     response = DynectSession.get_session().execute(uri, 'GET', api_args)
@@ -165,6 +166,7 @@ class UpdateUser(object):
     a :class:`~dyn.tm.accounts.User` which are tied to a specific Dynamic DNS
     services.
     """
+
     def __init__(self, *args, **kwargs):
         """Create an :class:`~dyn.tm.accounts.UpdateUser` object
 
@@ -235,6 +237,7 @@ class UpdateUser(object):
         been created.
         """
         return self._user_name
+
     @user_name.setter
     def user_name(self, value):
         pass
@@ -247,6 +250,7 @@ class UpdateUser(object):
         :class:`~dyn.tm.accounts.UpdateUser` has been created.
         """
         return self._nickname
+
     @nickname.setter
     def nickname(self, value):
         pass
@@ -259,6 +263,7 @@ class UpdateUser(object):
         DynECT System, where active :class:`~dyn.tm.accounts.UpdateUser`'s are.
         """
         return self._status
+
     @status.setter
     def status(self, value):
         pass
@@ -272,6 +277,7 @@ class UpdateUser(object):
         if self._password is None or self._password == u'':
             self._get(self._user_name)
         return self._password
+
     @password.setter
     def password(self, new_password):
         """Update this :class:`~dyn.tm.accounts.UpdateUser`'s password to be
@@ -325,6 +331,7 @@ class UpdateUser(object):
 
 class User(object):
     """DynECT System User object"""
+
     def __init__(self, user_name, *args, **kwargs):
         """Create a new :class:`~dyn.tm.accounts.User` object
 
@@ -372,13 +379,13 @@ class User(object):
         self._user_name = user_name
         self.uri = '/User/{}/'.format(self._user_name)
         self._permission_report_uri = '/UserPermissionReport/'
-        self._password = self._email = self._first_name = self._last_name = None
-        self._nickname = self._organization = self._phone = self._address = None
-        self._address_2 = self._city = self._country = self._fax = None
-        self._notify_email = self._pager_email = self._post_code = None
-        self._group_name = self._forbid = None
-        self._status = self._website = None
-        self._zone = []
+        self._password = self._email = self._first_name = None
+        self._last_name = self._nickname = self._organization = None
+        self._phone = self._address = self._address_2 = self._city = None
+        self._country = self._fax = self._notify_email = None
+        self._pager_email = self._post_code = self._group_name = None
+        self._permission = self._zone = self._forbid = self._status = None
+        self._website = None
         self._permissions = []
         self.permission_groups = []
         self.groups = []
@@ -437,7 +444,7 @@ class User(object):
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
-        self._update_permissions()
+        self._get_permissions(self)
 
     def _update_permissions(self):
         api_args = {'user_name': self._user_name}
@@ -456,11 +463,20 @@ class User(object):
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
+    def _get_permissions(self):
+        api_args = {'user_name': self._user_name}
+        response = DynectSession.get_session().execute(self._permission_report_uri, 'POST',
+                                                       api_args)
+
+        for val in response['data']['allowed']:
+            self._permissions.append(val['name'])
+
     @property
     def user_name(self):
         """A :class:`~dyn.tm.accounts.User`'s user_name is a read-only property
         """
         return self._user_name
+
     @user_name.setter
     def user_name(self, value):
         pass
@@ -471,6 +487,7 @@ class User(object):
         To change you must use the :meth:`block`/:meth:`unblock` methods
         """
         return self._status
+
     @status.setter
     def status(self, value):
         pass
@@ -479,6 +496,7 @@ class User(object):
     def email(self):
         """This :class:`~dyn.tm.accounts.User`'s Email address"""
         return self._email
+
     @email.setter
     def email(self, value):
         api_args = {'email': value}
@@ -488,6 +506,7 @@ class User(object):
     def first_name(self):
         """This :class:`~dyn.tm.accounts.User`'s first name"""
         return self._first_name
+
     @first_name.setter
     def first_name(self, value):
         api_args = {'first_name': value}
@@ -497,6 +516,7 @@ class User(object):
     def last_name(self):
         """This :class:`~dyn.tm.accounts.User`'s last name"""
         return self._last_name
+
     @last_name.setter
     def last_name(self, value):
         api_args = {'last_name': value}
@@ -507,6 +527,7 @@ class User(object):
         """The nickname for the `Contact` associated with this
         :class:`~dyn.tm.accounts.User`"""
         return self._nickname
+
     @nickname.setter
     def nickname(self, value):
         api_args = {'nickname': value}
@@ -516,6 +537,7 @@ class User(object):
     def organization(self):
         """This :class:`~dyn.tm.accounts.User`'s organization"""
         return self._organization
+
     @organization.setter
     def organization(self, value):
         api_args = {'organization': value}
@@ -530,6 +552,7 @@ class User(object):
         ignored.
         """
         return self._phone
+
     @phone.setter
     def phone(self, value):
         api_args = {'phone': value}
@@ -539,6 +562,7 @@ class User(object):
     def address(self):
         """This :class:`~dyn.tm.accounts.User`'s street address"""
         return self._address
+
     @address.setter
     def address(self, value):
         api_args = {'address': value}
@@ -548,6 +572,7 @@ class User(object):
     def address_2(self):
         """This :class:`~dyn.tm.accounts.User`'s street address, line 2"""
         return self._address_2
+
     @address_2.setter
     def address_2(self, value):
         api_args = {'address_2': value}
@@ -559,6 +584,7 @@ class User(object):
         address
         """
         return self._city
+
     @city.setter
     def city(self, value):
         api_args = {'city': value}
@@ -570,6 +596,7 @@ class User(object):
         address
         """
         return self._country
+
     @country.setter
     def country(self, value):
         api_args = {'country': value}
@@ -579,6 +606,7 @@ class User(object):
     def fax(self):
         """This :class:`~dyn.tm.accounts.User`'s fax number"""
         return self._fax
+
     @fax.setter
     def fax(self, value):
         api_args = {'fax': value}
@@ -590,6 +618,7 @@ class User(object):
         receive notifications
         """
         return self._notify_email
+
     @notify_email.setter
     def notify_email(self, value):
         api_args = {'notify_email': value}
@@ -601,6 +630,7 @@ class User(object):
         receive messages destined for a pager
         """
         return self._pager_email
+
     @pager_email.setter
     def pager_email(self, value):
         api_args = {'pager_email': value}
@@ -612,6 +642,7 @@ class User(object):
         user's address
         """
         return self._post_code
+
     @post_code.setter
     def post_code(self, value):
         api_args = {'post_code': value}
@@ -623,6 +654,7 @@ class User(object):
         belongs to
         """
         return self._group_name
+
     @group_name.setter
     def group_name(self, value):
         api_args = {'group_name': value}
@@ -634,6 +666,7 @@ class User(object):
         :class:`~dyn.tm.accounts.User`
         """
         return self._permissions
+
     @permission.setter
     def permission(self, value):
         api_args = {'permission': value}
@@ -645,6 +678,7 @@ class User(object):
         permissions apply
         """
         return self._zone
+
     @zone.setter
     def zone(self, value):
         api_args = {'zone': value}
@@ -656,6 +690,7 @@ class User(object):
         :class:`~dyn.tm.accounts.User`
         """
         return self._forbid
+
     @forbid.setter
     def forbid(self, value):
         """Apply a new list of forbidden permissions for the
@@ -668,6 +703,7 @@ class User(object):
     def website(self):
         """This :class:`~dyn.tm.accounts.User`'s website"""
         return self._website
+
     @website.setter
     def website(self, value):
         api_args = {'website': value}
@@ -861,14 +897,15 @@ class User(object):
 
 class PermissionsGroup(object):
     """A DynECT System Permissions Group object"""
+
     def __init__(self, group_name, *args, **kwargs):
         """Create a new permissions Group
 
         :param group_name: The name of the permission group to update
         :param description: A description of the permission group
-        :param group_type: The type of the permission group. Valid values: 
+        :param group_type: The type of the permission group. Valid values:
             plain or default
-        :param all_users: If 'Y', all current users will be added to the group. 
+        :param all_users: If 'Y', all current users will be added to the group.
             Cannot be used if user_name is passed in
         :param permission: A list of permissions that the group contains
         :param user_name: A list of users that belong to the permission group
@@ -954,6 +991,7 @@ class PermissionsGroup(object):
     def group_name(self):
         """The name of this permission group"""
         return self._group_name
+
     @group_name.setter
     def group_name(self, value):
         new_group_name = value
@@ -967,6 +1005,7 @@ class PermissionsGroup(object):
     def description(self):
         """A description of this permission group"""
         return self._description
+
     @description.setter
     def description(self, value):
         self._description = value
@@ -978,6 +1017,7 @@ class PermissionsGroup(object):
     def group_type(self):
         """The type of this permission group"""
         return self._group_type
+
     @group_type.setter
     def group_type(self, value):
         self._group_type = value
@@ -991,6 +1031,7 @@ class PermissionsGroup(object):
         used if user_name is passed in
         """
         return self._all_users
+
     @all_users.setter
     def all_users(self, value):
         self._all_users = value
@@ -1002,6 +1043,7 @@ class PermissionsGroup(object):
     def permission(self):
         """A list of permissions that this group contains"""
         return self._permission
+
     @permission.setter
     def permission(self, value):
         self._permission = value
@@ -1013,6 +1055,7 @@ class PermissionsGroup(object):
     def user_name(self):
         """A list of users that belong to the permission group"""
         return self._user_name
+
     @user_name.setter
     def user_name(self, value):
         self._user_name = value
@@ -1024,6 +1067,7 @@ class PermissionsGroup(object):
     def subgroup(self):
         """A list of groups that belong to the permission group"""
         return self._subgroup
+
     @subgroup.setter
     def subgroup(self, value):
         self._subgroup = value
@@ -1035,6 +1079,7 @@ class PermissionsGroup(object):
     def zone(self):
         """A list of users that belong to the permission group"""
         return self._zone
+
     @zone.setter
     def zone(self, value):
         self._zone = value
@@ -1052,7 +1097,7 @@ class PermissionsGroup(object):
 
         :param permission: the permission to add to this user
         """
-        uri = '/PermissionGroupPermissionEntry/{}/{}/'.format(self._group_name, 
+        uri = '/PermissionGroupPermissionEntry/{}/{}/'.format(self._group_name,
                                                               permission)
         DynectSession.get_session().execute(uri, 'POST')
         self._permission.append(permission)
@@ -1060,7 +1105,7 @@ class PermissionsGroup(object):
     def replace_permissions(self, permission=None):
         """Replaces a list of individual user permissions for the user
 
-        :param permission: A list of permissions. Pass an empty list or omit 
+        :param permission: A list of permissions. Pass an empty list or omit
             the argument to clear the list of permissions of the user
         """
         api_args = {}
@@ -1078,7 +1123,7 @@ class PermissionsGroup(object):
 
         :param permission: the permission to remove
         """
-        uri = '/PermissionGroupPermissionEntry/{}/{}/'.format(self._group_name, 
+        uri = '/PermissionGroupPermissionEntry/{}/{}/'.format(self._group_name,
                                                               permission)
         DynectSession.get_session().execute(uri, 'DELETE')
         self._permission.remove(permission)
@@ -1104,7 +1149,7 @@ class PermissionsGroup(object):
             to be added to this :class:`~dyn.tm.accounts.PermissionsGroup`'s
             subgroups
         """
-        uri = '/PermissionGroupSubgroupEntry/{}/{}/'.format(self._group_name, 
+        uri = '/PermissionGroupSubgroupEntry/{}/{}/'.format(self._group_name,
                                                             name)
         DynectSession.get_session().execute(uri, 'POST')
         self._subgroup.append(name)
@@ -1128,7 +1173,7 @@ class PermissionsGroup(object):
             to be remoevd from this
             :class:`~dyn.tm.accounts.PermissionsGroup`'s subgroups
         """
-        uri = '/PermissionGroupSubgroupEntry/{}/{}/'.format(self._group_name, 
+        uri = '/PermissionGroupSubgroupEntry/{}/{}/'.format(self._group_name,
                                                             name)
         DynectSession.get_session().execute(uri, 'DELETE')
         self._subgroup.remove(name)
@@ -1145,6 +1190,7 @@ class PermissionsGroup(object):
 
 class UserZone(object):
     """A DynECT system UserZoneEntry"""
+
     def __init__(self, user_name, zone_name, recurse='Y'):
         super(UserZone, self).__init__()
         self._user_name = user_name
@@ -1162,6 +1208,7 @@ class UserZone(object):
         read only
         """
         return self._user_name
+
     @user_name.setter
     def user_name(self, value):
         pass
@@ -1172,6 +1219,7 @@ class UserZone(object):
         the `zone_name` as well
         """
         return self._recurse
+
     @recurse.setter
     def recurse(self, value):
         self._recurse = value
@@ -1217,6 +1265,7 @@ class UserZone(object):
 
 class Notifier(object):
     """DynECT System Notifier"""
+
     def __init__(self, *args, **kwargs):
         """Create a new :class:`~dyn.tm.accounts.Notifier` object
 
@@ -1280,6 +1329,7 @@ class Notifier(object):
     def notifier_id(self):
         """The unique System id for this Notifier"""
         return self._notifier_id
+
     @notifier_id.setter
     def notifier_id(self, value):
         pass
@@ -1289,6 +1339,7 @@ class Notifier(object):
         """The label used to identify this :class:`~dyn.tm.accounts.Notifier`
         """
         return self._label
+
     @label.setter
     def label(self, value):
         self._label = value
@@ -1301,6 +1352,7 @@ class Notifier(object):
         :class:`~dyn.tm.accounts.Notifier`
         """
         return self._recipients
+
     @recipients.setter
     def recipients(self, value):
         self._recipients = value
@@ -1313,6 +1365,7 @@ class Notifier(object):
         :class:`~dyn.tm.accounts.Notifier`
         """
         return self._services
+
     @services.setter
     def services(self, value):
         self._services = value
@@ -1337,6 +1390,7 @@ class Notifier(object):
 
 class Contact(object):
     """A DynECT System Contact"""
+
     def __init__(self, nickname, *args, **kwargs):
         """Create a :class:`~dyn.tm.accounts.Contact` object
 
@@ -1373,8 +1427,8 @@ class Contact(object):
         super(Contact, self).__init__()
         self._nickname = nickname
         self._email = self._first_name = self._last_name = None
-        self._organization = self._address = self._address_2 = self._city = None
-        self._country = self._fax = self._notify_email = None
+        self._organization = self._address = self._address_2 = None
+        self._city = self._country = self._fax = self._notify_email = None
         self._pager_email = self._phone = self._post_code = self._state = None
         self._website = None
         self.uri = '/Contact/{}/'.format(self._nickname)
@@ -1439,6 +1493,7 @@ class Contact(object):
     def nickname(self):
         """This :class:`~dyn.tm.accounts.Contact`'s DynECT System Nickname"""
         return self._nickname
+
     @nickname.setter
     def nickname(self, value):
         self._nickname = value
@@ -1450,6 +1505,7 @@ class Contact(object):
         """This :class:`~dyn.tm.accounts.Contact`'s DynECT System Email address
         """
         return self._email
+
     @email.setter
     def email(self, value):
         self._email = value
@@ -1460,70 +1516,77 @@ class Contact(object):
     def first_name(self):
         """The first name of this :class:`~dyn.tm.accounts.Contact`"""
         return self._first_name
+
     @first_name.setter
     def first_name(self, value):
         self._first_name = value
         api_args = {'first_name': self._first_name}
         self._update(api_args)
-    
+
     @property
     def last_name(self):
         """The last name of this :class:`~dyn.tm.accounts.Contact`"""
         return self._last_name
+
     @last_name.setter
     def last_name(self, value):
         self._last_name = value
         api_args = {'last_name': self._last_name}
         self._update(api_args)
-    
+
     @property
     def organization(self):
         """The organization this :class:`~dyn.tm.accounts.Contact` belongs to
         within the DynECT System
         """
         return self._organization
+
     @organization.setter
     def organization(self, value):
         self._organization = value
         api_args = {'organization': self._organization}
         self._update(api_args)
-    
+
     @property
     def phone(self):
         """The phone number associated with this
         :class:`~dyn.tm.accounts.Contact`
         """
         return self._phone
+
     @phone.setter
     def phone(self, value):
         self._phone = value
         api_args = {'phone': self._phone}
         self._update(api_args)
-    
+
     @property
     def address(self):
         """This :class:`~dyn.tm.accounts.Contact`'s street address"""
         return self._address
+
     @address.setter
     def address(self, value):
         self._address = value
         api_args = {'address': self._address}
         self._update(api_args)
-    
+
     @property
     def address_2(self):
         """This :class:`~dyn.tm.accounts.Contact`'s street address, line 2"""
         return self._address_2
+
     @address_2.setter
     def address_2(self, value):
         self._address_2 = value
         api_args = {'address_2': self._address_2}
         self._update(api_args)
-    
+
     @property
     def city(self):
         """This :class:`~dyn.tm.accounts.Contact`'s city"""
         return self._city
+
     @city.setter
     def city(self, value):
         self._city = value
@@ -1534,6 +1597,7 @@ class Contact(object):
     def country(self):
         """This :class:`~dyn.tm.accounts.Contact`'s Country"""
         return self._country
+
     @country.setter
     def country(self, value):
         self._country = value
@@ -1546,6 +1610,7 @@ class Contact(object):
         :class:`~dyn.tm.accounts.Contact`
         """
         return self._fax
+
     @fax.setter
     def fax(self, value):
         self._fax = value
@@ -1558,30 +1623,33 @@ class Contact(object):
         receive notifications
         """
         return self._notify_email
+
     @notify_email.setter
     def notify_email(self, value):
         self._notify_email = value
         api_args = {'notify_email': self._notify_email}
         self._update(api_args)
-    
+
     @property
     def pager_email(self):
         """Email address where this :class:`~dyn.tm.accounts.Contact` should
         receive messages destined for a pager
         """
         return self._pager_email
+
     @pager_email.setter
     def pager_email(self, value):
         self._pager_email = value
         api_args = {'pager_email': self._pager_email}
         self._update(api_args)
-    
+
     @property
     def post_code(self):
         """This :class:`~dyn.tm.accounts.Contacts`'s postal code, part of the
         contacts's address
         """
         return self._post_code
+
     @post_code.setter
     def post_code(self, value):
         self._post_code = value
@@ -1592,6 +1660,7 @@ class Contact(object):
     def state(self):
         """This :class:`~dyn.tm.accounts.Contact`'s state"""
         return self._state
+
     @state.setter
     def state(self, value):
         self._state = value
@@ -1602,6 +1671,7 @@ class Contact(object):
     def website(self):
         """This :class:`~dyn.tm.accounts.Contact`'s website"""
         return self._website
+
     @website.setter
     def website(self, value):
         self._website = value

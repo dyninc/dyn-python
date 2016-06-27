@@ -7,13 +7,13 @@ that you do not currently need.
 
 NOTES: LoadBalance and CDNManager are deprecated and not included
 """
-from .active_failover import *
-from .ddns import DynamicDNS
-from .httpredirect import HTTPRedirect
-from .dnssec import *
-from .gslb import *
-from .reversedns import ReverseDNS
-from .rttm import *
-from .dsf import *
+from dyn.tm.services.active_failover import *  # NOQA
+from dyn.tm.services.ddns import DynamicDNS  # NOQA
+from dyn.tm.services.httpredirect import HTTPRedirect  # NOQA
+from dyn.tm.services.dnssec import *  # NOQA
+from dyn.tm.services.gslb import *  # NOQA
+from dyn.tm.services.reversedns import ReverseDNS  # NOQA
+from dyn.tm.services.rttm import *  # NOQA
+from dyn.tm.services.dsf import *  # NOQA
 
 __author__ = 'jnappi'

@@ -5,25 +5,29 @@ service should contact Concierge for any questions on adding a Geo Traffic
 Management  service to your zone. All other users should use Traffic Director
 (DSF) instead.
 """
-import logging
-
-from ..records import *
-from ..session import DynectSession
+from dyn.tm.records import (ARecord, AAAARecord, CERTRecord,
+                            CNAMERecord, DHCIDRecord, DNAMERecord,
+                            DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
+                            LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,
+                            PTRRecord, PXRecord, NSAPRecord, RPRecord,
+                            NSRecord, SPFRecord, SRVRecord, TXTRecord)
+from dyn.tm.session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['GeoARecord', 'GeoAAAARecord', 'GeoCERTRecord', 'GeoCNAMERecord',
-           'GeoDHCIDRecord', 'GeoDNAMERecord', 'GeoDNSKEYRecord', 'GeoDSRecord',
-           'GeoKEYRecord', 'GeoKXRecord', 'GeoLOCRecord', 'GeoIPSECKEYRecord',
-           'GeoMXRecord', 'GeoNAPTRRecord', 'GeoPTRRecord', 'GeoPXRecord',
-           'GeoNSAPRecord', 'GeoRPRecord', 'GeoNSRecord', 'GeoSPFRecord',
-           'GeoSRVRecord', 'GeoTXTRecord', 'GeoRegionGroup', 'Geo']
+           'GeoDHCIDRecord', 'GeoDNAMERecord', 'GeoDNSKEYRecord',
+           'GeoDSRecord', 'GeoKEYRecord', 'GeoKXRecord', 'GeoLOCRecord',
+           'GeoIPSECKEYRecord', 'GeoMXRecord', 'GeoNAPTRRecord',
+           'GeoPTRRecord', 'GeoPXRecord', 'GeoNSAPRecord', 'GeoRPRecord',
+           'GeoNSRecord', 'GeoSPFRecord', 'GeoSRVRecord', 'GeoTXTRecord',
+           'GeoRegionGroup', 'Geo']
 
 
 class GeoARecord(ARecord):
     """An :class:`ARecord` object which is able to store additional data for
     use by a :class:`Geo` service.
     """
-    def __init__(self, weight, serve_count, label=None, ttl=None, *args, 
+    def __init__(self, weight, serve_count, label=None, ttl=None, *args,
                  **kwargs):
         """Create a :class:`GeoARecord` object
 
@@ -31,8 +35,8 @@ class GeoARecord(ARecord):
         :param serve_count: The serve count for this :class:`GeoARecord`
         :param *args: Non keyword args for the associated :class:`ARecord`
         :param label: A unique label for this :class:`GeoARecord`
-        :param ttl: TTL for the associated :class:`ARecord`, will override a ttl
-            specified in *args or **kwargs
+        :param ttl: TTL for the associated :class:`ARecord`, will override a
+            ttl specified in *args or **kwargs
         :param **kwargs: Keyword args for the associated :class:`ARecord`
         """
         # Set api flag so the record isn't really created
@@ -88,8 +92,8 @@ class GeoCERTRecord(CERTRecord):
 
 
 class GeoCNAMERecord(CNAMERecord):
-    """An :class:`CNAMERecord` object which is able to store additional data for
-    use by a :class:`Geo` service.
+    """An :class:`CNAMERecord` object which is able to store additional data
+    for use by a :class:`Geo` service.
     """
     def __init__(self, weight, label=None, ttl=None, *args, **kwargs):
         """Create a :class:`GeoCNAMERecord` object
@@ -109,8 +113,8 @@ class GeoCNAMERecord(CNAMERecord):
 
 
 class GeoDHCIDRecord(DHCIDRecord):
-    """An :class:`DHCIDRecord` object which is able to store additional data for
-    use by a :class:`Geo` service.
+    """An :class:`DHCIDRecord` object which is able to store additional data
+    for use by a :class:`Geo` service.
     """
     def __init__(self, label=None, ttl=None, *args, **kwargs):
         """Create a :class:`GeoCNAMERecord` object
@@ -128,8 +132,8 @@ class GeoDHCIDRecord(DHCIDRecord):
 
 
 class GeoDNAMERecord(DNAMERecord):
-    """An :class:`DNAMERecord` object which is able to store additional data for
-    use by a :class:`Geo` service.
+    """An :class:`DNAMERecord` object which is able to store additional data
+    for use by a :class:`Geo` service.
     """
     def __init__(self, label=None, ttl=None, *args, **kwargs):
         """Create a :class:`GeoDNAMERecord` object
@@ -257,7 +261,8 @@ class GeoIPSECKEYRecord(IPSECKEYRecord):
         :param label: A unique label for this :class:`GeoIPSECKEYRecord`
         :param ttl: TTL for the associated :class:`IPSECKEYRecord`, will
             override a ttl specified in *args or **kwargs
-        :param **kwargs: Keyword args for the associated :class:`IPSECKEYRecord`
+        :param **kwargs: Keyword args for the associated
+            :class:`IPSECKEYRecord`
         """
         # Set api flag so the record isn't really created
         kwargs['create'] = False
@@ -287,16 +292,16 @@ class GeoMXRecord(MXRecord):
 
 
 class GeoNAPTRRecord(NAPTRRecord):
-    """An :class:`NAPTRRecord` object which is able to store additional data for
-    use by a :class:`Geo` service.
+    """An :class:`NAPTRRecord` object which is able to store additional data
+    for use by a :class:`Geo` service.
     """
     def __init__(self, label=None, ttl=None, *args, **kwargs):
         """Create a :class:`GeoNAPTRRecord` object
 
         :param *args: Non keyword args for the associated :class:`NAPTRRecord`
         :param label: A unique label for this :class:`GeoNAPTRRecord`
-        :param ttl: TTL for the associated :class:`NAPTRRecord`, will override a
-            ttl specified in *args or **kwargs
+        :param ttl: TTL for the associated :class:`NAPTRRecord`, will override
+            a ttl specified in *args or **kwargs
         :param **kwargs: Keyword args for the associated :class:`NAPTRRecord`
         """
         # Set api flag so the record isn't really created
@@ -625,6 +630,7 @@ class Geo(object):
     @property
     def service_name(self):
         return self._service_name
+
     @service_name.setter
     def service_name(self, new_name):
         self._service_name = new_name
@@ -635,6 +641,7 @@ class Geo(object):
     @property
     def groups(self):
         return self._groups
+
     @groups.setter
     def groups(self, value):
         self._groups = value
@@ -644,6 +651,7 @@ class Geo(object):
     @property
     def nodes(self):
         return self._nodes
+
     @nodes.setter
     def nodes(self, value):
         self._nodes = value

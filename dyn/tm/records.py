@@ -33,6 +33,7 @@ class DNSRecord(object):
         self.create = create
         self.api_args = {'rdata': {}}
         self._implicitPublish = True
+        self._note = None
 
     def _create_record(self, api_args):
         """Make the API call to create the current record type
@@ -96,9 +97,12 @@ class DNSRecord(object):
         """Return a records rdata"""
         rdata = {}
         for key, val in self.__dict__.items():
-            if key.startswith('_') and not hasattr(val, '__call__') \
-                    and key != '_record_type' and key != '_record_id' and key != '_implicitPublish':
-                if 'ttl' not in key and 'zone' not in key and 'fqdn' not in key:
+            if (key.startswith('_') and
+                    not hasattr(val, '__call__') and
+                    key != '_record_type' and
+                    key != '_record_id' and key != '_implicitPublish'):
+                missing = {'ttl', 'zone', 'fqdn'}
+                if all([i not in key for i in missing]):
                     rdata[key[1:]] = val
         return rdata
 
@@ -125,7 +129,7 @@ class DNSRecord(object):
         uri = '/{}/{}/{}/'
         values = (self._record_type, self.zone, self.fqdn)
         if self._record_id:
-            uri += ('{}/')
+            uri += '{}/'
             values += (self._record_id,)
         uri = uri.format(*values)
         DynectSession.get_session().execute(uri, 'DELETE', api_args)
@@ -314,6 +318,7 @@ class AAAARecord(DNSRecord):
         """print override"""
         return '<AAAARecord>: {}'.format(self._address)
 
+
 class ALIASRecord(DNSRecord):
     """The ALIAS Records map an alias (CNAME) to the real or canonical
     name that may lie inside or outside the current zone.
@@ -388,9 +393,11 @@ class ALIASRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class CDNSKEYRecord(DNSRecord):
-    """The CDNSKEY Record, or "Child DNSKEY", describes the public key of a public key (asymmetric)
-    cryptographic algorithm used with DNSSEC.nis. This is the DNSKEY for a Child Zone
+    """The CDNSKEY Record, or "Child DNSKEY", describes the public key of a
+    public key (asymmetric) cryptographic algorithm used with DNSSEC.nis. This
+    is the DNSKEY for a Child Zone
     """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -516,8 +523,9 @@ class CDNSKEYRecord(DNSRecord):
 
 
 class CDSRecord(DNSRecord):
-    """The Child Delegation Signer (CDS) record type is used in DNSSEC to create the
-    chain of trust or authority from a signed child zone to a signed parent zone.
+    """The Child Delegation Signer (CDS) record type is used in DNSSEC to
+    create the chain of trust or authority from a signed child zone to a
+    signed parent zone.
     """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -545,7 +553,8 @@ class CDSRecord(DNSRecord):
         else:
             super(CDSRecord, self).__init__(zone, fqdn)
             self._record_type = 'CDSRecord'
-            self._algorithm = self._digest = self._digtype = self._keytag = None
+            self._algorithm = self._digest = self._digtype = None
+            self._keytag = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
@@ -641,6 +650,7 @@ class CDSRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
 
 class CERTRecord(DNSRecord):
     """The Certificate (CERT) Record may be used to store either public key
@@ -760,6 +770,7 @@ class CERTRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class CNAMERecord(DNSRecord):
     """The Canonical Name (CNAME) Records map an alias to the real or canonical
     name that may lie inside or outside the current zone.
@@ -834,6 +845,7 @@ class CNAMERecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class CSYNCRecord(DNSRecord):
     """ The CSYNC RRType contains, in its RDATA component, these parts: an
     SOA serial number, a set of flags, and a simple bit-list indicating
@@ -872,9 +884,12 @@ class CSYNCRecord(DNSRecord):
         self._soa_serial = soa_serial
 
         validFlags = ['soaminimum', 'immediate']
-        validRectypes = ['A', 'AAAA',  'CDS', 'CDNSKEY', 'CERT', 'CNAME', 'DHCID', 'DNAME',
-                         'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY', 'MX', 'NAPTR',
-                         'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF', 'SRV', 'TLSA',
+        validRectypes = ['A', 'AAAA', 'CDS', 'CDNSKEY', 'CERT', 'CNAME',
+                         'DHCID', 'DNAME',
+                         'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY', 'MX',
+                         'NAPTR',
+                         'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF', 'SRV',
+                         'TLSA',
                          'TXT', 'SSHFP']
 
         for flag in flags:
@@ -884,9 +899,9 @@ class CSYNCRecord(DNSRecord):
 
         for record in rectypes:
             if record not in validRectypes:
-                raise DynectInvalidArgumentError('rectypes', record, validRectypes)
+                raise DynectInvalidArgumentError('rectypes', record,
+                                                 validRectypes)
         self._rectypes = rectypes
-
 
         self.api_args = {'rdata': {'soa_serial': self._soa_serial,
                                    'flags': ','.join(self._flags),
@@ -903,11 +918,10 @@ class CSYNCRecord(DNSRecord):
 
     def _format(self):
         """cleans up Flags and record types"""
-        if not isinstance(self._flags, (list,tuple)):
+        if not isinstance(self._flags, (list, tuple)):
             self._flags = self._flags.split(',')
-        if not isinstance(self._rectypes, (list,tuple)):
+        if not isinstance(self._rectypes, (list, tuple)):
             self._rectypes = self._rectypes.split(',')
-
 
     @property
     def soa_serial(self):
@@ -951,6 +965,7 @@ class CSYNCRecord(DNSRecord):
         if self._implicitPublish:
             self._rectypes = value
         self._format()
+
 
 class DHCIDRecord(DNSRecord):
     """The :class:`~dyn.tm.records.DHCIDRecord` provides a means by which DHCP
@@ -1028,9 +1043,9 @@ class DHCIDRecord(DNSRecord):
 class DNAMERecord(DNSRecord):
     """The Delegation of Reverse Name (DNAME) Record is designed to assist the
     delegation of reverse mapping by reducing the size of the data that must be
-    entered. DNAME's are designed to be used in conjunction with a bit label but
-    do not strictly require one. However, do note that without a bit label a
-    DNAME is equivalent to a CNAME when used in a reverse-map zone file.
+    entered. DNAME's are designed to be used in conjunction with a bit label
+    but do not strictly require one. However, do note that without a bit label
+    a DNAME is equivalent to a CNAME when used in a reverse-map zone file.
     """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -1224,6 +1239,7 @@ class DNSKEYRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class DSRecord(DNSRecord):
     """The Delegation Signer (DS) record type is used in DNSSEC to create the
     chain of trust or authority from a signed parent zone to a signed child
@@ -1255,7 +1271,8 @@ class DSRecord(DNSRecord):
         else:
             super(DSRecord, self).__init__(zone, fqdn)
             self._record_type = 'DSRecord'
-            self._algorithm = self._digest = self._digtype = self._keytag = None
+            self._algorithm = self._digest = self._digtype = None
+            self._keytag = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
@@ -1305,7 +1322,7 @@ class DSRecord(DNSRecord):
 
     @property
     def digest(self):
-        """The digest in hexadecimal form. 20-byte, hexadecimal-encoded, 
+        """The digest in hexadecimal form. 20-byte, hexadecimal-encoded,
         one-way hash of the DNSKEY record surrounded by parenthesis characters
         """
         self._pull()
@@ -1482,6 +1499,7 @@ class KEYRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class KXRecord(DNSRecord):
     """The "Key Exchanger" (KX) Record type is provided with one or more
     alternative hosts.
@@ -1540,7 +1558,7 @@ class KXRecord(DNSRecord):
 
     @property
     def exchange(self):
-        """Hostname that will act as the Key Exchanger. The hostname must have 
+        """Hostname that will act as the Key Exchanger. The hostname must have
         a CNAME record, an A Record and/or an AAAA record associated with it
         """
         self._pull()
@@ -1555,7 +1573,7 @@ class KXRecord(DNSRecord):
 
     @property
     def preference(self):
-        """Numeric value for priority usage. Lower value takes precedence over 
+        """Numeric value for priority usage. Lower value takes precedence over
         higher value where two records of the same type exist on the zone/node
         """
         self._pull()
@@ -1664,8 +1682,8 @@ class LOCRecord(DNSRecord):
 
     @property
     def latitude(self):
-        """Measured in degrees, minutes, and seconds with N/S indicator for 
-        North and South. Example: 45 24 15 N, where 45 = degrees, 24 = minutes, 
+        """Measured in degrees, minutes, and seconds with N/S indicator for
+        North and South. Example: 45 24 15 N, where 45 = degrees, 24 = minutes,
         15 = seconds
         """
         self._pull()
@@ -1680,8 +1698,8 @@ class LOCRecord(DNSRecord):
 
     @property
     def longitude(self):
-        """Measured in degrees, minutes, and seconds with E/W indicator for 
-        East and West. Example 89 23 18 W, where 89 = degrees, 23 = minutes, 
+        """Measured in degrees, minutes, and seconds with E/W indicator for
+        East and West. Example 89 23 18 W, where 89 = degrees, 23 = minutes,
         18 = seconds
         """
         self._pull()
@@ -1899,6 +1917,7 @@ class IPSECKEYRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class MXRecord(DNSRecord):
     """The "Mail Exchanger" record type specifies the name and relative
     preference of mail servers for a Zone. Defined in RFC 1035
@@ -1953,7 +1972,7 @@ class MXRecord(DNSRecord):
 
     @property
     def exchange(self):
-        """Hostname of the server responsible for accepting mail messages in 
+        """Hostname of the server responsible for accepting mail messages in
         the zone
         """
         self._pull()
@@ -1968,7 +1987,7 @@ class MXRecord(DNSRecord):
 
     @property
     def preference(self):
-        """Numeric value for priority usage. Lower value takes precedence over 
+        """Numeric value for priority usage. Lower value takes precedence over
         higher value where two records of the same type exist on the zone/node
         """
         self._pull()
@@ -1992,8 +2011,9 @@ class MXRecord(DNSRecord):
 
 class NAPTRRecord(DNSRecord):
     """Naming Authority Pointer Records are a part of the Dynamic Delegation
-    Discovery System (DDDS). The NAPTR is a generic record that defines a `rule`
-    that may be applied to private data owned by a client application."""
+    Discovery System (DDDS). The NAPTR is a generic record that defines a
+    `rule` that may be applied to private data owned by a client application.
+    """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create an :class:`~dyn.tm.records.NAPTRRecord` object
@@ -2023,7 +2043,8 @@ class NAPTRRecord(DNSRecord):
         else:
             super(NAPTRRecord, self).__init__(zone, fqdn)
             self._record_type = 'NAPTRRecord'
-            self._order = self._preference = self._flags = self._services = None
+            self._order = self._preference = self._flags = None
+            self._services = None
             self._regexp = self._replacement = None
             if 'record_id' in kwargs:
                 self._get_record(kwargs['record_id'])
@@ -2065,7 +2086,7 @@ class NAPTRRecord(DNSRecord):
 
     @property
     def order(self):
-        """Indicates the required priority for processing NAPTR records. Lowest 
+        """Indicates the required priority for processing NAPTR records. Lowest
         value is used first
         """
         self._pull()
@@ -2080,7 +2101,7 @@ class NAPTRRecord(DNSRecord):
 
     @property
     def preference(self):
-        """Indicates priority where two or more NAPTR records have identical 
+        """Indicates priority where two or more NAPTR records have identical
         order values. Lowest value is used first.
         """
         self._pull()
@@ -2095,7 +2116,7 @@ class NAPTRRecord(DNSRecord):
 
     @property
     def flags(self):
-        """Should be the letter "U". This indicates that this NAPTR record 
+        """Should be the letter "U". This indicates that this NAPTR record
         terminal (E.164 number that maps directly to a URI)
         """
         self._pull()
@@ -2110,8 +2131,8 @@ class NAPTRRecord(DNSRecord):
 
     @property
     def services(self):
-        """Always starts with "e2u+" (E.164 to URI). After the e2u+ there is a 
-        string that defines the type and optionally the subtype of the URI 
+        """Always starts with "e2u+" (E.164 to URI). After the e2u+ there is a
+        string that defines the type and optionally the subtype of the URI
         where this NAPTR record points
         """
         self._pull()
@@ -2139,7 +2160,7 @@ class NAPTRRecord(DNSRecord):
 
     @property
     def replacement(self):
-        """The next domain name to find. Only applies if this NAPTR record is 
+        """The next domain name to find. Only applies if this NAPTR record is
         non-terminal
         """
         self._pull()
@@ -2228,6 +2249,7 @@ class PTRRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class PXRecord(DNSRecord):
     """The X.400 to RFC 822 E-mail RR allows mapping of ITU X.400 format e-mail
     addresses to RFC 822 format e-mail addresses using a MIXER-conformant
@@ -2285,7 +2307,7 @@ class PXRecord(DNSRecord):
 
     @property
     def preference(self):
-        """Sets priority for processing records of the same type. Lowest value 
+        """Sets priority for processing records of the same type. Lowest value
         is processed first
         """
         self._pull()
@@ -2331,6 +2353,7 @@ class PXRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
 
 class NSAPRecord(DNSRecord):
     """The Network Services Access Point record is the equivalent of an RR for
@@ -2401,6 +2424,7 @@ class NSAPRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class RPRecord(DNSRecord):
     """The Respnosible Person record allows an email address and some optional
     human readable text to be associated with a host. Due to privacy and spam
@@ -2457,7 +2481,7 @@ class RPRecord(DNSRecord):
 
     @property
     def mbox(self):
-        """Email address of the Responsible Person. Data format: Replace @ 
+        """Email address of the Responsible Person. Data format: Replace @
         symbol with a dot '.' in the address
         """
         self._pull()
@@ -2472,7 +2496,7 @@ class RPRecord(DNSRecord):
 
     @property
     def txtdname(self):
-        """Hostname where a TXT record exists with more information on the 
+        """Hostname where a TXT record exists with more information on the
         responsible person
         """
         self._pull()
@@ -2492,6 +2516,7 @@ class RPRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
 
 class NSRecord(DNSRecord):
     """Nameserver Records are used to list all the nameservers that will respond
@@ -2621,7 +2646,7 @@ class SOARecord(DNSRecord):
 
     @property
     def rname(self):
-        """Domain name which specifies the mailbox of the person responsible 
+        """Domain name which specifies the mailbox of the person responsible
         for this zone
         """
         self._pull()
@@ -2749,6 +2774,7 @@ class SPFRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class SRVRecord(DNSRecord):
     """The Services Record type allow a service to be associated with a host
     name. A user or application that wishes to discover where a service is
@@ -2767,8 +2793,8 @@ class SRVRecord(DNSRecord):
         :param target: The domain name of a host where the service is running
             on the specified port
         :param weight: Secondary prioritizing of records to serve. Records of
-            equal priority should be served based on their weight. Higher values
-            are served more often
+            equal priority should be served based on their weight. Higher
+            values are served more often
         :param ttl: TTL for the record. Set to 0 to use zone default
         """
         if 'create' in kwargs:
@@ -2826,7 +2852,7 @@ class SRVRecord(DNSRecord):
 
     @property
     def priority(self):
-        """Numeric value for priority usage. Lower value takes precedence over 
+        """Numeric value for priority usage. Lower value takes precedence over
         higher value where two records of the same type exist on the zone/node
         """
         self._pull()
@@ -2841,7 +2867,7 @@ class SRVRecord(DNSRecord):
 
     @property
     def target(self):
-        """The domain name of a host where the service is running on the 
+        """The domain name of a host where the service is running on the
         specified `port`
         """
         self._pull()
@@ -2856,8 +2882,8 @@ class SRVRecord(DNSRecord):
 
     @property
     def weight(self):
-        """Secondary prioritizing of records to serve. Records of equal 
-        priority should be served based on their weight. Higher values are 
+        """Secondary prioritizing of records to serve. Records of equal
+        priority should be served based on their weight. Higher values are
         served more often
         """
         self._pull()
@@ -2877,6 +2903,7 @@ class SRVRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
 
 class SSHFPRecord(DNSRecord):
     """"SSHFP Record
@@ -2908,8 +2935,8 @@ class SSHFPRecord(DNSRecord):
                 self._get_record(kwargs['record_id'])
             elif len(args) + len(kwargs) == 1:
                 self._get_record(*args, **kwargs)
-            elif 'algorithm' in kwargs or 'fptype' in kwargs or 'fingerprint' in \
-                   kwargs or 'ttl' in kwargs:
+            elif ('algorithm' in kwargs or 'fptype' in kwargs or
+                  'fingerprint' in kwargs or 'ttl' in kwargs):
                 self._post(*args, **kwargs)
             elif len(args) + len(kwargs) > 1:
                 self._post(*args, **kwargs)
@@ -2987,6 +3014,7 @@ class SSHFPRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
 
 class TLSARecord(DNSRecord):
     """The TLSA record is used to associate a TLS server
@@ -3192,7 +3220,6 @@ class TXTRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
-
 
 
 class UNKNOWNRecord(DNSRecord):

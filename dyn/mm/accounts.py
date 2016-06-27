@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""This module contains Dyn Message Management accounts features. It's important
-to note that any/all timestamps are expected as `datetime.datetime` instances
-and will be returned as such.
+"""This module contains Dyn Message Management accounts features. It's
+important to note that any/all timestamps are expected as `datetime.datetime`
+instances and will be returned as such.
 """
 from datetime import datetime
 
@@ -141,11 +141,11 @@ class Account(object):
         self._tracklinks = tracklinks
         self._trackunsubscribes = trackunsubscribes
         self._generatenewapikey = generatenewapikey
-        
+
         valid = ('username', 'password', 'companyname', 'phone', 'address',
-                 'city', 'state', 'zipcode', 'country', 'timezone', 'bounceurl',
-                 'spamurl', 'unsubscribeurl', 'trackopens', 'tracklinks',
-                 'trackunsubscribes', 'generatenewapikey')
+                 'city', 'state', 'zipcode', 'country', 'timezone',
+                 'bounceurl', 'spamurl', 'unsubscribeurl', 'trackopens',
+                 'tracklinks', 'trackunsubscribes', 'generatenewapikey')
         d = cleared_class_dict(self.__dict__)
         api_args = {x[1:]: d[x] for x in d if d[x] is not None and
                     x[1:] in valid}
@@ -180,6 +180,7 @@ class Account(object):
         if self._xheaders is None:
             self._get_xheaders()
         return self._xheaders
+
     @xheaders.setter
     def xheaders(self, value):
         if isinstance(value, dict) and not isinstance(value, APIDict):
@@ -197,6 +198,7 @@ class Account(object):
         with this :class:`~dyn.mm.accounts.Account`.
         """
         return self._username
+
     @username.setter
     def username(self, value):
         pass
@@ -204,6 +206,7 @@ class Account(object):
     @property
     def account_name(self):
         return self._accountname
+
     @account_name.setter
     def account_name(self, value):
         pass
@@ -214,6 +217,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account`
         """
         return self._address
+
     @address.setter
     def address(self, value):
         pass
@@ -222,6 +226,7 @@ class Account(object):
     def apikey(self):
         """The apikey for this account"""
         return self._apikey
+
     @apikey.setter
     def apikey(self, value):
         pass
@@ -230,6 +235,7 @@ class Account(object):
     def city(self):
         """The City associated with this :class:`~dyn.mm.accounts.Account`"""
         return self._city
+
     @city.setter
     def city(self, value):
         pass
@@ -240,6 +246,7 @@ class Account(object):
         registered under
         """
         return self._companyname
+
     @company_name.setter
     def company_name(self, value):
         pass
@@ -250,6 +257,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account`
         """
         return self._contactname
+
     @contact_name.setter
     def contact_name(self, value):
         pass
@@ -260,6 +268,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account`
         """
         return self._country
+
     @country.setter
     def country(self, value):
         pass
@@ -267,6 +276,7 @@ class Account(object):
     @property
     def created(self):
         return self._created
+
     @created.setter
     def created(self, value):
         pass
@@ -274,6 +284,7 @@ class Account(object):
     @property
     def email_sent(self):
         return self._emailsent
+
     @email_sent.setter
     def email_sent(self, value):
         pass
@@ -281,6 +292,7 @@ class Account(object):
     @property
     def max_sample_count(self):
         return self._max_sample_count
+
     @max_sample_count.setter
     def max_sample_count(self, value):
         pass
@@ -290,6 +302,7 @@ class Account(object):
         """The primary telephone number of the contact associated with this
         :class:`~dyn.mm.accounts.Account`"""
         return self._phone
+
     @phone.setter
     def phone(self, value):
         pass
@@ -298,6 +311,7 @@ class Account(object):
     def state(self):
         """The state associated with this :class:`~dyn.mm.accounts.Account`"""
         return self._state
+
     @state.setter
     def state(self, value):
         pass
@@ -308,6 +322,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account`
         """
         return self._timezone
+
     @timezone.setter
     def timezone(self, value):
         pass
@@ -318,6 +333,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account` will be monitored for followed links
         """
         return self._tracklinks == 1
+
     @track_links.setter
     def track_links(self, value):
         pass
@@ -328,6 +344,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account` will be monitored for opens
         """
         return self._trackopens == 1
+
     @track_opens.setter
     def track_opens(self, value):
         pass
@@ -338,6 +355,7 @@ class Account(object):
         :class:`~dyn.mm.accounts.Account` will be monitored for unsubscribes
         """
         return self._trackunsubscribes == 1
+
     @track_unsubscribes.setter
     def track_unsubscribes(self, value):
         pass
@@ -345,6 +363,7 @@ class Account(object):
     @property
     def user_type(self):
         return self._usertype
+
     @user_type.setter
     def user_type(self, value):
         pass
@@ -354,6 +373,7 @@ class Account(object):
         """The zipcode of this :class:`~dyn.mm.accounts.Account`
         """
         return self._zipcode
+
     @zipcode.setter
     def zipcode(self, value):
         pass
@@ -365,6 +385,7 @@ class Account(object):
         this field will be *None*.
         """
         return self._password
+
     @password.setter
     def password(self, value):
         pass
@@ -372,6 +393,7 @@ class Account(object):
     @property
     def emailcap(self):
         return self._emailcap
+
     @emailcap.setter
     def emailcap(self, value):
         pass
@@ -473,6 +495,7 @@ class ApprovedSender(object):
         if self._seeding is None:
             self._seeding = self.status
         return self._seeding
+
     @seeding.setter
     def seeding(self, value):
         if value in range(0, 2):
@@ -490,6 +513,7 @@ class ApprovedSender(object):
         for key in response:
             self._status = response[key]
         return self._status
+
     @status.setter
     def status(self, value):
         pass
@@ -500,6 +524,7 @@ class ApprovedSender(object):
         only aplanumeric characters, dashes, or underscores.
         """
         return self._dkim
+
     @dkim.setter
     def dkim(self, value):
         uri = '/senders/dkim'
@@ -512,6 +537,7 @@ class ApprovedSender(object):
     def spf(self):
         """SPF for this :class:`~dyn.mm.accounts.ApprovedSender`"""
         return self._spf
+
     @spf.setter
     def spf(self, value):
         pass
@@ -520,6 +546,7 @@ class ApprovedSender(object):
     def dkimval(self):
         """DKIM val for this :class:`~dyn.mm.accounts.ApprovedSender`"""
         return self._dkimval
+
     @dkimval.setter
     def dkimval(self, value):
         pass
@@ -634,6 +661,7 @@ class Suppression(object):
         specified account, filtered by date range.
         """
         return self._count
+
     @count.setter
     def count(self, value):
         pass

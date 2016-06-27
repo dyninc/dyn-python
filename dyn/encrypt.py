@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Encryption module for providing users an option to not store their DynECT DNS
-passwords in plain-text, but rather to provide a means of automatic password
-encryption. Note: password encryption requires nothing more than the the
+"""Encryption module for providing users an option to not store their DynECT
+DNS passwords in plain-text, but rather to provide a means of automatic
+password encryption. Note: password encryption requires nothing more than the
 installation of the `PyCrypto <http://www.dlitz.net/software/pycrypto/>`_.
-module. Users are free to not install PyCrypto, however, your passwords will not
-be encrypted when stored in your session instance
+module. Users are free to not install PyCrypto, however, your passwords will
+not be encrypted when stored in your session instance
 """
 import base64
 import random
@@ -68,10 +68,12 @@ try:
             enc = base64.b64decode(enc)
             iv = enc[:AES.block_size]
             cipher = AES.new(self.key, AES.MODE_CBC, iv)
-            return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+            return self._unpad(
+                cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
 
         def _pad(self, s):
-            return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+            bs_ = self.bs
+            return s + (bs_ - len(s) % bs_) * chr(bs_ - len(s) % bs_)
 
         @staticmethod
         def _unpad(s):

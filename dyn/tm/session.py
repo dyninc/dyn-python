@@ -272,7 +272,7 @@ class DynectMultiSession(DynectSession):
 
     def new_user_session(self, customer, username, password):
         """Authenticate a new user"""
-        if not (self._open_sessions):
+        if not self._open_sessions:
             raise Exception(
                 'Session empty, please create new DynectMultiSession')
         original_username = self.username
@@ -313,8 +313,10 @@ class DynectMultiSession(DynectSession):
             self.set_active_session(self._open_sessions[0]['user_name'])
         elif len(self._open_sessions) > 1:
             warnings.warn("More than one active session remains,\
-                           could not reliably fall back to a different session,\
-                           please specify session with 'set_active_session()'", RuntimeWarning)
+                           could not reliably fall back to a \
+                           different session, \
+                           please specify session with \
+                           'set_active_session()'", RuntimeWarning)
             self.username = self.password = self.customer = self._token = None
 
     def log_out(self):

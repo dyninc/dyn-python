@@ -22,6 +22,7 @@ For basic usage, you need not do anything more than simply
     >>> from dyn.tm.session import DynectSession
     >>> DynectSession('customer', 'user', 'password')
 
+
 Permissions
 -----------
 Using a :class:`~dyn.tm.session.DynectSession` instance, you can also verify
@@ -38,6 +39,29 @@ Additional Features
 -------------------
 The majority of these features exist mainly to provide a cleaner interface to working
 with sessions as Singleton types.
+
+Multiple Sessions
+~~~~~~~~~~~~~~~~~
+To manage multiple user accounts, use a :class:`~dyn.tm.session.DynectMultiSession` instance and call the `new_user_session` method
+::
+
+    >>> from dyn.tm.session import DynectMultiSession
+    >>> s = DynectMultiSession('customer', 'user', 'password')
+    >>> s.new_user_session('customer_two', 'user_two', 'password_two')
+
+This will authenticate a second user. You can then switch between your open user sessions with
+`set_active_session` by passing a username. Use the `get_open_sessions` method to get a dictionary of all
+open sessions
+::
+
+    >>> current_sessions = dynect_session.get_open_sessions()
+    >>> # loop through all open sessions
+    >>> for user in current_sessions:
+    ...     dynect_session.set_active_session(user)
+    ...     print("Zones for {0}".format(dynect_session.username))
+    ...     print(get_all_zones())
+
+`log_out_active_session` can be called to only log out of the active session. Calling `log_out` will log out of all open sessions
 
 DynectSession as a Context Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

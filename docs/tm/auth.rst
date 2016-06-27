@@ -50,14 +50,15 @@ To manage multiple user accounts, use a :class:`~dyn.tm.session.DynectMultiSessi
     >>> s.new_user_session('customer_two', 'user_two', 'password_two')
 
 This will authenticate a second user. You can then switch between your open user sessions with
-`set_active_session` by passing a username. Use the `get_open_sessions` method to get a dictionary of all
-open sessions
+`set_active_session` by passing a username. You can also pass the customer name as a keyword argument
+(in case you have the same username in two different customers).Use the `get_open_sessions` method
+to get a dictionary of all open sessions
 ::
 
     >>> current_sessions = dynect_session.get_open_sessions()
     >>> # loop through all open sessions
-    >>> for user in current_sessions:
-    ...     dynect_session.set_active_session(user)
+    >>> for session in current_sessions:
+    ...     dynect_session.set_active_session(session['user_name'], customer=session['customer'])
     ...     print("Zones for {0}".format(dynect_session.username))
     ...     print(get_all_zones())
 

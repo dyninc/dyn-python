@@ -444,7 +444,7 @@ class User(object):
         for key, val in response['data'].items():
             setattr(self, '_' + key, val)
 
-        self._get_permissions(self)
+        self._get_permissions()
 
     def _update_permissions(self):
         api_args = {'user_name': self._user_name}

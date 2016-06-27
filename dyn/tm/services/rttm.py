@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import warnings
 from datetime import datetime
 
 from dyn.compat import force_unicode
@@ -462,6 +463,10 @@ class RTTMRegion(object):
         self._autopopulate = self._ep = self._apmc = None
         self._epmc = self._serve_count = self._failover_mode = None
         self._failover_data = None
+        if len(args) != 0:
+            pool = args[0]
+        else:
+            pool = None
         if region_code not in self.valid_region_codes:
             raise DynectInvalidArgumentError('region_code', region_code,
                                              self.valid_region_codes)
@@ -469,20 +474,28 @@ class RTTMRegion(object):
         self._pool = []
         self.uri = '/RTTMRegion/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                   self._region_code)
-        if len(args) == 0 and len(kwargs) == 0:
+        # Backwards Compatability, since we changed the structure of this
+        # Class:
+        if kwargs.get('pool'):
+            warnings.warn("passing pool as keyword argument is\
+                          depreciated! please pass in as 4th argument",
+                          DeprecationWarning)
+            pool = kwargs.pop('pool')
+
+        if not pool and len(kwargs) == 0:
             self._get()
         if len(kwargs) > 0:
             self._build(kwargs)
-        if len(args) > 0:
-            for pool in args[0]:
-                if isinstance(pool, dict):
-                    rpe = RegionPoolEntry(**pool)
+        if pool:
+            for poole in pool:
+                if isinstance(poole, dict):
+                    rpe = RegionPoolEntry(**poole)
                     rpe._zone = self._zone
                     rpe._fqdn = self._fqdn
                     rpe._region_code = self._region_code
                     self._pool.append(rpe)
                 else:
-                    self._pool.append(pool)
+                    self._pool.append(poole)
         self._status = None
 
     def _post(self):

@@ -34,7 +34,7 @@ if is_py2:
     from httplib import HTTPConnection, HTTPSConnection, HTTPException
     from urllib import urlencode, pathname2url
 
-    string_types = (str, unicode)
+    string_types = (str, unicode)  # NOQA
 
     def prepare_to_send(args):
         return bytes(args)
@@ -44,7 +44,7 @@ if is_py2:
 
     def force_unicode(s, encoding='UTF-8'):
         try:
-            s = unicode(s)
+            s = unicode(s)  # NOQA
         except UnicodeDecodeError:
             s = str(s).decode(encoding, 'replace')
 
@@ -71,12 +71,12 @@ if is_py2:
         return date_string
 
 
-
 elif is_py3:
-    from http.client import HTTPConnection, HTTPSConnection, HTTPException
-    from urllib.parse import urlencode
-    from urllib.request import pathname2url
-    import json
+    from http.client import (HTTPConnection, HTTPSConnection,  # NOQA
+                             HTTPException)  # NOQA
+    from urllib.parse import urlencode  # NOQA
+    from urllib.request import pathname2url  # NOQA
+    import json  # NOQA
     string_types = (str,)
 
     def prepare_to_send(args):
@@ -97,7 +97,6 @@ elif is_py3:
         if date_string[-3] == ':':
             date_string = date_string[:-3] + date_string[-2:]
         return datetime.strptime(date_string, API_FMT)
-
 
     def date_to_str(date_obj):
         """Convert a standard python ``datetime.datetime`` object to a

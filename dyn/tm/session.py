@@ -4,11 +4,14 @@ easy access to all other functionality within the dynect library via
 methods that return various types of DynECT objects which will provide their
 own respective functionality.
 """
+import warnings
 # API Libs
-from ..core import SessionEngine
-from .errors import *
-from ..compat import force_unicode
-from ..encrypt import AESCipher
+from dyn.compat import force_unicode
+from dyn.core import SessionEngine
+from dyn.encrypt import AESCipher
+from dyn.tm.errors import (DynectAuthError, DynectCreateError,
+                           DynectUpdateError, DynectGetError,
+                           DynectDeleteError, DynectQueryTimeout)
 
 
 class DynectSession(SessionEngine):
@@ -23,6 +26,7 @@ class DynectSession(SessionEngine):
                  proxy_user=None, proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
+
         :param host: DynECT API server address
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
@@ -84,6 +88,7 @@ class DynectSession(SessionEngine):
     def _process_response(self, response, method, final=False):
         """Process an API response for failure, incomplete, or success and
         throw any appropriate errors
+
         :param response: the JSON response from the request being processed
         :param method: the HTTP method
         :param final: boolean flag representing whether or not to continue
@@ -115,6 +120,7 @@ class DynectSession(SessionEngine):
 
     def update_password(self, new_password):
         """Update the current users password
+
         :param new_password: The new password to use
         """
         uri = '/Password/'
@@ -124,6 +130,7 @@ class DynectSession(SessionEngine):
 
     def user_permissions_report(self, user_name=None):
         """Returns information regarding the requested user's permission access
+
         :param user_name: The user whose permissions will be returned. Defaults
             to the current user
         """
@@ -191,12 +198,19 @@ class DynectMultiSession(DynectSession):
                  key=None, history=False, proxy_host=None, proxy_port=None,
                  proxy_user=None, proxy_pass=None):
 
-        self._open_sessions = {}
+        self._open_sessions = []
 
-        super(DynectMultiSession, self).__init__(customer, username, password, host=host,
-                                                 port=port, ssl=ssl, api_version=api_version, auto_auth=auto_auth,
-                                                 key=key, history=history, proxy_host=proxy_host, proxy_port=proxy_port,
-                                                 proxy_user=proxy_user, proxy_pass=proxy_pass)
+        super(DynectMultiSession, self).__init__(customer, username,
+                                                 password, host=host,
+                                                 port=port, ssl=ssl,
+                                                 api_version=api_version,
+                                                 auto_auth=auto_auth,
+                                                 key=key, history=history,
+                                                 proxy_host=proxy_host,
+                                                 proxy_port=proxy_port,
+                                                 proxy_user=proxy_user,
+                                                 proxy_pass=proxy_pass)
+        self.__add_open_session()
 
     def _handle_error(self, uri, method, raw_args):
         """Handle the processing of a connection error with the api"""
@@ -213,29 +227,56 @@ class DynectMultiSession(DynectSession):
 
     def __add_open_session(self):
         """Add new open session to hash of open sessions"""
-        self._open_sessions[self.username] = {
+        # Blow away any sessions of the same user/customer.
+        self._open_sessions = [x for x in self._open_sessions
+                                  if x['user_name'] != self.username
+                                  or x['customer_name'] != self.customer]
+        self._open_sessions.append({
             'user_name': self.username,
             'password': self.password,
             'customer_name': self.customer,
             'token': self._token
-        }
+        })
 
+    @property
     def get_open_sessions(self):
         return self._open_sessions
 
-    def set_active_session(self, username):
+    def set_active_session(self, username, customer = None):
         """Set the active session from the hash of open sessions"""
-        if username in self._open_sessions:
-            self.username = self._open_sessions[username]['user_name']
-            self.password = self._open_sessions[username]['password']
-            self.customer = self._open_sessions[username]['customer_name']
-            self._token = self._open_sessions[username]['token']
+        candidate_session = [open_session for open_session
+                             in self._open_sessions
+                             if open_session['user_name'] == username]
+        if customer:
+            candidate_session = [c_session for c_session
+                                 in candidate_session
+                                 if c_session['customer_name'] == customer]
+        if len(candidate_session) > 1:
+            raise Exception("Could not sensibly determine what to set to\
+             active. Try Specifying the customer")
+        elif len(candidate_session) == 1:
+            self.username = candidate_session[0]['user_name']
+            self.password = candidate_session[0]['password']
+            self.customer = candidate_session[0]['customer_name']
+            self._token = candidate_session[0]['token']
+            self.authenticate()
+
         else:
-            raise ValueError("No open sessions for {0}".format(username))
+            if customer:
+                raise ValueError("No open sessions for\
+                     customer {0}, user {1}".format(
+                    customer, username))
+            else:
+                raise ValueError("No open sessions for user {0}".format(
+                    username))
 
     def new_user_session(self, customer, username, password):
         """Authenticate a new user"""
+        if not (self._open_sessions):
+            raise Exception(
+                'Session empty, please create new DynectMultiSession')
         original_username = self.username
+        original_customer = self.customer
         self.customer = customer
         self.username = username
         self.password = self._encrypt(password)
@@ -243,27 +284,46 @@ class DynectMultiSession(DynectSession):
             self.authenticate()
         except DynectAuthError as e:
             # revert active user session if auth failed
-            self.set_active_session(original_username)
+            self.set_active_session(original_username,
+                                    customer=original_customer)
             raise e
 
     def authenticate(self):
         super(DynectMultiSession, self).authenticate()
         self.__add_open_session()
 
+    @property
+    def current_open_session(self):
+        return {'customer': self.customer,
+                'username': self.username,
+                'password': self.password,
+                'token': self._token,
+                }
+
     def log_out_active_session(self):
         """Log the active session out from the DynECT API system"""
+        if len(self._open_sessions) == 1:
+            self.log_out()
+            return
         self.execute('/Session/', 'DELETE', {})
-        del self._open_sessions[self.username]
-
-        for user in self._open_sessions.keys():
-            self.set_active_session(user)
-            break
+        self._open_sessions[:] = (s for s in self._open_sessions
+                                 if s['user_name'] != self.username
+                                 or s['customer_name'] != self.customer)
+        if len(self._open_sessions) == 1:
+            self.set_active_session(self._open_sessions[0]['user_name'])
+        elif len(self._open_sessions) > 1:
+            warnings.warn("More than one active session remains,\
+             could not reliably fall back to a different session,\
+             please specify session with 'set_active_session()'",
+             RuntimeWarning)
+            self.username = self.password = self.customer = self._token = None
 
     def log_out(self):
         """Log the current session(s) out from the DynECT API system"""
-        for user in self._open_sessions.keys():
-            if self.username != user:
-                self.set_active_session(user)
-            self.log_out_active_session()
-
+        for session in self._open_sessions:
+            self.set_active_session(session['user_name'],
+                                    customer = session['customer_name'])
+            self.execute('/Session/', 'DELETE', {})
         self.close_session()
+        self._open_sessions = []
+        self.username = self.password = self.customer = self._token = None

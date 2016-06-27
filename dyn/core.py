@@ -28,6 +28,7 @@ def cleared_class_dict(dict_obj):
 def clean_args(dict_obj):
     """Clean a dictionary of API arguments to prevent the display of plain text
     passwords to users
+
     :param dict_obj: The dictionary of arguments to be cleaned
     """
     cleaned_args = copy.deepcopy(dict_obj)
@@ -38,6 +39,7 @@ def clean_args(dict_obj):
 
 class _Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         cur_thread = threading.current_thread()
         key = getattr(cls, '__metakey__')
@@ -65,6 +67,7 @@ class _History(list):
     """A *list* subclass specifically targeted at being able to store the
     history of calls made via a SessionEngine
     """
+
     def append(self, p_object):
         """Override builtin list append operators to allow for the automatic
         appendation of a timestamp for cleaner record keeping
@@ -79,9 +82,11 @@ class SessionEngine(Singleton):
     uri_root = '/'
 
     def __init__(self, host=None, port=443, ssl=True, history=False,
-        proxy_host=None, proxy_port=None, proxy_user=None, proxy_pass=None):
+                 proxy_host=None, proxy_port=None, proxy_user=None,
+                 proxy_pass=None):
         """Initialize a Dynect Rest Session object and store the provided
         credentials
+
         :param host: DynECT API server address
         :param port: Port to connect to DynECT API server
         :param ssl: Enable SSL
@@ -114,6 +119,7 @@ class SessionEngine(Singleton):
     def new_session(cls, *args, **kwargs):
         """Return a new session instance, regardless of whether or not there is
         already an existing session.
+
         :param args: Arguments to be passed to the Singleton __call__ method
         :param kwargs: keyword arguments to be passed to the Singleton __call__
             method
@@ -178,40 +184,52 @@ class SessionEngine(Singleton):
 
             if self.proxy_user and self.proxy_pass:
                 auth = '{}:{}'.format(self.proxy_user, self.proxy_pass)
-                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(auth)
+                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(
+                    auth)
 
         if use_proxy:
             if self.ssl:
-                msg = 'Establishing SSL connection to {}:{} with proxy {}:{}'.format(self.host,
-                                                                                     self.port,
-                                                                                     self.proxy_host,
-                                                                                     self.proxy_port)
+                s = 'Establishing SSL connection to {}:{} with proxy {}:{}'
+                msg = s.format(
+                    self.host,
+                    self.port,
+                    self.proxy_host,
+                    self.proxy_port)
                 self.logger.info(msg)
-                self._conn = HTTPSConnection(self.proxy_host, self.proxy_port, timeout=300)
+                self._conn = HTTPSConnection(self.proxy_host, self.proxy_port,
+                                             timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
             else:
-                msg = 'Establishing unencrypted connection to {}:{} with proxy {}:{}'.format(self.host,
-                                                                                             self.port,
-                                                                                             self.proxy_host,
-                                                                                             self.proxy_port)
+                s = ('Establishing unencrypted connection to {}:{} with proxy '
+                     '{}:{}')
+                msg = s.format(
+                    self.host,
+                    self.port,
+                    self.proxy_host,
+                    self.proxy_port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.proxy_host, self.proxy_port, timeout=300)
+                self._conn = HTTPConnection(self.proxy_host, self.proxy_port,
+                                            timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
         else:
             if self.ssl:
                 msg = 'Establishing SSL connection to {}:{}'.format(self.host,
                                                                     self.port)
                 self.logger.info(msg)
-                self._conn = HTTPSConnection(self.host, self.port, timeout=300)
+                self._conn = HTTPSConnection(self.host, self.port,
+                                             timeout=300)
             else:
-                msg = 'Establishing unencrypted connection to {}:{}'.format(self.host,
-                                                                            self.port)
+                msg = 'Establishing unencrypted connection to {}:{}'.format(
+                    self.host,
+                    self.port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.host, self.port, timeout=300)
+                self._conn = HTTPConnection(self.host, self.port,
+                                            timeout=300)
 
     def _process_response(self, response, method, final=False):
         """API Method. Process an API response for failure, incomplete, or
         success and throw any appropriate errors
+
         :param response: the JSON response from the request being processed
         :param method: the HTTP method
         :param final: boolean flag representing whether or not to continue
@@ -286,6 +304,7 @@ class SessionEngine(Singleton):
 
     def execute(self, uri, method, args=None, final=False):
         """Execute a commands against the rest server
+
         :param uri: The uri of the resource to access. /REST/ will be prepended
             if it is not at the beginning of the uri
         :param method: One of 'DELETE', 'GET', 'POST', or 'PUT'
@@ -305,7 +324,8 @@ class SessionEngine(Singleton):
         raw_args, args, uri = self._prepare_arguments(args, method, uri)
 
         msg = 'uri: {}, method: {}, args: {}'
-        self.logger.debug(msg.format(uri, method, clean_args(json.loads(args))))
+        self.logger.debug(
+            msg.format(uri, method, clean_args(json.loads(args))))
 
         # Send the command and deal with results
         self.send_command(uri, method, args)
@@ -329,6 +349,7 @@ class SessionEngine(Singleton):
 
     def _meta_update(self, uri, method, results):
         """Update the HTTP session token if the uri is a login or logout
+
         :param uri: the uri from the call being updated
         :param method: the api method
         :param results: the JSON results
@@ -346,6 +367,7 @@ class SessionEngine(Singleton):
     def poll_response(self, response, body):
         """Looks at a response from a REST command, and while indicates that
         the job is incomplete, poll for response
+
         :param response: the JSON response containing return codes
         :param body: the body of the HTTP response
         """
@@ -362,6 +384,7 @@ class SessionEngine(Singleton):
     def send_command(self, uri, method, args):
         """Responsible for packaging up the API request and sending it to the
         server over the established connection
+
         :param uri: The uri of the resource to interact with
         :param method: The HTTP method to use
         :param args: Encoded arguments to send to the server
@@ -390,6 +413,7 @@ class SessionEngine(Singleton):
         """When a response comes back with a status of "incomplete" we need to
         wait and poll for the status of that job until it comes back with
         success or failure
+
         :param job_id: the id of the job to poll for a response from
         :param timeout: how long (in seconds) we should wait for a valid
             response before giving up on this request
@@ -427,6 +451,7 @@ class SessionEngine(Singleton):
     def __str__(self):
         """str override"""
         return force_unicode('<{}>').format(self.name)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

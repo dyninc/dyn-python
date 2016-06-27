@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """This module contains API Wrapper implementations of the Dynamic DNS service
 """
-import logging
-
-from ..utils import Active
-from ..session import DynectSession
-from ..accounts import User
-from ...compat import force_unicode
+from dyn.compat import force_unicode
+from dyn.tm.accounts import User
+from dyn.tm.session import DynectSession
+from dyn.tm.utils import Active
 
 __author__ = 'jnappi'
 __all__ = ['DynamicDNS']
@@ -16,6 +14,7 @@ class DynamicDNS(object):
     """DynamicDNS is a service which aliases a dynamic IP Address to a static
     hostname
     """
+
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create a new :class:`DynamicDNS` service object
 
@@ -94,6 +93,7 @@ class DynamicDNS(object):
         attribute
         """
         return self._zone
+
     @zone.setter
     def zone(self, value):
         pass
@@ -104,6 +104,7 @@ class DynamicDNS(object):
         attribute
         """
         return self._fqdn
+
     @fqdn.setter
     def fqdn(self, value):
         pass
@@ -120,6 +121,7 @@ class DynamicDNS(object):
             this :class:`DynamicDNS` Service
         """
         return self._active
+
     @active.setter
     def active(self, value):
         deactivate = ('N', False)
@@ -133,6 +135,7 @@ class DynamicDNS(object):
     def record_type(self):
         """The record_type of a DDNS Service is a read-only attribute"""
         return self._record_type
+
     @record_type.setter
     def record_type(self, value):
         pass
@@ -142,6 +145,7 @@ class DynamicDNS(object):
         """The :class:`User` attribute of a DDNS Service is a read-only
         attribute"""
         return self._user
+
     @user.setter
     def user(self, value):
         pass
@@ -150,6 +154,7 @@ class DynamicDNS(object):
     def address(self):
         """IPv4 or IPv6 address for this DynamicDNS service"""
         return self._address
+
     @address.setter
     def address(self, value):
         self._address = value

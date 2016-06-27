@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-import logging
-
-from ..utils import APIList
-from ..errors import DynectInvalidArgumentError
-from ..session import DynectSession
-from ...compat import force_unicode
+from dyn.compat import force_unicode
+from dyn.tm.utils import APIList
+from dyn.tm.errors import DynectInvalidArgumentError
+from dyn.tm.session import DynectSession
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
@@ -12,6 +10,7 @@ __all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
 
 class Monitor(object):
     """A :class:`Monitor` for a GSLB Service"""
+
     def __init__(self, protocol, interval, retries=None, timeout=None,
                  port=None, path=None, host=None, header=None, expected=None):
         """Create a :class:`Monitor` object
@@ -64,8 +63,8 @@ class Monitor(object):
         """eq override for comparing :class:`HealthMonitor` objects to JSON
         response hashes or other :class:`HealthMonitor` instances
 
-        :param other: the value to compare this :class:`HealthMonitor` to. Valid
-            input types: `dict`, :class:`HealthMonitor`
+        :param other: the value to compare this :class:`HealthMonitor` to.
+            Valid input types: `dict`, :class:`HealthMonitor`
         """
         if isinstance(other, dict):
             return False
@@ -76,8 +75,8 @@ class Monitor(object):
 
     @property
     def status(self):
-        """Get the current status of this :class:`HealthMonitor` from the DynECT
-        System
+        """Get the current status of this :class:`HealthMonitor` from the
+        DynECT System
         """
         api_args = {}
         uri = '/Failover/{}/{}/'.format(self.zone, self.fqdn)
@@ -88,6 +87,7 @@ class Monitor(object):
     def protocol(self):
         """The protocol to monitor"""
         return self._protocol
+
     @protocol.setter
     def protocol(self, value):
         if value not in self.valid_protocols:
@@ -101,6 +101,7 @@ class Monitor(object):
     def interval(self):
         """How often to run this monitor"""
         return self._interval
+
     @interval.setter
     def interval(self, value):
         if value not in self.valid_intervals:
@@ -116,6 +117,7 @@ class Monitor(object):
         up
         """
         return self._retries
+
     @retries.setter
     def retries(self, value):
         self._retries = value
@@ -129,6 +131,7 @@ class Monitor(object):
         out
         """
         return self._timeout
+
     @timeout.setter
     def timeout(self, value):
         self._timeout = value
@@ -140,6 +143,7 @@ class Monitor(object):
     def port(self):
         """For HTTP(S)/SMTP/TCP probes, an alternate connection port"""
         return self._port
+
     @port.setter
     def port(self, value):
         self._port = value
@@ -151,6 +155,7 @@ class Monitor(object):
     def path(self):
         """For HTTP(S) probes, a specific path to request"""
         return self._path
+
     @path.setter
     def path(self, value):
         self._path = value
@@ -162,6 +167,7 @@ class Monitor(object):
     def host(self):
         """For HTTP(S) probes, a value to pass in to the Host"""
         return self._host
+
     @host.setter
     def host(self, value):
         self._host = value
@@ -175,6 +181,7 @@ class Monitor(object):
         separated by a newline character
         """
         return self._header
+
     @header.setter
     def header(self, value):
         self._header = value
@@ -189,6 +196,7 @@ class Monitor(object):
         this string means the monitor will report a down status
         """
         return self._expected
+
     @expected.setter
     def expected(self, value):
         self._expected = value
@@ -199,6 +207,7 @@ class Monitor(object):
     def __str__(self):
         """str override"""
         return force_unicode('<GSLBMonitor>: {}').format(self._protocol)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -208,6 +217,7 @@ class Monitor(object):
 
 class GSLBRegionPoolEntry(object):
     """:class:`GSLBRegionPoolEntry`"""
+
     def __init__(self, zone, fqdn, region_code, address, *args, **kwargs):
         """Create a :class:`GSLBRegionPoolEntry` object
 
@@ -291,6 +301,7 @@ class GSLBRegionPoolEntry(object):
     def zone(self):
         """Zone monitored by this :class:`GSLBRegionPoolEntry`"""
         return self._zone
+
     @zone.setter
     def zone(self, value):
         pass
@@ -301,6 +312,7 @@ class GSLBRegionPoolEntry(object):
         :class:`GSLBRegionPoolEntry`
         """
         return self._fqdn
+
     @fqdn.setter
     def fqdn(self, value):
         pass
@@ -309,6 +321,7 @@ class GSLBRegionPoolEntry(object):
     def region_code(self):
         """ISO Region Code for this :class:`GSLBRegionPoolEntry`"""
         return self._region_code
+
     @region_code.setter
     def region_code(self, value):
         pass
@@ -317,6 +330,7 @@ class GSLBRegionPoolEntry(object):
     def address(self):
         """The IP address or FQDN of this Node IP"""
         return self._address
+
     @address.setter
     def address(self, value):
         self._address = value
@@ -329,6 +343,7 @@ class GSLBRegionPoolEntry(object):
         :class:`GSLBRegionPoolEntry`
         """
         return self._label
+
     @label.setter
     def label(self, value):
         self._label = value
@@ -341,6 +356,7 @@ class GSLBRegionPoolEntry(object):
         :class:`GSLBRegionPoolEntry` will be served.
         """
         return self._weight
+
     @weight.setter
     def weight(self, new_weight):
         if new_weight not in self.valid_weight:
@@ -356,6 +372,7 @@ class GSLBRegionPoolEntry(object):
         'obey', 'remove', or 'no'
         """
         return self._serve_mode
+
     @serve_mode.setter
     def serve_mode(self, new_serve_mode):
         if new_serve_mode not in self.valid_serve_modes:
@@ -385,6 +402,7 @@ class GSLBRegionPoolEntry(object):
         """str override"""
         s = force_unicode('<GSLBRegionPoolEntry>: {}')
         return s.format(self._region_code)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -394,6 +412,7 @@ class GSLBRegionPoolEntry(object):
 
 class GSLBRegion(object):
     """docstring for GSLBRegion"""
+
     def __init__(self, zone, fqdn, region_code, *args, **kwargs):
         """Create a :class:`GSLBRegion` object
 
@@ -406,8 +425,8 @@ class GSLBRegion(object):
             response
         :param failover_mode: How the :class:`GSLBRegion` should failover. Must
             be one of 'ip', 'cname', 'region', 'global'
-        :param failover_data: Dependent upon failover_mode. Must be one of 'ip',
-            'cname', 'region', 'global'
+        :param failover_data: Dependent upon failover_mode. Must be one of
+            'ip', 'cname', 'region', 'global'
         """
         super(GSLBRegion, self).__init__()
         self._zone = zone
@@ -425,10 +444,10 @@ class GSLBRegion(object):
                 if key == 'pool':
                     for pool in val:
                         if isinstance(pool, dict):
-                            self._pool.append(GSLBRegionPoolEntry(self._zone,
-                                                                  self._fqdn,
-                                                                  self._region_code,
-                                                                  **pool))
+                            self._pool.append(GSLBRegionPoolEntry(
+                                self._zone, self._fqdn,
+                                self._region_code, **pool)
+                            )
                         else:
                             self._pool.append(pool)
                 else:
@@ -463,10 +482,10 @@ class GSLBRegion(object):
             if key == 'pool':
                 for pool in val:
                     if isinstance(pool, dict):
-                        self._pool.append(GSLBRegionPoolEntry(self._zone,
-                                                              self._fqdn,
-                                                              self._region_code,
-                                                              **pool))
+                        self._pool.append(GSLBRegionPoolEntry(
+                            self._zone, self._fqdn,
+                            self._region_code, **pool)
+                        )
             else:
                 setattr(self, '_' + key, val)
 
@@ -479,11 +498,10 @@ class GSLBRegion(object):
             if key == 'pool':
                 for pool in val:
                     if isinstance(pool, dict):
-                        self._pool.append(GSLBRegionPoolEntry(self._zone,
-                                                              self._fqdn,
-                                                              self._region_code,
-                                                              method=None,
-                                                              **pool))
+                        self._pool.append(GSLBRegionPoolEntry(
+                            self._zone, self._fqdn, self._region_code,
+                            method=None, **pool)
+                        )
                     else:
                         self._pool.append(pool)
             else:
@@ -497,11 +515,10 @@ class GSLBRegion(object):
             if key == 'pool':
                 for pool in val:
                     if isinstance(pool, dict):
-                        self._pool.append(GSLBRegionPoolEntry(self._zone,
-                                                              self._fqdn,
-                                                              self._region_code,
-                                                              method=None,
-                                                              **pool))
+                        self._pool.append(GSLBRegionPoolEntry(
+                            self._zone, self._fqdn, self._region_code,
+                            method=None, **pool)
+                        )
                     else:
                         self._pool.append(pool)
             else:
@@ -515,6 +532,7 @@ class GSLBRegion(object):
     def zone(self):
         """Zone monitored by this :class:`GSLBRegion`"""
         return self._zone
+
     @zone.setter
     def zone(self, value):
         pass
@@ -525,6 +543,7 @@ class GSLBRegion(object):
         :class:`GSLBRegion`
         """
         return self._fqdn
+
     @fqdn.setter
     def fqdn(self, value):
         pass
@@ -533,6 +552,7 @@ class GSLBRegion(object):
     def region_code(self):
         """ISO region code of this :class:`GSLBRegion`"""
         return self._region_code
+
     @region_code.setter
     def region_code(self, value):
         pass
@@ -541,6 +561,7 @@ class GSLBRegion(object):
     def serve_count(self):
         """How many records will be returned in each DNS response"""
         return self._serve_count
+
     @serve_count.setter
     def serve_count(self, value):
         self._serve_count = value
@@ -553,6 +574,7 @@ class GSLBRegion(object):
         'cname', 'region', 'global'
         """
         return self._failover_mode
+
     @failover_mode.setter
     def failover_mode(self, value):
         self._failover_mode = value
@@ -561,10 +583,11 @@ class GSLBRegion(object):
 
     @property
     def failover_data(self):
-        """Dependent upon failover_mode. Must be one of 'ip', 'cname', 'region',
-        'global'
+        """Dependent upon failover_mode. Must be one of 'ip', 'cname',
+        'region', 'global'
         """
         return self._failover_data
+
     @failover_data.setter
     def failover_data(self, value):
         self._failover_data = value
@@ -575,6 +598,7 @@ class GSLBRegion(object):
     def pool(self):
         """The IP Pool list for this :class:`GSLBRegion`"""
         return self._pool
+
     @pool.setter
     def pool(self, value):
         self._pool = value
@@ -602,6 +626,7 @@ class GSLBRegion(object):
     def __str__(self):
         """str override"""
         return force_unicode('<GSLBRegion>: {}').format(self._region_code)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):
@@ -611,6 +636,7 @@ class GSLBRegion(object):
 
 class GSLB(object):
     """A Global Server Load Balancing (GSLB) service"""
+
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create a :class:`GSLB` object
 
@@ -619,10 +645,10 @@ class GSLB(object):
             active status or if the service should remain in failover until
             manually reset. Must be 'Y' or 'N'
         :param ttl: Time To Live in seconds of records in the service. Must be
-            less than 1/2 of the Health Probe's monitoring interval. Must be one
-            of 30, 60, 150, 300, or 450
-        :param notify_events: A comma separated list of the events which trigger
-            notifications. Must be one of 'ip', 'svc', or 'nosrv'
+            less than 1/2 of the Health Probe's monitoring interval. Must be
+            one of 30, 60, 150, 300, or 450
+        :param notify_events: A comma separated list of the events which
+            trigger notifications. Must be one of 'ip', 'svc', or 'nosrv'
         :param syslog_server: The Hostname or IP address of a server to receive
             syslog notifications on monitoring events
         :param syslog_port: The port where the remote syslog server listens for
@@ -633,9 +659,10 @@ class GSLB(object):
             'auth', 'syslog', 'lpr', 'news', 'uucp', 'cron', 'authpriv', 'ftp',
             'ntp', 'security', 'console', 'local0', 'local1', 'local2',
             'local3', 'local4', 'local5', 'local6', or 'local7'
-        :param syslog_delivery: The syslog delivery action type. 'all' will deliver
-            notifications no matter what the endpoint state. 'change' (default) will
-            deliver only on change in the detected endpoint state
+        :param syslog_delivery: The syslog delivery action type. 'all' will
+            deliver notifications no matter what the endpoint state. 'change'
+            (default) will deliver only on change in the detected endpoint
+            state
         :param region: A list of :class:`GSLBRegion`'s
         :param monitor: The health :class:`Monitor` for this service
         :param contact_nickname: Name of contact to receive notifications
@@ -654,7 +681,8 @@ class GSLB(object):
             %adr	address of monitored node
             %med	median value
             %rts	response times (RTTM)
-        :param recovery_delay: number of up status polling intervals to consider service up
+        :param recovery_delay: number of up status polling intervals to
+            consider service up
         """
 
         super(GSLB, self).__init__()
@@ -688,9 +716,9 @@ class GSLB(object):
 
     def _post(self, contact_nickname, region, auto_recover=None, ttl=None,
               notify_events=None, syslog_server=None, syslog_port=514,
-              syslog_ident='dynect', syslog_facility='daemon', syslog_probe_fmt = None,
-              syslog_status_fmt = None, monitor=None, syslog_delivery='change',
-              recovery_delay = None):
+              syslog_ident='dynect', syslog_facility='daemon',
+              syslog_probe_fmt=None, syslog_status_fmt=None, monitor=None,
+              syslog_delivery='change', recovery_delay=None):
         """Create a new :class:`GSLB` service object on the DynECT System"""
         self._auto_recover = auto_recover
         self._ttl = ttl
@@ -802,11 +830,13 @@ class GSLB(object):
 
     @property
     def auto_recover(self):
-        """Indicates whether or not the service should automatically come out of
-         failover when the IP addresses resume active status or if the service
-         should remain in failover until manually reset. Must be 'Y' or 'N'
-         """
+        """Indicates whether or not the service should automatically come out
+        of failover when the IP addresses resume active status or if the
+        service should remain in failover until manually reset. Must be 'Y' or
+        'N'
+        """
         return self._auto_recover
+
     @auto_recover.setter
     def auto_recover(self, value):
         if value not in self.valid_auto_recover:
@@ -828,6 +858,7 @@ class GSLB(object):
                                                        api_args)
         self._status = respnose['data']['status']
         return self._status
+
     @status.setter
     def status(self, value):
         pass
@@ -844,6 +875,7 @@ class GSLB(object):
             this :class:`GSLB` Service
         """
         return self._active
+
     @active.setter
     def active(self, value):
         deactivate = ('N', False)
@@ -860,6 +892,7 @@ class GSLB(object):
         150, 300, or 450
         """
         return self._ttl
+
     @ttl.setter
     def ttl(self, value):
         if value not in self.valid_ttls:
@@ -876,6 +909,7 @@ class GSLB(object):
         Must be one of 'ip', 'svc', or 'nosrv'
         """
         return self._notify_events
+
     @notify_events.setter
     def notify_events(self, value):
         if value not in self.valid_notify_events:
@@ -894,6 +928,7 @@ class GSLB(object):
         """
         self._get()
         return self._syslog_server
+
     @syslog_server.setter
     def syslog_server(self, value):
         self._syslog_server = value
@@ -907,6 +942,7 @@ class GSLB(object):
         """The port where the remote syslog server listens for notifications"""
         self._get()
         return self._syslog_port
+
     @syslog_port.setter
     def syslog_port(self, value):
         self._syslog_port = value
@@ -920,6 +956,7 @@ class GSLB(object):
         """The ident to use when sending syslog notifications"""
         self._get()
         return self._syslog_ident
+
     @syslog_ident.setter
     def syslog_ident(self, value):
         self._syslog_ident = value
@@ -930,14 +967,15 @@ class GSLB(object):
 
     @property
     def syslog_facility(self):
-        """The syslog facility to use when sending syslog notifications. Must be
-        one of 'kern', 'user', 'mail', 'daemon', 'auth', 'syslog', 'lpr',
-        'news', 'uucp', 'cron', 'authpriv', 'ftp', 'ntp', 'security', 'console',
-        'local0', 'local1', 'local2', 'local3', 'local4', 'local5', 'local6', or
-        'local7'
+        """The syslog facility to use when sending syslog notifications. Must
+        be one of 'kern', 'user', 'mail', 'daemon', 'auth', 'syslog', 'lpr',
+        'news', 'uucp', 'cron', 'authpriv', 'ftp', 'ntp', 'security',
+        'console', 'local0', 'local1', 'local2', 'local3', 'local4', 'local5',
+        'local6', or 'local7'
         """
         self._get()
         return self._syslog_facility
+
     @syslog_facility.setter
     def syslog_facility(self, value):
         if value not in self.valid_syslog_facility:
@@ -1001,6 +1039,7 @@ class GSLB(object):
     def region(self):
         """A list of :class:`GSLBRegion`'s"""
         return self._region
+
     @region.setter
     def region(self, value):
         if isinstance(value, list) and not isinstance(value, APIList):
@@ -1014,6 +1053,7 @@ class GSLB(object):
     def monitor(self):
         """The health :class:`Monitor` for this service"""
         return self._monitor
+
     @monitor.setter
     def monitor(self, value):
         # We're only going accept new monitors of type Monitor
@@ -1030,6 +1070,7 @@ class GSLB(object):
         service
         """
         return self._contact_nickname
+
     @contact_nickname.setter
     def contact_nickname(self, value):
         self._contact_nickname = value
@@ -1046,6 +1087,7 @@ class GSLB(object):
     def __str__(self):
         """str override"""
         return force_unicode('<GSLB>: {}').format(self._fqdn)
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

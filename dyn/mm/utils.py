@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """Utilities for use across the Message Manamgent module"""
-from datetime import datetime
-from dyn.compat import (str_to_date, date_to_str)
 
 
 class APIDict(dict):
     """Custom API Dict type"""
+
     def __init__(self, session_func, uri=None, *args, **kwargs):
         super(APIDict, self).__init__(*args, **kwargs)
         self.session_func = session_func

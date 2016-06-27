@@ -38,7 +38,7 @@ class Task(object):
         """Build this object from the data returned in an API response"""
         for key, val in data.items():
             if key == 'args':
-                self._args = [{varg['name'][1:]: varg['value']}
+                self._args = [{varg['name']: varg['value']}
                               for varg in val]
             else:
                 setattr(self, '_' + key, val)

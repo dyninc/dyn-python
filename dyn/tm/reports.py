@@ -2,8 +2,7 @@
 """This module contains interfaces for all Report generation features of the
 REST API
 """
-import json
-from datetime import datetime, time
+from datetime import datetime
 
 from .utils import unix_date
 from .session import DynectSession

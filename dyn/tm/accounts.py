@@ -448,8 +448,8 @@ class User(object):
 
     def _update_permissions(self):
         api_args = {'user_name': self._user_name}
-        response = DynectSession.get_session().execute(self._permission_report_uri, 'POST',
-                                                       api_args)
+        response = DynectSession.get_session().execute(self._permission_report_uri,
+                                                       'POST', api_args)
 
         for val in response['data']['allowed']:
             self._permissions.append(val['name'])
@@ -465,8 +465,8 @@ class User(object):
 
     def _get_permissions(self):
         api_args = {'user_name': self._user_name}
-        response = DynectSession.get_session().execute(self._permission_report_uri, 'POST',
-                                                       api_args)
+        response = DynectSession.get_session().execute(self._permission_report_uri,
+                                                       'POST', api_args)
 
         for val in response['data']['allowed']:
             self._permissions.append(val['name'])
@@ -732,7 +732,8 @@ class User(object):
         """
         if permission not in self._permissions:
             self._permissions.append(permission)
-            uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
+            uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name,
+                                                       permission)
             DynectSession.get_session().execute(uri, 'POST')
 
     def replace_permissions(self, permissions=None):

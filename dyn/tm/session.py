@@ -229,8 +229,8 @@ class DynectMultiSession(DynectSession):
         """Add new open session to hash of open sessions"""
         # Blow away any sessions of the same user/customer.
         self._open_sessions = [x for x in self._open_sessions
-                                  if x['user_name'] != self.username
-                                  or x['customer_name'] != self.customer]
+                               if x['user_name'] != self.username or
+                               x['customer_name'] != self.customer]
         self._open_sessions.append({
             'user_name': self.username,
             'password': self.password,
@@ -242,7 +242,7 @@ class DynectMultiSession(DynectSession):
     def get_open_sessions(self):
         return self._open_sessions
 
-    def set_active_session(self, username, customer = None):
+    def set_active_session(self, username, customer=None):
         """Set the active session from the hash of open sessions"""
         candidate_session = [open_session for open_session
                              in self._open_sessions
@@ -307,22 +307,21 @@ class DynectMultiSession(DynectSession):
             return
         self.execute('/Session/', 'DELETE', {})
         self._open_sessions[:] = (s for s in self._open_sessions
-                                 if s['user_name'] != self.username
-                                 or s['customer_name'] != self.customer)
+                                  if s['user_name'] != self.username or
+                                  s['customer_name'] != self.customer)
         if len(self._open_sessions) == 1:
             self.set_active_session(self._open_sessions[0]['user_name'])
         elif len(self._open_sessions) > 1:
             warnings.warn("More than one active session remains,\
-             could not reliably fall back to a different session,\
-             please specify session with 'set_active_session()'",
-             RuntimeWarning)
+                           could not reliably fall back to a different session,\
+                           please specify session with 'set_active_session()'", RuntimeWarning)
             self.username = self.password = self.customer = self._token = None
 
     def log_out(self):
         """Log the current session(s) out from the DynECT API system"""
         for session in self._open_sessions:
             self.set_active_session(session['user_name'],
-                                    customer = session['customer_name'])
+                                    customer=session['customer_name'])
             self.execute('/Session/', 'DELETE', {})
         self.close_session()
         self._open_sessions = []

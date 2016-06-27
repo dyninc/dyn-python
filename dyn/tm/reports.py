@@ -128,6 +128,60 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
                                                    'POST', api_args)
     return response['data']
 
+"""
+def get_qph_csv(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None, zones=None):
+    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+    titles = rows[0].split(",")
+    data = rows[1:]
+
+    title_dict = {}
+    title_dict['Timestamp'] = 0
+    if breakdown is not None:
+        title_dict[breakdown_map[breakdown]] = 1
+    title_dict['Queries'] = len(title_dict.keys())
+
+    new_csv = ''
+    old_csv = ''
+
+    last_time = None
+    total_queries = 0
+    last_breakdown = None
+
+    for row in data:
+        columns = row.split(",")
+        timestamp = int(columns[title_dict['Timestamp']])
+        queries = int(columns[title_dict['Queries']])
+        other = None
+        this_time = datetime.fromtimestamp(timestamp)
+        if last_time is None:
+            last_time = this_time
+
+        if breakdown is not None:
+            other = columns[title_dict[breakdown_map[breakdown]]]
+
+        old_csv += this_time.strftime("%x %H:%M") + ' - ' + str(timestamp) + ', ' + ('' if other is None else (other + ', ')) + str(queries) + '\n'
+
+        if last_breakdown is None and other is not None:
+            last_breakdown = other
+
+        if last_time.hour != this_time.hour or (breakdown is not None and last_breakdown != other):
+            new_csv += last_time.strftime("%x %H:%M") + ' - ' + str(timestamp) + ', ' + ('' if other is None else (other + ', ')) + str(total_queries) + '\n'
+
+            total_queries = 0
+
+        total_queries += queries
+        last_time = this_time
+        last_breakdown = other
+
+    if last_time is not None:
+        new_csv += last_time.strftime("%x %H:%M") + ' - ' + str(timestamp) + ', ' + ('' if other is None else (other + ', ')) + str(total_queries) + '\n'
+
+    return new_csv, old_csv
+"""
+
 
 def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
                    zones=None):
@@ -221,7 +275,7 @@ def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     # if we have a breakdown
     if breakdown is not None:
         # order keys by breakdown (zones, rrecs, or hosts) and timestamp
-        rows = sorted(rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
+        rows = sorted(formatted_rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
 
     for row in formatted_rows:
         epoch = int(row['Timestamp'])
@@ -348,7 +402,7 @@ def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     # if we have a breakdown
     if breakdown is not None:
         # order keys by breakdown (zones, rrecs, or hosts) and timestamp
-        rows = sorted(rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
+        rows = sorted(formatted_rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
 
     for row in formatted_rows:
         epoch = int(row['Timestamp'])

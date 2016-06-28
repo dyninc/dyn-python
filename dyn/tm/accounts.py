@@ -418,7 +418,7 @@ class User(object):
                     'fax': fax, 'notify_email': notify_email,
                     'pager_email': pager_email, 'post_code': post_code,
                     'group_name': group_name, 'permissions': permission,
-                    'zone': zone, 'forbid': forbid, 'status': status,
+                    'zone': zone, 'forbid': forbid,
                     'website': website}
 
         self._password = password

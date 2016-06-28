@@ -409,6 +409,18 @@ class User(object):
         """Create a new :class:`~dyn.tm.accounts.User` object on the DynECT
         System
         """
+
+        api_args = {'password': password, 'email': email,
+                    'first_name': first_name, 'last_name': last_name,
+                    'nickname': nickname, 'organization': organization,
+                    'phone': phone, 'address': address,
+                    'address_2': address_2, 'city': city, 'country': country,
+                    'fax': fax, 'notify_email': notify_email,
+                    'pager_email': pager_email, 'post_code': post_code,
+                    'group_name': group_name, 'permissions': permission,
+                    'zone': zone, 'forbid': forbid, 'status': status,
+                    'website': website}
+
         self._password = password
         self._email = email
         self._first_name = first_name
@@ -430,9 +442,9 @@ class User(object):
         self._forbid = forbid
         self._status = status
         self._website = website
-        response = DynectSession.get_session().execute(self.uri, 'POST', self)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+
+        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        self._build(response['data'])
 
     def _get(self):
         """Get an existing :class:`~dyn.tm.accounts.User` object from the
@@ -441,9 +453,7 @@ class User(object):
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
-
+        self._build(response['data'])
         self._get_permissions()
 
     def _update_permissions(self):
@@ -460,7 +470,11 @@ class User(object):
     def _update(self, api_args=None):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
-        for key, val in response['data'].items():
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Private build method"""
+        for key, val in data.items():
             setattr(self, '_' + key, val)
 
     def _get_permissions(self):

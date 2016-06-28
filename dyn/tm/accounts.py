@@ -384,9 +384,9 @@ class User(object):
         self._phone = self._address = self._address_2 = self._city = None
         self._country = self._fax = self._notify_email = None
         self._pager_email = self._post_code = self._group_name = None
-        self._permission = self._zone = self._forbid = self._status = None
+        self._zone = self._forbid = self._status = None
         self._website = None
-        self._permissions = []
+        self._permission = []
         self.permission_groups = []
         self.groups = []
         if 'api' in kwargs:
@@ -417,7 +417,7 @@ class User(object):
                     'address_2': address_2, 'city': city, 'country': country,
                     'fax': fax, 'notify_email': notify_email,
                     'pager_email': pager_email, 'post_code': post_code,
-                    'group_name': group_name, 'permissions': permission,
+                    'group_name': group_name, 'permission': permission,
                     'zone': zone, 'forbid': forbid,
                     'website': website}
 
@@ -437,7 +437,7 @@ class User(object):
         self._pager_email = pager_email
         self._post_code = post_code
         self._group_name = group_name
-        self._permissions = permission
+        self._permission = permission
         self._zone = zone
         self._forbid = forbid
         self._status = status
@@ -455,15 +455,15 @@ class User(object):
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
         self._build(response['data'])
-        self._get_permissions()
+        self._get_permission()
 
-    def _update_permissions(self):
+    def _update_permission(self):
         api_args = {'user_name': self._user_name}
         response = DynectSession.get_session().execute(
             self._permission_report_uri, 'POST', api_args)
 
         for val in response['data']['allowed']:
-            self._permissions.append(val['name'])
+            self._permission.append(val['name'])
             for zone in val['zone']:
                 if zone['zone_name'] not in self._zone:
                     self._zone.append(zone['zone_name'])
@@ -478,13 +478,13 @@ class User(object):
         for key, val in data.items():
             setattr(self, '_' + key, val)
 
-    def _get_permissions(self):
+    def _get_permission(self):
         api_args = {'user_name': self._user_name}
         response = DynectSession.get_session().execute(
             self._permission_report_uri, 'POST', api_args)
 
         for val in response['data']['allowed']:
-            self._permissions.append(val['name'])
+            self._permission.append(val['name'])
 
     @property
     def user_name(self):
@@ -680,7 +680,7 @@ class User(object):
         """A list of permissions assigned to this
         :class:`~dyn.tm.accounts.User`
         """
-        return self._permissions
+        return self._permission
 
     @permission.setter
     def permission(self, value):
@@ -745,13 +745,13 @@ class User(object):
 
         :param permission: the permission to add
         """
-        if permission not in self._permissions:
-            self._permissions.append(permission)
+        if permission not in self._permission:
+            self._permission.append(permission)
             uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name,
                                                        permission)
             DynectSession.get_session().execute(uri, 'POST')
 
-    def replace_permissions(self, permissions=None):
+    def replace_permission(self, permission=None):
         """Replaces the list of permissions for this
         :class:`~dyn.tm.accounts.User`
 
@@ -760,11 +760,11 @@ class User(object):
             :class:`~dyn.tm.accounts.User`
         """
         api_args = {}
-        if permissions is not None:
-            api_args['permissions'] = permissions
-            self._permissions = permissions
+        if permission is not None:
+            api_args['permission'] = permission
+            self._permission = permission
         else:
-            self._permissions = []
+            self._permission = []
         uri = '/UserPermissionEntry/{}/'.format(self._user_name)
         DynectSession.get_session().execute(uri, 'PUT', api_args)
 
@@ -774,8 +774,8 @@ class User(object):
 
         :param permission: the permission to remove
         """
-        if permission in self._permissions:
-            self._permissions.remove(permission)
+        if permission in self._permission:
+            self._permission.remove(permission)
         uri = '/UserPermissionEntry/{}/{}/'.format(self._user_name, permission)
         DynectSession.get_session().execute(uri, 'DELETE')
 
@@ -813,7 +813,7 @@ class User(object):
         :param group: the permissions group to remove from this
             :class:`~dyn.tm.accounts.User`
         """
-        if group in self.permissions:
+        if group in self.permission:
             self.permission_groups.remove(group)
         uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
         DynectSession.get_session().execute(uri, 'DELETE')

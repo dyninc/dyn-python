@@ -443,7 +443,8 @@ class User(object):
         self._status = status
         self._website = website
 
-        response = DynectSession.get_session().execute(self.uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
         self._build(response['data'])
 
     def _get(self):

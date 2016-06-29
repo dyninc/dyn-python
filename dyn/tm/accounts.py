@@ -823,8 +823,13 @@ class User(object):
 
         :param zone: the zone to add
         """
-        if zone not in self._zone:
-            self._zone.append(zone)
+        if self._zone is not None:
+            if zone not in self._zone:
+                self._zone.append(zone)
+                uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
+                DynectSession.get_session().execute(uri, 'POST')
+        else:
+            self._zone = [zone]
             uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
             DynectSession.get_session().execute(uri, 'POST')
 

@@ -118,6 +118,7 @@ class Zone(object):
         self._contact = self._ttl = self._serial_style = self._serial = None
         self._zone = self._status = None
         self.records = {}
+        self._task_id = None
         self.services = {}
         self.uri = '/Zone/{}/'.format(self._name)
         if 'api' in kwargs:
@@ -173,8 +174,9 @@ class Zone(object):
             content = f.read()
             f.close()
             api_args = {'file': content}
-            DynectSession.get_session().execute(uri, 'POST', api_args)
+            response = DynectSession.get_session().execute(uri, 'POST', api_args)
             self.__poll_for_get()
+            self._build(response['data'])
 
     def _xfer(self, master_ip, timeout=None):
         """Create a :class:`Zone` by ZoneTransfer by providing an optional
@@ -182,7 +184,8 @@ class Zone(object):
         """
         uri = '/ZoneTransfer/{}/'.format(self.name)
         api_args = {'master_ip': master_ip}
-        DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        self._build(response['data'])
         time_out = timeout or 10
         count = 0
         while count < time_out:
@@ -235,7 +238,6 @@ class Zone(object):
     def _build(self, data):
         """Build the variables in this object by pulling out the data from data
         """
-        self._task_id = None
         for key, val in data.items():
             if key == "task_id" and not val:
                 self._task_id = None
@@ -763,6 +765,7 @@ class SecondaryZone(object):
         self._zone = self._name = zone
         self.uri = '/Secondary/{}/'.format(self._zone)
         self._masters = self._contact_nickname = self._tsig_key_name = None
+        self._task_id = None
         if 'api' in kwargs:
             del kwargs['api']
             for key, val in kwargs.items():
@@ -806,7 +809,6 @@ class SecondaryZone(object):
     def _build(self, data):
         """Build the variables in this object by pulling out the data from data
         """
-        self._task_id = None
         for key, val in data.items():
             if key == "task_id" and not val:
                 self._task_id = None

@@ -285,10 +285,12 @@ class RegionPoolEntry(object):
         self._address = address
         self._label = label
         self._task_id = None
+        self._zone = kwargs.get('zone')
+        self._fqdn = kwargs.get('fqdn')
+        self._region_code = kwargs.get('region_code')
         if weight not in range(1, 16):
             raise DynectInvalidArgumentError('weight', weight, '1-15')
         self._weight = weight
-        self._zone = self._fqdn = self._region_code = None
         if serve_mode not in self.valid_modes:
             raise DynectInvalidArgumentError('serve_mode', serve_mode,
                                              self.valid_modes)
@@ -317,7 +319,6 @@ class RegionPoolEntry(object):
     def _build(self, data):
         """Build the variables in this object by pulling out the data from data
         """
-        self._task_id = None
         for key, val in data.items():
             if key == "task_id" and not val:
                 self._task_id = None
@@ -329,7 +330,7 @@ class RegionPoolEntry(object):
     @property
     def task(self):
         """:class:`Task` for most recent system
-        action on this :class:`ActiveFailover`."""
+        action on this :class:`RegionPoolEntry`."""
         if self._task_id:
             self._task_id.refresh()
         return self._task_id
@@ -352,6 +353,36 @@ class RegionPoolEntry(object):
     def address(self, new_address):
         api_args = {'new_address': new_address}
         self._update(api_args)
+
+    @property
+    def zone(self):
+        """Zone for this :class:`RegionPoolEntry`,
+         this is stored locally for REST command completion"""
+        return self._zone
+
+    @zone.setter
+    def zone(self, zone):
+        self._zone = zone
+
+    @property
+    def fqdn(self):
+        """FQDN for this :class:`RegionPoolEntry`,
+         this is stored locally for REST command completion"""
+        return self._fqdn
+
+    @fqdn.setter
+    def fqdn(self, fqdn):
+        self._fqdn = fqdn
+
+    @property
+    def region_code(self):
+        """region_code for this :class:`RegionPoolEntry`,
+         this is stored locally for REST command completion"""
+        return self._region_code
+
+    @region_code.setter
+    def region_code(self, region_code):
+        self._region_code = region_code
 
     @property
     def label(self):
@@ -392,15 +423,6 @@ class RegionPoolEntry(object):
         self._serve_mode = serve_mode
         api_args = {'serve_mode': self._serve_mode}
         self._update(api_args)
-
-    @property
-    def region_code(self):
-        """Name of the region"""
-        return self._region_code
-
-    @region_code.setter
-    def region_code(self, value):
-        pass
 
     def to_json(self):
         """Return a JSON representation of this RegionPoolEntry"""
@@ -489,12 +511,18 @@ class RTTMRegion(object):
         if pool:
             for poole in pool:
                 if isinstance(poole, dict):
-                    rpe = RegionPoolEntry(**poole)
-                    rpe._zone = self._zone
-                    rpe._fqdn = self._fqdn
-                    rpe._region_code = self._region_code
+                    rpe = RegionPoolEntry(zone=self._zone,
+                                          fqdn=self._fqdn,
+                                          region_code=self._region_code,
+                                          **poole)
                     self._pool.append(rpe)
                 else:
+                    if not poole.zone:
+                        poole.zone = self._zone
+                    if not poole.fqdn:
+                        poole.fqdn = self._fqdn
+                    if not poole.region_code:
+                        poole.region_code = self._region_code
                     self._pool.append(poole)
         self._status = None
 
@@ -502,7 +530,7 @@ class RTTMRegion(object):
         """Create a new :class:`RTTMRegion` on the DynECT System"""
         uri = '/RTTMRegion/{}/{}/'.format(self._zone, self._fqdn)
         api_args = {'region_code': self._region_code,
-                    'pool': self._pool.to_json()}
+                    'pool': [poole.to_json() for poole in self._pool]}
         if self._autopopulate:
             if self._autopopulate not in ('Y', 'N'):
                 raise DynectInvalidArgumentError('autopopulate',
@@ -546,7 +574,6 @@ class RTTMRegion(object):
         self._build(response['data'])
 
     def _build(self, data):
-        self._task_id = None
         for key, val in data.items():
             if key == 'pool':
                 pass
@@ -892,7 +919,6 @@ class RTTM(object):
 
     def _build(self, data):
         """Build the neccesary substructures under this :class:`RTTM`"""
-        self._task_id = None
         for key, val in data.items():
             if key == 'region':
                 self._region = APIList(DynectSession.get_session, 'region')

@@ -294,7 +294,6 @@ class GSLBRegionPoolEntry(object):
     def _build(self, data):
         """Build the variables in this object by pulling out the data from data
         """
-        self._task_id = None
         for key, val in data.items():
             if key == "task_id" and not val:
                 self._task_id = None
@@ -487,7 +486,8 @@ class GSLBRegion(object):
         self._failover_mode = failover_mode
         self._failover_data = failover_data
         uri = '/GSLBRegion/{}/{}/'.format(self._zone, self._fqdn)
-        api_args = {'pool': self._pool.to_json()}
+        api_args = {'pool': self._pool.to_json(),
+                    'region_code': self._region_code}
         if serve_count:
             api_args['serve_count'] = self._serve_count
         if self._failover_mode:
@@ -502,7 +502,7 @@ class GSLBRegion(object):
                                                  self._failover_data,
                                                  self.valid_modes)
             api_args['failover_data'] = self._failover_data
-        response = DynectSession.get_session()(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
         self._build(response['data'])
 
     def _get(self):
@@ -519,7 +519,7 @@ class GSLBRegion(object):
         self._build(response['data'])
 
     def _build(self, data):
-        self._task_id = None
+        self._pool = []
         for key, val in data.items():
             if key == 'pool':
                 for pool in val:
@@ -803,7 +803,6 @@ class GSLB(object):
         :param region: Boolean flag specifying whether to rebuild the region
             objects or not
         """
-        self._task_id = None
         for key, val in data.items():
             if key == 'region':
                 if region:

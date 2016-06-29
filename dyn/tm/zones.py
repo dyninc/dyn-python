@@ -174,7 +174,8 @@ class Zone(object):
             content = f.read()
             f.close()
             api_args = {'file': content}
-            response = DynectSession.get_session().execute(uri, 'POST', api_args)
+            response = DynectSession.get_session().execute(
+                uri, 'POST', api_args)
             self.__poll_for_get()
             self._build(response['data'])
 

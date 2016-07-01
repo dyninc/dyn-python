@@ -830,13 +830,12 @@ class User(object):
         api_args = {'recurse': recurse}
         if self._zone is not None:
             if zone not in self._zone:
-                self._zone.append(zone)
                 uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
                 DynectSession.get_session().execute(uri, 'POST')
         else:
-            self._zone = [zone]
             uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
             DynectSession.get_session().execute(uri, 'POST')
+        self._get_permission()
 
     def replace_zones(self, zones):
         """Remove this specific zones from the
@@ -848,11 +847,9 @@ class User(object):
         api_args = {}
         if zones is not None:
             api_args['zone'] = zones
-            self._zone = [zone['zone_name'] for zone in zones]
-        else:
-            self._zone = []
         uri = '/UserZoneEntry/{}/'.format(self._user_name)
         DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self._get_permission()
 
     def delete_zone(self, zone):
         """Remove this specific zones from the
@@ -860,10 +857,9 @@ class User(object):
 
         :param zone: the zone to remove
         """
-        if zone in self._zone:
-            self._zone.remove(zone)
         uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
         DynectSession.get_session().execute(uri, 'DELETE')
+        self._get_permission()
 
     def add_forbid_rule(self, permission, zone=None):
         """Adds the forbid rule to the :class:`~dyn.tm.accounts.User`'s

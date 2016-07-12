@@ -461,12 +461,8 @@ class User(object):
         api_args = {'user_name': self._user_name}
         response = DynectSession.get_session().execute(
             self._permission_report_uri, 'POST', api_args)
+        self._build_permission(response)
 
-        for val in response['data']['allowed']:
-            self._permission.append(val['name'])
-            for zone in val['zone']:
-                if zone['zone_name'] not in self._zone:
-                    self._zone.append(zone['zone_name'])
 
     def _update(self, api_args=None):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
@@ -482,9 +478,16 @@ class User(object):
         api_args = {'user_name': self._user_name}
         response = DynectSession.get_session().execute(
             self._permission_report_uri, 'POST', api_args)
+        self._build_permission(response)
 
+
+    def _build_permission(self, response):
+        self._zone = list()
         for val in response['data']['allowed']:
             self._permission.append(val['name'])
+            for zone in val['zone']:
+                if zone['zone_name'] not in self._zone:
+                    self._zone.append(zone['zone_name'])
 
     @property
     def user_name(self):
@@ -818,35 +821,35 @@ class User(object):
         uri = '/UserGroupEntry/{}/{}/'.format(self._user_name, group)
         DynectSession.get_session().execute(uri, 'DELETE')
 
-    def add_zone(self, zone):
+    def add_zone(self, zone, recurse='Y'):
         """Add individual zones to this :class:`~dyn.tm.accounts.User`
-
         :param zone: the zone to add
+        :param recurse: determine if permissions should be extended to
+         subzones.
         """
+        api_args = {'recurse': recurse}
         if self._zone is not None:
             if zone not in self._zone:
-                self._zone.append(zone)
                 uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
                 DynectSession.get_session().execute(uri, 'POST')
         else:
-            self._zone = [zone]
             uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
             DynectSession.get_session().execute(uri, 'POST')
+        self._get_permission()
 
-    def replace_zone(self, zones):
+    def replace_zones(self, zones):
         """Remove this specific zones from the
         :class:`~dyn.tm.accounts.User`
-
         :param zones: array of the zones to be updated
+        format must be [{'zone_name':[yourzone], recurse: 'Y'},{ ...}]
+        recurse is optional.
         """
         api_args = {}
         if zones is not None:
-            api_args['zones'] = zones
-            self._zone = zones
-        else:
-            self._zone = []
+            api_args['zone'] = zones
         uri = '/UserZoneEntry/{}/'.format(self._user_name)
-        DynectSession.get_session().execute(uri, 'PUT')
+        DynectSession.get_session().execute(uri, 'PUT', api_args)
+        self._get_permission()
 
     def delete_zone(self, zone):
         """Remove this specific zones from the
@@ -854,10 +857,9 @@ class User(object):
 
         :param zone: the zone to remove
         """
-        if zone in self._zone:
-            self._zone.remove(zone)
         uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)
         DynectSession.get_session().execute(uri, 'DELETE')
+        self._get_permission()
 
     def add_forbid_rule(self, permission, zone=None):
         """Adds the forbid rule to the :class:`~dyn.tm.accounts.User`'s

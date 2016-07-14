@@ -463,7 +463,6 @@ class User(object):
             self._permission_report_uri, 'POST', api_args)
         self._build_permission(response)
 
-
     def _update(self, api_args=None):
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
@@ -479,7 +478,6 @@ class User(object):
         response = DynectSession.get_session().execute(
             self._permission_report_uri, 'POST', api_args)
         self._build_permission(response)
-
 
     def _build_permission(self, response):
         self._zone = list()
@@ -827,7 +825,6 @@ class User(object):
         :param recurse: determine if permissions should be extended to
          subzones.
         """
-        api_args = {'recurse': recurse}
         if self._zone is not None:
             if zone not in self._zone:
                 uri = '/UserZoneEntry/{}/{}/'.format(self._user_name, zone)

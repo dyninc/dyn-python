@@ -3,6 +3,7 @@ from dyn.compat import force_unicode
 from dyn.tm.utils import APIList
 from dyn.tm.errors import DynectInvalidArgumentError
 from dyn.tm.session import DynectSession
+from dyn.tm.task import Task
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'GSLBRegionPoolEntry', 'GSLBRegion', 'GSLB']
@@ -242,14 +243,15 @@ class GSLBRegionPoolEntry(object):
         self._region_code = region_code
         self._address = address
         self._label = self._weight = self._serve_mode = None
+        self._task_id = None
+
         uri = '/GSLBRegionPoolEntry/{}/{}/{}/{}/'
         self.uri = uri.format(self._zone, self._fqdn, self._region_code,
                               self._address)
         if len(args) == 0 and len(kwargs) == 0:
             self._get()
         else:
-            for key, val in kwargs.items():
-                setattr(self, '_' + key, val)
+            self._build(kwargs)
 
     def _post(self, label=None, weight=None, serve_mode=None):
         """Create a new :class:`GSLBRegionPoolEntry` on the DynECT System"""
@@ -272,8 +274,7 @@ class GSLBRegionPoolEntry(object):
                                                  self.valid_serve_modes)
             api_args['serve_mode'] = self._serve_mode
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def _get(self):
         """Get an existing :class:`GSLBRegionPoolEntry` object from the DynECT
@@ -282,15 +283,32 @@ class GSLBRegionPoolEntry(object):
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def _update(self, api_args):
         """Private update method"""
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Build the variables in this object by pulling out the data from data
+        """
+        for key, val in data.items():
+            if key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
+            else:
+                setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system
+        action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     def sync(self):
         """Sync this :class:`GSLBRegionPoolEntry` object with the DynECT System
@@ -420,7 +438,7 @@ class GSLBRegion(object):
         :param fqdn: The fqdn of the specific node which will be monitored by
             this :class:`GSLBRegion`
         :param region_code: ISO region code of this :class:`GSLBRegion`
-        :param pool: The IP Pool list for this :class:`GSLBRegion`
+        :param pool: (*arg) The IP Pool list for this :class:`GSLBRegion`
         :param serve_count: How many records will be returned in each DNS
             response
         :param failover_mode: How the :class:`GSLBRegion` should failover. Must
@@ -429,29 +447,27 @@ class GSLBRegion(object):
             'ip', 'cname', 'region', 'global'
         """
         super(GSLBRegion, self).__init__()
+        self.valid_region_codes = ('US West', 'US Central', 'US East', 'Asia',
+                                   'EU West', 'EU Central', 'EU East',
+                                   'global')
+
+        self.valid_modes = ('ip', 'cname', 'region', 'global')
         self._zone = zone
         self._fqdn = fqdn
-        self._region_code = region_code
         self._pool = self._serve_count = self._failover_mode = None
         self._failover_data = None
+        self._task_id = None
+        if region_code not in self.valid_region_codes:
+            raise DynectInvalidArgumentError('region_code', region_code,
+                                             self.valid_region_codes)
+        self._region_code = region_code
         self.uri = '/GSLBRegion/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                   self._region_code)
         self._pool = []
         if len(args) == 0 and len(kwargs) == 0:
             self._get()
         if len(kwargs) > 0:
-            for key, val in kwargs.items():
-                if key == 'pool':
-                    for pool in val:
-                        if isinstance(pool, dict):
-                            self._pool.append(GSLBRegionPoolEntry(
-                                self._zone, self._fqdn,
-                                self._region_code, **pool)
-                            )
-                        else:
-                            self._pool.append(pool)
-                else:
-                    setattr(self, '_' + key, val)
+            self._build(kwargs)
         elif len(args) > 0:
             for pool in args[0]:
                 if isinstance(pool, dict):
@@ -470,59 +486,64 @@ class GSLBRegion(object):
         self._failover_mode = failover_mode
         self._failover_data = failover_data
         uri = '/GSLBRegion/{}/{}/'.format(self._zone, self._fqdn)
-        api_args = {'pool': self._pool.to_json()}
+        api_args = {'pool': self._pool.to_json(),
+                    'region_code': self._region_code}
         if serve_count:
             api_args['serve_count'] = self._serve_count
-        if failover_mode:
+        if self._failover_mode:
+            if self._failover_mode not in self.valid_modes:
+                raise DynectInvalidArgumentError('failover_mode',
+                                                 self._failover_mode,
+                                                 self.valid_modes)
             api_args['failover_mode'] = self._failover_mode
-        if failover_data:
+        if self._failover_data:
+            if self._failover_data not in self.valid_modes:
+                raise DynectInvalidArgumentError('failover_data',
+                                                 self._failover_data,
+                                                 self.valid_modes)
             api_args['failover_data'] = self._failover_data
-        response = DynectSession.get_session()(uri, 'POST', api_args)
-        for key, val in response['data'].items():
-            if key == 'pool':
-                for pool in val:
-                    if isinstance(pool, dict):
-                        self._pool.append(GSLBRegionPoolEntry(
-                            self._zone, self._fqdn,
-                            self._region_code, **pool)
-                        )
-            else:
-                setattr(self, '_' + key, val)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        self._build(response['data'])
 
     def _get(self):
         """Get an existing :class:`GSLBRegion` object"""
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
-            if key == 'pool':
-                for pool in val:
-                    if isinstance(pool, dict):
-                        self._pool.append(GSLBRegionPoolEntry(
-                            self._zone, self._fqdn, self._region_code,
-                            method=None, **pool)
-                        )
-                    else:
-                        self._pool.append(pool)
-            else:
-                setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def _update(self, api_args):
         """Private udpate method for PUT commands"""
         response = DynectSession.get_session().execute(self.uri, 'PUT',
                                                        api_args)
-        for key, val in response['data'].items():
+        self._build(response['data'])
+
+    def _build(self, data):
+        self._pool = []
+        for key, val in data.items():
             if key == 'pool':
                 for pool in val:
                     if isinstance(pool, dict):
                         self._pool.append(GSLBRegionPoolEntry(
                             self._zone, self._fqdn, self._region_code,
-                            method=None, **pool)
+                            **pool)
                         )
                     else:
                         self._pool.append(pool)
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system
+        action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     def sync(self):
         """Sync this :class:`GSLBRegion` object with the DynECT System"""
@@ -703,6 +724,7 @@ class GSLB(object):
         self._syslog_facility = self._monitor = self._contact_nickname = None
         self._syslog_probe_fmt = self._syslog_status_fmt = None
         self._active = self._status = self._syslog_delivery = None
+        self._task_id = None
         self._recovery_delay = None
         self._region = APIList(DynectSession.get_session, 'region')
         if 'api' in kwargs:
@@ -792,9 +814,21 @@ class GSLB(object):
             elif key == 'monitor':
                 # We already have the monitor object, no need to rebuild it
                 pass
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
         self._region.uri = self.uri
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`GSLB`.
+        """
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     def sync(self):
         """Sync this :class:`GSLB` object with the DynECT System"""

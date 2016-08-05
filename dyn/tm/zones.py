@@ -20,6 +20,7 @@ from dyn.tm.session import DynectSession
 from dyn.tm.services import (ActiveFailover, DynamicDNS, DNSSEC,
                              TrafficDirector, GSLB, ReverseDNS, RTTM,
                              HTTPRedirect)
+from dyn.tm.task import Task
 
 __author__ = 'jnappi'
 __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
@@ -117,6 +118,7 @@ class Zone(object):
         self._contact = self._ttl = self._serial_style = self._serial = None
         self._zone = self._status = None
         self.records = {}
+        self._task_id = None
         self.services = {}
         self.uri = '/Zone/{}/'.format(self._name)
         if 'api' in kwargs:
@@ -172,8 +174,10 @@ class Zone(object):
             content = f.read()
             f.close()
             api_args = {'file': content}
-            DynectSession.get_session().execute(uri, 'POST', api_args)
+            response = DynectSession.get_session().execute(
+                uri, 'POST', api_args)
             self.__poll_for_get()
+            self._build(response['data'])
 
     def _xfer(self, master_ip, timeout=None):
         """Create a :class:`Zone` by ZoneTransfer by providing an optional
@@ -181,7 +185,8 @@ class Zone(object):
         """
         uri = '/ZoneTransfer/{}/'.format(self.name)
         api_args = {'master_ip': master_ip}
-        DynectSession.get_session().execute(uri, 'POST', api_args)
+        response = DynectSession.get_session().execute(uri, 'POST', api_args)
+        self._build(response['data'])
         time_out = timeout or 10
         count = 0
         while count < time_out:
@@ -235,7 +240,20 @@ class Zone(object):
         """Build the variables in this object by pulling out the data from data
         """
         for key, val in data.items():
-            setattr(self, '_' + key, val)
+            if key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
+            else:
+                setattr(self, '_' + key, val)
+
+    def _update(self, api_args):
+        """Update this :class:`ActiveFailover`, via the API, with the args in
+        api_args
+        """
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'])
 
     @property
     def __root_soa(self):
@@ -351,9 +369,15 @@ class Zone(object):
         api_args = {'publish': True}
         if notes:
             api_args['notes'] = notes
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        self._build(response['data'])
+        self._update(api_args)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`Zone`.
+        """
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     def get_notes(self, offset=None, limit=None):
         """Generates a report containing the Zone Notes for this :class:`Zone`
@@ -742,6 +766,7 @@ class SecondaryZone(object):
         self._zone = self._name = zone
         self.uri = '/Secondary/{}/'.format(self._zone)
         self._masters = self._contact_nickname = self._tsig_key_name = None
+        self._task_id = None
         if 'api' in kwargs:
             del kwargs['api']
             for key, val in kwargs.items():
@@ -756,8 +781,7 @@ class SecondaryZone(object):
         api_args = {}
         response = DynectSession.get_session().execute(self.uri, 'GET',
                                                        api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def _post(self, masters, contact_nickname=None, tsig_key_name=None):
         """Create a new :class:`SecondaryZone` object on the DynECT System"""
@@ -771,8 +795,36 @@ class SecondaryZone(object):
             api_args['tsig_key_name'] = self._tsig_key_name
         response = DynectSession.get_session().execute(self.uri, 'POST',
                                                        api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
+
+    def _update(self, api_args, uri=None):
+        """Update this :class:`ActiveFailover`, via the API, with the args in
+        api_args
+        """
+        if not uri:
+            uri = self.uri
+        response = DynectSession.get_session().execute(uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Build the variables in this object by pulling out the data from data
+        """
+        for key, val in data.items():
+            if key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
+            else:
+                setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system action on this :class:`SecondaryZone`.
+        """
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     @property
     def zone(self):
@@ -795,10 +847,7 @@ class SecondaryZone(object):
     def masters(self, value):
         self._masters = value
         api_args = {'masters': self._masters}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def contact_nickname(self):
@@ -812,10 +861,7 @@ class SecondaryZone(object):
     def contact_nickname(self, value):
         self._contact_nickname = value
         api_args = {'contact_nickname': self._contact_nickname}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args)
 
     @property
     def tsig_key_name(self):
@@ -829,36 +875,24 @@ class SecondaryZone(object):
     def tsig_key_name(self, value):
         self._tsig_key_name = value
         api_args = {'tsig_key_name': self._tsig_key_name}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args)
 
     def activate(self):
         """Activates this secondary zone"""
         api_args = {'activate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args)
 
     def deactivate(self):
         """Deactivates this secondary zone"""
         api_args = {'deactivate': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args)
 
     def retransfer(self):
         """Retransfers this secondary zone from its original provider into
         Dyn's Managed DNS
         """
         api_args = {'retransfer': True}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args)
 
     def delete(self):
         """Delete this :class:`SecondaryZone`"""
@@ -877,10 +911,7 @@ class SecondaryZone(object):
         """Reports the serial of :class:`SecondaryZone`"""
         api_args = {}
         uri = '/Zone/{}/'.format(self._zone)
-        response = DynectSession.get_session().execute(uri, 'GET',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args, uri)
         return self._serial
 
     def __str__(self):

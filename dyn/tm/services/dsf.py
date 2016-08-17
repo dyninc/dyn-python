@@ -4164,7 +4164,8 @@ class TrafficDirector(object):
         elif isinstance(nodes, DSFNode) or type(nodes).__name__ == 'Node':
             _nodeList.append({'zone': nodes.zone, 'fqdn': nodes.fqdn})
         uri = '/DSFNode/{}'.format(self._service_id)
-        api_args = {'nodes': _nodeList, 'publish': 'Y'}
+        publish = "Y" if self._implicitPublish else "N"
+        api_args = {'nodes': _nodeList, 'publish': publish}
         response = DynectSession.get_session().execute(uri, 'PUT',
                                                        api_args)
         self._nodes = [DSFNode(node['zone'], node['fqdn']) for node

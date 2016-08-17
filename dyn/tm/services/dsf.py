@@ -4179,7 +4179,7 @@ class TrafficDirector(object):
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
-        if self._implicitPublish == True:
+        if self._implicitPublish is True:
             publish = "Y"
         else:
             publish = "N"
@@ -4198,7 +4198,7 @@ class TrafficDirector(object):
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
-        if self._implicitPublish == True:
+        if self._implicitPublish is True:
             publish = "Y"
         else:
             publish = "N"
@@ -4248,7 +4248,7 @@ class TrafficDirector(object):
         self._implicitPublish = value
 
     implicitPublish = implicit_publish
-    
+
     def delete(self):
         """Delete this :class:`TrafficDirector` from the DynECT System
         :param notes: Optional zone publish notes

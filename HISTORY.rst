@@ -1,6 +1,10 @@
 Release History
 ---------------
 
+1.7.2 (2016-08-17)
+++++++++++++++++++
+*Update add_node and remove_node functions in Traffic Director to respect implicitPublish setting.
+
 1.7.1 (2016-08-11)
 ++++++++++++++++++
 *task_id is now returned for a number of calls that spawn system tasks

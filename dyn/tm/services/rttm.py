@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import warnings
 from datetime import datetime
 
 from dyn.compat import force_unicode
 from dyn.tm.utils import APIList, Active, unix_date
 from dyn.tm.errors import DynectInvalidArgumentError
 from dyn.tm.session import DynectSession
+from dyn.tm.task import Task
 
 __author__ = 'jnappi'
 __all__ = ['Monitor', 'PerformanceMonitor', 'RegionPoolEntry', 'RTTMRegion',
@@ -282,17 +284,19 @@ class RegionPoolEntry(object):
         self.valid_modes = ('always', 'obey', 'remove', 'no')
         self._address = address
         self._label = label
+        self._task_id = None
+        self._zone = kwargs.get('zone')
+        self._fqdn = kwargs.get('fqdn')
+        self._region_code = kwargs.get('region_code')
         if weight not in range(1, 16):
             raise DynectInvalidArgumentError('weight', weight, '1-15')
         self._weight = weight
-        self._zone = self._fqdn = self._region_code = None
         if serve_mode not in self.valid_modes:
             raise DynectInvalidArgumentError('serve_mode', serve_mode,
                                              self.valid_modes)
         self._serve_mode = serve_mode
         self._log = []
-        for key, val in kwargs.items():
-            setattr(self, key, val)
+        self._build(kwargs)
 
     def _update(self, args):
         """Private method for processing various updates"""
@@ -301,8 +305,7 @@ class RegionPoolEntry(object):
                                                          self._region_code,
                                                          self._address)
         response = DynectSession.get_session().execute(uri, 'PUT', args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
 
     def _get(self):
         uri = '/RTTMRegionPoolEntry/{}/{}/{}/{}/'.format(self._zone,
@@ -311,8 +314,26 @@ class RegionPoolEntry(object):
                                                          self._address)
         args = {'detail': 'Y'}
         response = DynectSession.get_session().execute(uri, 'GET', args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._build(response['data'])
+
+    def _build(self, data):
+        """Build the variables in this object by pulling out the data from data
+        """
+        for key, val in data.items():
+            if key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
+            else:
+                setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system
+        action on this :class:`RegionPoolEntry`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     @property
     def logs(self):
@@ -332,6 +353,36 @@ class RegionPoolEntry(object):
     def address(self, new_address):
         api_args = {'new_address': new_address}
         self._update(api_args)
+
+    @property
+    def zone(self):
+        """Zone for this :class:`RegionPoolEntry`,
+         this is stored locally for REST command completion"""
+        return self._zone
+
+    @zone.setter
+    def zone(self, zone):
+        self._zone = zone
+
+    @property
+    def fqdn(self):
+        """FQDN for this :class:`RegionPoolEntry`,
+         this is stored locally for REST command completion"""
+        return self._fqdn
+
+    @fqdn.setter
+    def fqdn(self, fqdn):
+        self._fqdn = fqdn
+
+    @property
+    def region_code(self):
+        """region_code for this :class:`RegionPoolEntry`,
+         this is stored locally for REST command completion"""
+        return self._region_code
+
+    @region_code.setter
+    def region_code(self, region_code):
+        self._region_code = region_code
 
     @property
     def label(self):
@@ -373,15 +424,6 @@ class RegionPoolEntry(object):
         api_args = {'serve_mode': self._serve_mode}
         self._update(api_args)
 
-    @property
-    def region_code(self):
-        """Name of the region"""
-        return self._region_code
-
-    @region_code.setter
-    def region_code(self, value):
-        pass
-
     def to_json(self):
         """Return a JSON representation of this RegionPoolEntry"""
         json_blob = {'address': self._address, 'label': self._label,
@@ -410,13 +452,11 @@ class RegionPoolEntry(object):
 class RTTMRegion(object):
     """docstring for RTTMRegion"""
 
-    def __init__(self, zone, fqdn, region_code, pool, autopopulate=None,
-                 ep=None, apmc=None, epmc=None, serve_count=None,
-                 failover_mode=None, failover_data=None):
+    def __init__(self, zone, fqdn, region_code, *args, **kwargs):
         """Create a :class:`RTTMRegion` object
 
         :param region_code: Name of the region
-        :param pool: The IP Pool list for this region
+        :param pool: (*arg) The IP Pool list for this region
         :param autopopulate: If set to Y, this region will automatically be
             filled in from the global pool, and any other options passed in for
             this region will be ignored
@@ -439,38 +479,58 @@ class RTTMRegion(object):
                                    'EU West', 'EU Central', 'EU East',
                                    'global')
         self.valid_modes = ('ip', 'cname', 'region', 'global')
+        self._task_id = None
         self._zone = zone
         self._fqdn = fqdn
+        self._autopopulate = self._ep = self._apmc = None
+        self._epmc = self._serve_count = self._failover_mode = None
+        self._failover_data = None
+        if len(args) != 0:
+            pool = args[0]
+        else:
+            pool = None
         if region_code not in self.valid_region_codes:
             raise DynectInvalidArgumentError('region_code', region_code,
                                              self.valid_region_codes)
         self._region_code = region_code
-        if len(pool) > 0 and isinstance(pool[0], dict):
-            pool_list = pool
-            pool = []
-            for item in pool_list:
-                rpe = RegionPoolEntry(**item)
-                rpe._zone = self._zone
-                rpe._fqdn = self._fqdn
-                rpe._region_code = self._region_code
-                pool.append(rpe)
-        self._pool = pool
-        self._autopopulate = autopopulate
-        self._ep = ep
-        self._apmc = apmc
-        self._epmc = epmc
-        self._serve_count = serve_count
-        self._failover_mode = failover_mode
-        self._failover_data = failover_data
-        self._status = None
+        self._pool = []
         self.uri = '/RTTMRegion/{}/{}/{}/'.format(self._zone, self._fqdn,
                                                   self._region_code)
+        # Backwards Compatability, since we changed the structure of this
+        # Class:
+        if kwargs.get('pool'):
+            warnings.warn("passing pool as keyword argument is\
+                          depreciated! please pass in as 4th argument",
+                          DeprecationWarning)
+            pool = kwargs.pop('pool')
+
+        if not pool and len(kwargs) == 0:
+            self._get()
+        if len(kwargs) > 0:
+            self._build(kwargs)
+        if pool:
+            for poole in pool:
+                if isinstance(poole, dict):
+                    rpe = RegionPoolEntry(zone=self._zone,
+                                          fqdn=self._fqdn,
+                                          region_code=self._region_code,
+                                          **poole)
+                    self._pool.append(rpe)
+                else:
+                    if not poole.zone:
+                        poole.zone = self._zone
+                    if not poole.fqdn:
+                        poole.fqdn = self._fqdn
+                    if not poole.region_code:
+                        poole.region_code = self._region_code
+                    self._pool.append(poole)
+        self._status = None
 
     def _post(self):
         """Create a new :class:`RTTMRegion` on the DynECT System"""
         uri = '/RTTMRegion/{}/{}/'.format(self._zone, self._fqdn)
         api_args = {'region_code': self._region_code,
-                    'pool': self._pool.to_json()}
+                    'pool': [poole.to_json() for poole in self._pool]}
         if self._autopopulate:
             if self._autopopulate not in ('Y', 'N'):
                 raise DynectInvalidArgumentError('autopopulate',
@@ -517,8 +577,20 @@ class RTTMRegion(object):
         for key, val in data.items():
             if key == 'pool':
                 pass
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system
+         action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     @property
     def autopopulate(self):
@@ -743,6 +815,7 @@ class RTTM(object):
         self._syslog_status_fmt = self._syslog_rttm_fmt = None
         self._recovery_delay = None
         self._region = APIList(DynectSession.get_session, 'region')
+        self._task_id = None
         if 'api' in kwargs:
             del kwargs['api']
             self._build(kwargs)
@@ -853,6 +926,7 @@ class RTTM(object):
                     code = region.pop('region_code', None)
                     pool = region.pop('pool', None)
                     status = region.pop('status', None)
+
                     r = RTTMRegion(self._zone, self._fqdn, code, pool,
                                    **region)
                     r._status = status
@@ -879,9 +953,21 @@ class RTTM(object):
                 self._notify_events = [item.strip() for item in val.split(',')]
             elif key == 'active':
                 self._active = Active(val)
+            elif key == "task_id" and not val:
+                self._task_id = None
+            elif key == "task_id":
+                self._task_id = Task(val)
             else:
                 setattr(self, '_' + key, val)
         self._region.uri = self.uri
+
+    @property
+    def task(self):
+        """:class:`Task` for most recent system
+         action on this :class:`ActiveFailover`."""
+        if self._task_id:
+            self._task_id.refresh()
+        return self._task_id
 
     def get_rrset_report(self, ts):
         """Generates a report of regional response sets for this RTTM service

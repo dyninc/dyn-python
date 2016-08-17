@@ -4179,10 +4179,7 @@ class TrafficDirector(object):
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
-        if self._implicitPublish is True:
-            publish = "Y"
-        else:
-            publish = "N"
+        publish = "Y" if self._implicitPublish else "N"
         api_args = {'node': _node, 'publish': publish}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
@@ -4198,10 +4195,7 @@ class TrafficDirector(object):
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
-        if self._implicitPublish is True:
-            publish = "Y"
-        else:
-            publish = "N"
+        publish = "Y" if self._implicitPublish else "N"
         api_args = {'node': _node, 'publish': publish}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)

@@ -4179,7 +4179,11 @@ class TrafficDirector(object):
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
-        api_args = {'node': _node, 'publish': 'Y'}
+        if self._implicitPublish == True:
+            publish = "Y"
+        else:
+            publish = "N"
+        api_args = {'node': _node, 'publish': publish}
         response = DynectSession.get_session().execute(uri, 'POST',
                                                        api_args)
         self._nodes = [DSFNode(nd['zone'], nd['fqdn']) for nd
@@ -4194,7 +4198,11 @@ class TrafficDirector(object):
         elif isinstance(node, dict):
             _node = node
         uri = '/DSFNode/{}'.format(self._service_id)
-        api_args = {'node': _node, 'publish': 'Y'}
+        if self._implicitPublish == True:
+            publish = "Y"
+        else:
+            publish = "N"
+        api_args = {'node': _node, 'publish': publish}
         response = DynectSession.get_session().execute(uri, 'DELETE',
                                                        api_args)
         self._nodes = [DSFNode(nd['zone'], nd['fqdn']) for nd
@@ -4240,7 +4248,7 @@ class TrafficDirector(object):
         self._implicitPublish = value
 
     implicitPublish = implicit_publish
-
+    
     def delete(self):
         """Delete this :class:`TrafficDirector` from the DynECT System
         :param notes: Optional zone publish notes

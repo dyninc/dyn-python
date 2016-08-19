@@ -1713,6 +1713,7 @@ class Contact(object):
         """bytes override"""
         return bytes(self.__str__())
 
+
 class IPACL(object):
     """A scoped IP ACL for logins on a customer"""
 
@@ -1745,9 +1746,6 @@ class IPACL(object):
     def _post(self, netmasks=None, active=None, scope=None):
         """Create a new :class:`~dyn.tm.accounts.IPACL` on the DynECT System
         """
-        self._netmasks = netmasks
-        self._active = active
-        self._scope = scope
         self.uri = '/CustomerIPACL/{}/'.format(self.scope)
         api_args = {'netmasks': self._netmasks, 'active': self._active}
         response = DynectSession.get_session().execute(
@@ -1759,7 +1757,7 @@ class IPACL(object):
         System
         """
         self._scope = scope
-        self.uri = '/CustomerIPACL/{}/'.format(self.scope)
+        self.uri = '/CustomerIPACL/{}/'.format(self._scope)
         response = DynectSession.get_session().execute(self.uri, 'GET')
         self._build(response['data'])
 
@@ -1782,7 +1780,7 @@ class IPACL(object):
     def netmasks(self):
         """The netmask list of this :class:`~dyn.tm.accounts.IPACL`"""
         #
-        return [x for x in (re.split('\r\n| |,',self._netmasks)) if x]
+        return [x for x in (re.split('\r\n| |,', self._netmasks)) if x]
 
     @netmasks.setter
     def netmasks(self, values):

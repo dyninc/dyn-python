@@ -5,6 +5,7 @@ REST API
 from dyn.tm.errors import DynectInvalidArgumentError
 from dyn.tm.session import DynectSession
 from dyn.compat import force_unicode
+import re
 
 __author__ = 'jnappi'
 __all__ = ['get_updateusers', 'get_users', 'get_permissions_groups',
@@ -1706,6 +1707,125 @@ class Contact(object):
     def __str__(self):
         """Custom str method"""
         return force_unicode('<Contact>: {}').format(self.nickname)
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())
+
+class IPACL(object):
+    """A scoped IP ACL for logins on a customer"""
+
+    def __init__(self, *args, **kwargs):
+        """Create a :class:`~dyn.tm.accounts.IPACL` object
+        :param netmasks: a list of netmasks, in CIDR
+            form; no '/' assumes exact address
+        :param active: Whether or not this ACL is active: 'Y' (default) or 'N'
+        :param scope: The scope this :class:`~dyn.tm.accounts.IPACL` covers:
+            'web' (default) or 'api'
+        """
+        super(IPACL, self).__init__()
+        self._scope = kwargs.get('scope', 'web').lower()
+        if not isinstance(kwargs.get('netmasks', []), list):
+            raise Exception('Must be list of netmasks.')
+        self._netmasks = " ".join(kwargs.get('netmasks', []))
+        self._active = kwargs.get('active', 'Y')
+        if 'api' in kwargs:
+            del kwargs['api']
+            for key, val in kwargs.items():
+                setattr(self, '_' + key, val)
+        elif len(args) == 0 and len(kwargs) == 0:
+            self._get()
+        elif len(args) == 0 and len(kwargs) == 1 and kwargs['scope']:
+            self._get(scope=self._scope)
+        else:
+            kwargs['netmasks'] = self._netmasks
+            self._post(*args, **kwargs)
+
+    def _post(self, netmasks=None, active=None, scope=None):
+        """Create a new :class:`~dyn.tm.accounts.IPACL` on the DynECT System
+        """
+        self._netmasks = netmasks
+        self._active = active
+        self._scope = scope
+        self.uri = '/CustomerIPACL/{}/'.format(self.scope)
+        api_args = {'netmasks': self._netmasks, 'active': self._active}
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(response['data'])
+
+    def _get(self, scope='web'):
+        """Get an existing :class:`~dyn.tm.accounts.IPACL` from the DynECT
+        System
+        """
+        self._scope = scope
+        self.uri = '/CustomerIPACL/{}/'.format(self.scope)
+        response = DynectSession.get_session().execute(self.uri, 'GET')
+        self._build(response['data'])
+
+    def _build(self, data):
+        for scope in data:
+            if scope['scope'] == self._scope:
+                for key, val in scope.items():
+                    setattr(self, '_' + key, val)
+
+    def _update(self, api_args=None):
+        """Private update method which handles building this
+        :class:`~dyn.tm.accounts.IPACL` object from the API JSON respnose
+        """
+        self.uri = '/CustomerIPACL/{}/'.format(self._scope)
+        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._build(response['data'])
+
+    @property
+    def netmasks(self):
+        """The netmask list of this :class:`~dyn.tm.accounts.IPACL`"""
+        #
+        return [x for x in (re.split('\r\n| |,',self._netmasks)) if x]
+
+    @netmasks.setter
+    def netmasks(self, values):
+        if not isinstance(values, list):
+            raise Exception('Must be list of netmasks.')
+
+        self._netmasks = " ".join(values)
+        api_args = {'netmasks': self._netmasks}
+        self._update(api_args)
+
+    @property
+    def active(self):
+        """The active status of this :class:`~dyn.tm.accounts.IPACL`"""
+        return self._active
+
+    @active.setter
+    def active(self, value):
+        self._active = value
+        api_args = {'active': self._active}
+        self._update(api_args)
+
+    @property
+    def scope(self):
+        """The scope of this :class:`~dyn.tm.accounts.IPACL`"""
+        return self._scope
+
+    @scope.setter
+    def scope(self, value):
+        self._scope = value.lower()
+        api_args = {'scope': self._scope}
+        self._update(api_args)
+
+    def delete(self):
+        """Delete this :class:`~dyn.tm.accounts.IPACL` from the Dynect System
+        """
+        api_args = {'netmasks': '', 'scope': self._scope}
+        DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        self._netmasks = ''
+
+    def __str__(self):
+        """Custom str method"""
+        return force_unicode(
+            '<IPACL>: Scope: {}, Active: {}, Netmasks: {}').format(
+            self._scope, self._active, " ".join(self.netmasks))
+
     __repr__ = __unicode__ = __str__
 
     def __bytes__(self):

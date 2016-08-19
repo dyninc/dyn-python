@@ -1750,7 +1750,8 @@ class IPACL(object):
         self._scope = scope
         self.uri = '/CustomerIPACL/{}/'.format(self.scope)
         api_args = {'netmasks': self._netmasks, 'active': self._active}
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(
+                            self.uri, 'PUT', api_args)
         self._build(response['data'])
 
     def _get(self, scope='web'):
@@ -1770,10 +1771,11 @@ class IPACL(object):
 
     def _update(self, api_args=None):
         """Private update method which handles building this
-        :class:`~dyn.tm.accounts.IPACL` object from the API JSON respnose
+        :class:`~dyn.tm.accounts.IPACL` object from the API JSON response
         """
         self.uri = '/CustomerIPACL/{}/'.format(self._scope)
-        response = DynectSession.get_session().execute(self.uri, 'PUT', api_args)
+        response = DynectSession.get_session().execute(
+                                self.uri, 'PUT', api_args)
         self._build(response['data'])
 
     @property

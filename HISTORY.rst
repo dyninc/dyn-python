@@ -1,6 +1,10 @@
 Release History
 ---------------
 
+1.7.3 (2016-08-30)
+++++++++++++++++++
+*Added IPACL feature to accounts library. Customers can now control Account Login ACLs for API and Web independently.
+
 1.7.2 (2016-08-17)
 ++++++++++++++++++
 *Update add_node and remove_node functions in Traffic Director to respect implicitPublish setting.

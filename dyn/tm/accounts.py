@@ -1726,10 +1726,11 @@ class IPACL(object):
             'web' (default) or 'api'
         """
         super(IPACL, self).__init__()
-        valid_scope = ['api','web']
+        valid_scope = ['api', 'web']
         self._scope = kwargs.get('scope', 'web').lower()
         if self._scope not in valid_scope:
-            raise Exception('scope can only be: {}'.format(" ".join(valid_scope)))
+            raise Exception('scope can only be: {}'.format(" ".join(
+                                                           valid_scope)))
         if not isinstance(kwargs.get('netmasks', []), list):
             raise Exception('Must be list of netmasks.')
         self._netmasks = " ".join(kwargs.get('netmasks', []))

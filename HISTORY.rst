@@ -1,7 +1,7 @@
 Release History
 ---------------
 
-1.7.3 (2016-08-30)
+1.7.4 (2016-08-30)
 ++++++++++++++++++
 *Added IPACL feature to accounts library. Customers can now control Account Login ACLs for API and Web independently.
 

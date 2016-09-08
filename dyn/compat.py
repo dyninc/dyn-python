@@ -31,7 +31,8 @@ if is_py2:
             import simplejson as json
         except ImportError:
             raise ex
-    from httplib import HTTPConnection, HTTPSConnection, HTTPException, BadStatusLine
+    from httplib import (HTTPConnection, HTTPSConnection,
+                         HTTPException, BadStatusLine)
     from urllib import urlencode, pathname2url
 
     string_types = (str, unicode)  # NOQA

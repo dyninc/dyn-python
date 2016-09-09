@@ -1,5 +1,8 @@
 Release History
 ---------------
+1.7.5 (2016-09-09)
+++++++++++++++++++
+*Bug fix for token renewal on connection timeout
 
 1.7.4 (2016-08-30)
 ++++++++++++++++++

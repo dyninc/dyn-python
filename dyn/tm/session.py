@@ -72,15 +72,18 @@ class DynectSession(SessionEngine):
         """Accessible method for subclass to encrypt with existing AESCipher"""
         return self.__cipher.encrypt(data)
 
-    def _handle_error(self, uri, method, raw_args):
+    def _handle_error(self, uri, method, raw_args, renew_token=True):
         """Handle the processing of a connection error with the api"""
-        # Our token is no longer valid because our session was killed
-        self._token = None
         # Need to force a re-connect on next execute
         self._conn.close()
         self._conn.connect()
-        # Need to get a new Session token
-        self.execute('/REST/Session/', 'POST', self.__auth_data)
+
+        if renew_token:
+            # Our token is no longer valid because our session was killed
+            self._token = None
+            # Need to get a new Session token
+            self.execute('/REST/Session/', 'POST', self.__auth_data)
+
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
         return self.execute(uri, method, raw_args, final=True)
@@ -212,15 +215,19 @@ class DynectMultiSession(DynectSession):
                                                  proxy_pass=proxy_pass)
         self.__add_open_session()
 
-    def _handle_error(self, uri, method, raw_args):
+    def _handle_error(self, uri, method, raw_args, renew_token=True):
         """Handle the processing of a connection error with the api"""
-        # Our token is no longer valid because our session was killed
-        self._token = None
+
         # Need to force a re-connect on next execute
         self._conn.close()
         self._conn.connect()
-        # Need to get a new Session token and update the open session
-        self.authenticate()
+
+        if renew_token:
+            # Our token is no longer valid because our session was killed
+            self._token = None
+            # Need to get a new Session token and update the open session
+            self.authenticate()
+
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
         return self.execute(uri, method, raw_args, final=True)

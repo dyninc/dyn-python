@@ -32,7 +32,7 @@ if is_py2:
         except ImportError:
             raise ex
     from httplib import (HTTPConnection, HTTPSConnection,
-                         HTTPException, BadStatusLine)
+                         HTTPException)
     from urllib import urlencode, pathname2url
 
     string_types = (str, unicode)  # NOQA
@@ -74,7 +74,7 @@ if is_py2:
 
 elif is_py3:
     from http.client import (HTTPConnection, HTTPSConnection,  # NOQA
-                             HTTPException, BadStatusLine)  # NOQA
+                             HTTPException)  # NOQA
     from urllib.parse import urlencode  # NOQA
     from urllib.request import pathname2url  # NOQA
     import json  # NOQA

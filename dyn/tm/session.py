@@ -72,11 +72,17 @@ class DynectSession(SessionEngine):
         """Accessible method for subclass to encrypt with existing AESCipher"""
         return self.__cipher.encrypt(data)
 
-    def _handle_error(self, uri, method, raw_args, renew_token=True):
+    def _handle_error(self, uri, method, raw_args):
         """Handle the processing of a connection error with the api"""
         # Need to force a re-connect on next execute
         self._conn.close()
         self._conn.connect()
+
+        try:
+            session_check = self.execute('/REST/Session/', 'GET')
+            renew_token = 'login:' in session_check['msgs'][0]['INFO']
+        except DynectGetError:
+            renew_token = True
 
         if renew_token:
             # Our token is no longer valid because our session was killed
@@ -215,17 +221,23 @@ class DynectMultiSession(DynectSession):
                                                  proxy_pass=proxy_pass)
         self.__add_open_session()
 
-    def _handle_error(self, uri, method, raw_args, renew_token=True):
+    def _handle_error(self, uri, method, raw_args):
         """Handle the processing of a connection error with the api"""
 
         # Need to force a re-connect on next execute
         self._conn.close()
         self._conn.connect()
 
+        try:
+            session_check = self.execute('/REST/Session/', 'GET')
+            renew_token = 'login:' in session_check['msgs'][0]['INFO']
+        except DynectGetError:
+            renew_token = True
+
         if renew_token:
             # Our token is no longer valid because our session was killed
             self._token = None
-            # Need to get a new Session token and update the open session
+            # Need to get a new Session token
             self.authenticate()
 
         # Then try the current call again and Specify final as true so
@@ -287,6 +299,7 @@ class DynectMultiSession(DynectSession):
         self.customer = customer
         self.username = username
         self.password = self._encrypt(password)
+        self._token = None
         try:
             self.authenticate()
         except DynectAuthError as e:

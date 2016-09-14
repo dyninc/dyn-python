@@ -14,7 +14,7 @@ from datetime import datetime
 
 from . import __version__
 from .compat import (HTTPConnection, HTTPSConnection, HTTPException, json,
-                     prepare_to_send, force_unicode, BadStatusLine)
+                     prepare_to_send, force_unicode)
 
 
 def cleared_class_dict(dict_obj):

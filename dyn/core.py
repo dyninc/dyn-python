@@ -237,7 +237,7 @@ class SessionEngine(Singleton):
         """
         return response
 
-    def _handle_error(self, uri, method, raw_args, renew_token=True):
+    def _handle_error(self, uri, method, raw_args):
         """Handle the processing of a connection error with the api. Note, to be
         implemented as needed in subclasses.
         """
@@ -333,19 +333,6 @@ class SessionEngine(Singleton):
         # Deal with the results
         try:
             response = self._conn.getresponse()
-        except BadStatusLine as e:
-            if final:
-                raise e
-            else:
-                # Handle processing a connection error, reset connection but
-                # do not renew token
-                resp = self._handle_error(uri, method, raw_args,
-                                          renew_token=False)
-                # If we got a valid response back from our _handle_error call
-                # Then return it, otherwise raise the original exception
-                if resp is not None:
-                    return resp
-                raise e
         except (IOError, HTTPException) as e:
             if final:
                 raise e

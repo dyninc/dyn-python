@@ -654,7 +654,8 @@ class Zone(object):
             del advredir['zone']
             del advredir['fqdn']
             advredirs.append(
-                AdvancedRedirect(self._name, self._fqdn, api=False, **advredir))
+                AdvancedRedirect(self._name, self._fqdn,
+                                 api=False, **advredir))
         return advredirs
 
     def get_all_gslb(self):

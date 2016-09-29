@@ -144,7 +144,6 @@ class AdvancedRedirect(object):
         self._get()
         return [AdvancedRedirectRule(self.zone, self.fqdn, api=True, **rule)
                 for rule in self._rules]
-        #return self._rules
 
     @rules.setter
     def rules(self, value):
@@ -201,7 +200,7 @@ class AdvancedRedirectRule(object):
         self._code = kwargs.get("code", None)
         self._host_prefix = kwargs.get("host_prefix", None)
         self._path = kwargs.get("path", None)
-        #self._query = kwargs.get("query",None)
+        # self._query = kwargs.get("query",None)
         self._url_pattern = kwargs.get("url_pattern", None)
         self._active = kwargs.get("active", None)
         self._next_public_id = kwargs.get("next_public_id", None)

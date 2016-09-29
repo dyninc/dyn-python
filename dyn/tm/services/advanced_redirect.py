@@ -242,8 +242,8 @@ class AdvancedRedirectRule(object):
             api_args['host_prefix'] = self._host_prefix
         if self._path:
             api_args['path'] = self._path
-        if self._query:
-            api_args['query'] = self._query
+        # if self._query:
+        #     api_args['query'] = self._query
         if self._url_pattern:
             api_args['url_pattern'] = self._url_pattern
         if self._active:

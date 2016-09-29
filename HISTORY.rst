@@ -1,5 +1,11 @@
 Release History
 ---------------
+
+1.7.6 (2016-09-29)
+++++++++++++++++++
+*Bug fix for DSFNode export
+*Internal Improvement for multiprocess applications.
+
 1.7.5 (2016-09-09)
 ++++++++++++++++++
 *Bug fix for token renewal on connection timeout

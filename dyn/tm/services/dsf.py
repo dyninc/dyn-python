@@ -31,7 +31,8 @@ __all__ = ['get_all_dsf_services', 'get_all_record_sets',
            'DSFPTRRecord', 'DSFPXRecord', 'DSFNSAPRecord', 'DSFRPRecord',
            'DSFNSRecord', 'DSFSPFRecord', 'DSFSRVRecord', 'DSFTXTRecord',
            'DSFRecordSet', 'DSFFailoverChain', 'DSFResponsePool',
-           'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor', 'TrafficDirector']
+           'DSFRuleset', 'DSFMonitorEndpoint', 'DSFMonitor', 'DSFNode',
+           'TrafficDirector']
 
 
 def get_all_dsf_services():

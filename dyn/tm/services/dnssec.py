@@ -37,6 +37,11 @@ class DNSSECKey(object):
         :param overlap: Time before key expiration when a replacement key is
             prepared, expressed in seconds. Default = 7 days.
         :param expire_ts: An epoch time when this key is to expire
+        :param dnskey: The KSK or ZSK record data
+        :param ds: One of the DS records for the KSK. ZSKs will have this
+            value intialized, but with null values.
+        :param all_ds: All the DS records associated with this KSK. Applies
+            only to KSK, ZSK will have a zero-length list.
         """
         super(DNSSECKey, self).__init__()
         self.key_type = key_type

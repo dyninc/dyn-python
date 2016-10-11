@@ -1,6 +1,10 @@
 Release History
 ---------------
 
+1.7.7 (2016-10-20)
+++++++++++++++++++
+*Add 'all_ds' field to DNSSECKey class for multi-DS support
+
 1.7.6 (2016-09-29)
 ++++++++++++++++++
 *Bug fix for DSFNode export

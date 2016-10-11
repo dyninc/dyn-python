@@ -48,7 +48,7 @@ class DNSSECKey(object):
         self.lifetime = lifetime
         self.overlap = overlap
         self.expire_ts = expire_ts
-        self.dnssec_key_id = self.dnskey = self.ds = None
+        self.dnssec_key_id = self.dnskey = self.ds = self.all_ds = None
         for key, val in kwargs.items():
             setattr(self, key, val)
 

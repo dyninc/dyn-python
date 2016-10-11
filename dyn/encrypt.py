@@ -55,6 +55,7 @@ try:
             :param raw: The raw password string to encode
             """
             raw = self._pad(raw)
+            Random.atfork()
             iv = Random.new().read(AES.block_size)
             cipher = AES.new(self.key, AES.MODE_CBC, iv)
             return base64.b64encode(iv + cipher.encrypt(raw))

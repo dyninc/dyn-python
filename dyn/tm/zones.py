@@ -1416,6 +1416,3 @@ class ExternalNameserverEntry(object):
     def __bytes__(self):
         """bytes override"""
         return bytes(self.__str__())
-
-
-

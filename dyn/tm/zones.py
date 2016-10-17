@@ -821,7 +821,8 @@ class SecondaryZone(object):
 
     @property
     def task(self):
-        """:class:`Task` for most recent system action on this :class:`SecondaryZone`.
+        """:class:`Task` for most recent system action
+         on this :class:`SecondaryZone`.
         """
         if self._task_id:
             self._task_id.refresh()
@@ -1226,15 +1227,18 @@ class ExternalNameserver(object):
         self._build(response['data'])
 
     def _post(self, *args, **kwargs):
-        """Create a new :class:`ExternalNameserver` object on the DynECT System"""
-        api_args = {'zone':self._zone}
-        self._deny = kwargs.get('deny',None)
-        if self._deny: api_args['deny'] = self._deny
+        """Create a new :class:`ExternalNameserver`
+         object on the DynECT System"""
+        api_args = {'zone': self._zone}
+        self._deny = kwargs.get('deny', None)
+        if self._deny:
+            api_args['deny'] = self._deny
 
-        self._active = kwargs.get('active',None)
-        if self._active: api_args['active'] = self._active
+        self._active = kwargs.get('active', None)
+        if self._active:
+            api_args['active'] = self._active
 
-        self._hosts = kwargs.get('hosts',None)
+        self._hosts = kwargs.get('hosts', None)
         if self._hosts:
             api_args['hosts'] = list()
             for host in self._hosts:
@@ -1302,7 +1306,6 @@ class ExternalNameserver(object):
                 api_args['hosts'].append(host)
         self._update(api_args)
 
-
     @property
     def active(self):
         """Gets active status of :class:`ExternalNameserver` object. """
@@ -1343,8 +1346,7 @@ class ExternalNameserverEntry(object):
 
         """
         self._address = address
-        self._notifies = kwargs.get('notifies',None)
-
+        self._notifies = kwargs.get('notifies', None)
 
     @property
     def _json(self):
@@ -1356,12 +1358,10 @@ class ExternalNameserverEntry(object):
                      }
         return {x: json_blob[x] for x in json_blob if json_blob[x] is not None}
 
-
     @property
     def address(self):
         """Gets address value :class:`ExternalNameserverEntry` object"""
         return self._address
-
 
     @address.setter
     def address(self, address):
@@ -1371,12 +1371,10 @@ class ExternalNameserverEntry(object):
         """
         self._address = address
 
-
     @property
     def notifies(self):
         """Gets address value :class:`ExternalNameserverEntry` object"""
         return self._notifies
-
 
     @notifies.setter
     def notifies(self, notifies):

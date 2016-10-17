@@ -23,7 +23,8 @@ from dyn.tm.services import (ActiveFailover, DynamicDNS, DNSSEC,
 from dyn.tm.task import Task
 
 __author__ = 'jnappi'
-__all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node']
+__all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node',
+           'ExternalNameserver', 'ExternalNameserverEntry']
 
 RECS = {'A': ARecord, 'AAAA': AAAARecord, 'ALIAS': ALIASRecord,
         'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord, 'CSYNC': CSYNCRecord,
@@ -1192,3 +1193,208 @@ class TSIG(object):
         api_args = {}
         DynectSession.get_session().execute(self.uri, 'DELETE',
                                             api_args)
+
+
+class ExternalNameserver(object):
+    """A class representing DynECT External Nameserver """
+
+    def __init__(self, zone, *args, **kwargs):
+        """Create a :class:`ExternalNameserver` object
+
+        :param zone: The name of the zone for this :class:`ExternalNameserver`
+        :param deny: does this block requests or add them
+        :param hosts: list of :class:`ExternalNameserverEntry`
+        :param active: active? Y/N
+
+        """
+        self._zone = zone
+        self.uri = '/ExtNameserver/{}/'.format(self._zone)
+        self._deny = None
+        self._hosts = None
+        self._active = None
+
+        if len(args) == 0 and len(kwargs) == 0:
+            self._get()
+        else:
+            self._post(*args, **kwargs)
+
+    def _get(self):
+        """Get a :class:`ExternalNameserver` object from the DynECT System"""
+        api_args = {'zone': self._zone}
+        response = DynectSession.get_session().execute(self.uri, 'GET',
+                                                       api_args)
+        self._build(response['data'])
+
+    def _post(self, *args, **kwargs):
+        """Create a new :class:`ExternalNameserver` object on the DynECT System"""
+        api_args = {'zone':self._zone}
+        self._deny = kwargs.get('deny',None)
+        if self._deny: api_args['deny'] = self._deny
+
+        self._active = kwargs.get('active',None)
+        if self._active: api_args['active'] = self._active
+
+        self._hosts = kwargs.get('hosts',None)
+        if self._hosts:
+            api_args['hosts'] = list()
+            for host in self._hosts:
+                if isinstance(host, ExternalNameserverEntry):
+                    api_args['hosts'].append(host._json)
+                else:
+                    api_args['hosts'].append(host)
+        response = DynectSession.get_session().execute(self.uri, 'POST',
+                                                       api_args)
+        self._build(response['data'])
+
+    def _update(self, api_args=None):
+        """Update an existing :class:`AdvancedRedirect` Service
+         on the DynECT System"""
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        self._build(response['data'])
+
+    def _build(self, data):
+        self._hosts = []
+        for key, val in data.items():
+            if key == 'hosts':
+                for host in val:
+                    host['api'] = 'Y'
+                    self._hosts.append(ExternalNameserverEntry(
+                        host['address'], notifies=host['notifies']))
+                continue
+            setattr(self, '_' + key, val)
+
+    @property
+    def deny(self):
+        """Gets deny value :class:`ExternalNameserver` object"""
+        self._get()
+        return self._deny
+
+    @deny.setter
+    def deny(self, deny):
+        """
+        Sets deny value of :class:`ExternalNameserver` object
+        :param deny: Y/N
+        """
+        api_args = {'zone': self._zone, 'deny': deny}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+
+    @property
+    def hosts(self):
+        """
+        :class:`ExternalNameserver` hosts. list of ExternalNameserverEntries
+        """
+        self._get()
+        return [ExternalNameserverEntry(host['address'], host['notifies'])
+                for host in self._hosts]
+
+    @hosts.setter
+    def hosts(self, value):
+        api_args = dict()
+        api_args['hosts'] = list()
+        for host in value:
+            if isinstance(host, ExternalNameserverEntry):
+                api_args['hosts'].append(host._json)
+            else:
+                api_args['hosts'].append(host)
+        self._update(api_args)
+
+
+    @property
+    def active(self):
+        """Gets active status of :class:`ExternalNameserver` object. """
+        self._get()
+        return self._active
+
+    @active.setter
+    def active(self, active):
+        """
+        Sets active status of :class:`ExternalNameserver` object.
+        :param active: Y/N
+        """
+        api_args = {'zone': self._zone, 'active': active}
+        response = DynectSession.get_session().execute(self.uri, 'PUT',
+                                                       api_args)
+        for key, val in response['data'].items():
+            setattr(self, '_' + key, val)
+
+    @property
+    def zone(self):
+        """Gets name of zone in :class:`ExternalNameserver`"""
+        return self._zone
+
+    def delete(self):
+        api_args = {}
+        DynectSession.get_session().execute(self.uri, 'DELETE',
+                                            api_args)
+
+
+class ExternalNameserverEntry(object):
+    """A class representing DynECT :class:`ExternalNameserverEntry`"""
+
+    def __init__(self, address, *args, **kwargs):
+        """Create a :class:`ExternalNameserverEntry` object
+
+        :param address: address or CIDR of this nameserver Entry
+        :param notifies: Y/N Do we send notifies to this host?
+
+        """
+        self._address = address
+        self._notifies = kwargs.get('notifies',None)
+
+
+    @property
+    def _json(self):
+        """Get the JSON representation of this :class:`ExternalNameserverEntry`
+        object
+        """
+        json_blob = {'address': self._address,
+                     'notifies': self._notifies,
+                     }
+        return {x: json_blob[x] for x in json_blob if json_blob[x] is not None}
+
+
+    @property
+    def address(self):
+        """Gets address value :class:`ExternalNameserverEntry` object"""
+        return self._address
+
+
+    @address.setter
+    def address(self, address):
+        """
+        Sets address of :class:`ExternalNameserverEntry` object
+        :param address: address or CIDR
+        """
+        self._address = address
+
+
+    @property
+    def notifies(self):
+        """Gets address value :class:`ExternalNameserverEntry` object"""
+        return self._notifies
+
+
+    @notifies.setter
+    def notifies(self, notifies):
+        """
+        Sets notifies of :class:`ExternalNameserverEntry` object
+        :param notifies: send notifies to this server. Y/N
+        """
+        self._notifies = notifies
+
+    def __str__(self):
+        """str override"""
+        return force_unicode(
+            '<ExternalNameserverEntry>: {}, Notifies: {}').format(
+            self._address,
+            self._notifies)
+
+    __repr__ = __unicode__ = __str__
+
+    def __bytes__(self):
+        """bytes override"""
+        return bytes(self.__str__())

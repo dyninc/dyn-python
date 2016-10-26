@@ -1292,8 +1292,7 @@ class ExternalNameserver(object):
         :class:`ExternalNameserver` hosts. list of ExternalNameserverEntries
         """
         self._get()
-        return [ExternalNameserverEntry(host['address'], host['notifies'])
-                for host in self._hosts]
+        return [ExternalNameserverEntry(host.address, host.notifies) for host in self._hosts]
 
     @hosts.setter
     def hosts(self, value):
@@ -1346,16 +1345,14 @@ class ExternalNameserverEntry(object):
 
         """
         self._address = address
-        self._notifies = kwargs.get('notifies', None)
+        self._notifies = kwargs.get('notifies', 'N')
 
     @property
     def _json(self):
         """Get the JSON representation of this :class:`ExternalNameserverEntry`
         object
         """
-        json_blob = {'address': self._address,
-                     'notifies': self._notifies,
-                     }
+        json_blob = {'address': self._address, 'notifies': self._notifies}
         return {x: json_blob[x] for x in json_blob if json_blob[x] is not None}
 
     @property

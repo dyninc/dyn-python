@@ -15,5 +15,6 @@ from dyn.tm.services.gslb import *  # NOQA
 from dyn.tm.services.reversedns import ReverseDNS  # NOQA
 from dyn.tm.services.rttm import *  # NOQA
 from dyn.tm.services.dsf import *  # NOQA
+from dyn.tm.services.advanced_redirect import *  # NOQA
 
 __author__ = 'jnappi'

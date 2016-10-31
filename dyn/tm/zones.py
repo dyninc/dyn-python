@@ -19,7 +19,7 @@ from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
 from dyn.tm.session import DynectSession
 from dyn.tm.services import (ActiveFailover, DynamicDNS, DNSSEC,
                              TrafficDirector, GSLB, ReverseDNS, RTTM,
-                             HTTPRedirect)
+                             HTTPRedirect, AdvancedRedirect)
 from dyn.tm.task import Task
 
 __author__ = 'jnappi'
@@ -640,6 +640,24 @@ class Zone(object):
             httpredirs.append(
                 HTTPRedirect(self._name, self._fqdn, api=False, **httpredir))
         return httpredirs
+
+    def get_all_advanced_redirect(self):
+        """Retrieve a list of all :class:`AdvancedRedirect` services associated
+        with this :class:`Zone`
+
+        :return: A :class:`List` of :class:`AdvancedRedirect` Services
+        """
+        uri = '/AdvRedirect/{}/'.format(self._name)
+        api_args = {'rules': 'Y'}
+        response = DynectSession.get_session().execute(uri, 'GET', api_args)
+        advredirs = []
+        for advredir in response['data']:
+            del advredir['zone']
+            del advredir['fqdn']
+            advredirs.append(
+                AdvancedRedirect(self._name, self._fqdn,
+                                 api=False, **advredir))
+        return advredirs
 
     def get_all_gslb(self):
         """Retrieve a list of all :class:`GSLB` services associated with this

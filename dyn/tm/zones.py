@@ -1352,7 +1352,7 @@ class ExternalNameserverEntry(object):
         """Get the JSON representation of this :class:`ExternalNameserverEntry`
         object
         """
-        json_blob = {'address': self._address, 'notifies': self._notifies }
+        json_blob = {'address': self._address, 'notifies': self._notifies}
         return {k: v for k, v in json_blob.items() if v is not None}
 
     @property

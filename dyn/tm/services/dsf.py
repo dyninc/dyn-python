@@ -633,11 +633,15 @@ class _DSFRecord(object):
 
     implicitPublish = implicit_publish  # NOQA
 
-    def delete(self, notes=None):
+    def delete(self, notes=None, publish=True):
         """Delete this :class:`DSFRecord`
         :param notes: Optional zone publish notes
+        :param publish: Publish at run time. Default is True
         """
-        api_args = {'publish': 'Y'}
+        api_args = {}
+
+        if publish and self._implicitPublish:
+            api_args['publish'] = 'Y'
         if notes:
             api_args['notes'] = notes
         uri = '/DSFRecord/{}/{}'.format(self._service_id, self._dsf_record_id)
@@ -2048,11 +2052,15 @@ class DSFRecordSet(object):
             json_blob['records'] = []
         return json_blob
 
-    def delete(self, notes=None):
+    def delete(self, notes=None, publish=True):
         """Delete this :class:`DSFRecordSet` from the Dynect System
         :param notes: Optional zone publish notes
+        :param publish: Publish at run time. Default is True
         """
-        api_args = {'publish': 'Y'}
+        api_args = {}
+
+        if publish and self._implicitPublish:
+            api_args['publish'] = 'Y'
         if notes:
             api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
@@ -2651,11 +2659,15 @@ class DSFResponsePool(object):
 
     implicitPublish = implicit_publish
 
-    def delete(self, notes=None):
+    def delete(self, notes=None, publish=True):
         """Delete this :class:`DSFResponsePool` from the DynECT System
         :param notes: Optional zone publish notes
+        :param publish: Publish at run time. Default is True
         """
-        api_args = {'publish': 'Y'}
+        api_args = {}
+
+        if publish and self._implicitPublish:
+            api_args['publish'] = 'Y'
         if notes:
             api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)
@@ -3039,12 +3051,16 @@ class DSFRuleset(object):
 
         return json_blob
 
-    def delete(self, notes=None):
+    def delete(self, notes=None, publish=True):
         """Remove this :class:`DSFRuleset` from it's associated
         :class:`TrafficDirector` Service
         :param notes: Optional zone publish notes
+        :param publish: Publish at run time. Default is True
         """
-        api_args = {'publish': 'Y'}
+        api_args = {}
+
+        if publish and self._implicitPublish:
+            api_args['publish'] = 'Y'
         if notes:
             api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

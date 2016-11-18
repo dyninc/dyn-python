@@ -2350,11 +2350,15 @@ class DSFFailoverChain(object):
 
     implicitPublish = implicit_publish
 
-    def delete(self, notes=None):
+    def delete(self, notes=None, publish=True):
         """Delete this :class:`DSFFailoverChain` from the Dynect System
         :param notes: Optional zone publish notes
+        :param publish: Publish at run time. Default is True
         """
-        api_args = {'publish': 'Y'}
+        api_args = {}
+
+        if publish and self._implicitPublish:
+            api_args['publish'] = 'Y'
         if notes:
             api_args['notes'] = notes
         DynectSession.get_session().execute(self.uri, 'DELETE', api_args)

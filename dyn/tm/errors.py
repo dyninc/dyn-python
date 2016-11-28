@@ -142,6 +142,7 @@ class DynectQueryTimeout(DynectError):
     def __str__(self):
         return self.message
 
+
 ACTION_ERRORS = (DynectAuthError, DynectCreateError, DynectUpdateError,
                  DynectGetError, DynectDeleteError)
 

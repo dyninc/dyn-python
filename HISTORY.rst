@@ -1,6 +1,10 @@
 Release History
 ---------------
 
+1.7.10 (2016-12-08)
+++++++++++++++++++
+*TSIG names can now be attached to `dyn.tm.zones.ExternalNamserver`
+
 1.7.9 (2016-11-28)
 ++++++++++++++++++
 *Add publish parameter to delete methods

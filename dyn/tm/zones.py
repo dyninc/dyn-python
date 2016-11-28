@@ -1224,6 +1224,8 @@ class ExternalNameserver(object):
         :param deny: does this block requests or add them
         :param hosts: list of :class:`ExternalNameserverEntry`
         :param active: active? Y/N
+        :param tsig_key_name: Name of TSIG to associate with this
+         :class:`ExternalNameserver`
 
         """
         self._zone = zone
@@ -1231,6 +1233,7 @@ class ExternalNameserver(object):
         self._deny = None
         self._hosts = None
         self._active = None
+        self._tsig_key_name = None
 
         if len(args) == 0 and len(kwargs) == 0:
             self._get()
@@ -1251,6 +1254,10 @@ class ExternalNameserver(object):
         self._deny = kwargs.get('deny', None)
         if self._deny:
             api_args['deny'] = self._deny
+
+        self._tsig_key_name = kwargs.get('tsig_key_name', None)
+        if self._tsig_key_name:
+            api_args['tsig_key_name'] = self._tsig_key_name
 
         self._active = kwargs.get('active', None)
         if self._active:
@@ -1299,10 +1306,22 @@ class ExternalNameserver(object):
         :param deny: Y/N
         """
         api_args = {'zone': self._zone, 'deny': deny}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args=api_args)
+
+    @property
+    def tsig_key_name(self):
+        """Gets tsig_key_name value :class:`ExternalNameserver` object"""
+        self._get()
+        return self._tsig_key_name
+
+    @tsig_key_name.setter
+    def tsig_key_name(self, tsig_key_name):
+        """
+        Sets deny value of :class:`ExternalNameserver` object
+        :param deny: Y/N
+        """
+        api_args = {'zone': self._zone, 'tsig_key_name': tsig_key_name}
+        self._update(api_args=api_args)
 
     @property
     def hosts(self):
@@ -1336,10 +1355,7 @@ class ExternalNameserver(object):
         :param active: Y/N
         """
         api_args = {'zone': self._zone, 'active': active}
-        response = DynectSession.get_session().execute(self.uri, 'PUT',
-                                                       api_args)
-        for key, val in response['data'].items():
-            setattr(self, '_' + key, val)
+        self._update(api_args=api_args)
 
     @property
     def zone(self):

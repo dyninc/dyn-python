@@ -29,6 +29,8 @@ def generate_key(force=False):
     key = ''.join([random.SystemRandom().choice(choices) for i in range(50)])
     generate_key.secret_key = key
     return generate_key.secret_key
+
+
 generate_key.secret_key = None
 
 

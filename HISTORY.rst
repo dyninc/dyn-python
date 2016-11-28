@@ -1,6 +1,14 @@
 Release History
 ---------------
+
+1.7.9 (2016-11-28)
+++++++++++++++++++
+*Add publish parameter to delete methods
+*Check publish and implicitPublish for delete
+
+
 1.7.8 (2016-10-31)
+++++++++++++++++++
 *Minor Bugfixes to ExtNameServer.
 *Advanced Redirect SDK calls (Beta)
 

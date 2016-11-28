@@ -30,8 +30,10 @@ class DNSSECKey(object):
         """Create a :class:`DNSSECKey` object
 
         :param key_type: The type of this key. (KSK or ZSK)
-        :param algorithm: One of (RSA/SHA-1, RSA/SHA-256, RSA/SHA-512, DSA)
-        :param bits: length of the key. Valid values: 1024, 2048, or 4096
+        :param algorithm: One of (RSA/SHA-1, RSA/SHA-256, RSA/SHA-512, DSA,
+         ECDSAP256SHA256, ECDSAP384SHA384)
+        :param bits: length of the key. Valid values: 256, 384, 1024, 2048,
+         or 4096
         :param start_ts: An epoch time when key is to be valid
         :param lifetime: Lifetime of the key expressed in seconds
         :param overlap: Time before key expiration when a replacement key is

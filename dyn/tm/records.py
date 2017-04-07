@@ -9,11 +9,11 @@ from .session import DynectSession
 from ..compat import force_unicode
 
 __author__ = 'jnappi'
-__all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'ALIASRecord', 'CDSRecord',
-           'CDNSKEYRecord', 'CERTRecord', 'CNAMERecord', 'CSYNCRecord',
-           'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord', 'DSRecord',
-           'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord', 'MXRecord',
-           'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord',
+__all__ = ['DNSRecord', 'ARecord', 'AAAARecord', 'ALIASRecord', 'CAARecord',
+           'CDSRecord', 'CDNSKEYRecord', 'CERTRecord', 'CNAMERecord',
+           'CSYNCRecord', 'DHCIDRecord', 'DNAMERecord', 'DNSKEYRecord',
+           'DSRecord', 'KEYRecord', 'KXRecord', 'LOCRecord', 'IPSECKEYRecord',
+           'MXRecord', 'NAPTRRecord', 'PTRRecord', 'PXRecord', 'NSAPRecord',
            'RPRecord', 'NSRecord', 'SOARecord', 'SPFRecord', 'SRVRecord',
            'TLSARecord', 'TXTRecord', 'SSHFPRecord', 'UNKNOWNRecord']
 
@@ -1238,6 +1238,107 @@ class DNSKEYRecord(DNSRecord):
     def __repr__(self):
         """print override"""
         return self.__str__()
+
+class CAARecord(DNSRecord):
+    """
+    """
+
+    def __init__(self, zone, fqdn, *args, **kwargs):
+        """Create a :class:`~dyn.tm.records.CAARecord` object
+
+        :param zone: Name of zone where the record will be added
+        :param fqdn: Name of node where the record will be added
+        :param flags: A byte
+        :param tag: A string defining the tag component of the <tag>=<value>
+            record property. May be one of:
+			issue: The issue property entry authorizes the holder of
+				the domain name <Issuer Domain Name> or a party acting under
+				the explicit authority of the holder of that domain name to
+				issue certificates for the domain in which the property is
+				published.
+
+			issuewild: The issuewild property entry authorizes the
+				holder of the domain name <Issuer Domain Name> or a party
+				acting under the explicit authority of the holder of that
+				domain name to issue wildcard certificates for the domain in
+				which the property is published.
+
+			iodef: Specifies a URL to which an issuer MAY report
+				certificate issue requests that are inconsistent with the
+				issuer's Certification Practices or Certificate Policy, or
+				that a Certificate Evaluator may use to report observation
+				of a possible policy violation.
+        :param value: A string representing the value component of the property.
+			This will be an issuer domain name or a URL.
+        :param ttl: TTL for this record. Use 0 for zone default
+        """
+        fields = ['flags', 'tag', 'value', 'ttl']
+
+        create = kwargs.pop('create', None)
+        if create is not None:
+            super(CAARecord, self).__init__(zone, fqdn, create)
+            self._build(kwargs)
+            self._record_type = 'CAARecord'
+        else:
+            super(CAARecord, self).__init__(zone, fqdn)
+            self._record_type = 'CAARecord'
+            arg_length = len(args) + len(kwargs)
+            if 'record_id' in kwargs:
+                self._get_record(kwargs['record_id'])
+            elif arg_length == 1:
+                self._get_record(*args, **kwargs)
+            elif any(field in kwargs for field in fields) or arg_length >= 1:
+                self._post(*args, **kwargs)
+
+    def _post(self, flags, tag, value, ttl=0):
+        self._flags = flags
+        self._tag = tag
+        self._value = value
+        self._ttl = ttl
+        self.api_args = dict(
+            rdata=dict(flags=flags, tag=tag, value=value),
+            ttl=ttl
+        )
+        self._create_record(self.api_args)
+
+    def rdata(self):
+        return dict(caa_rdata=super(CAARecord, self).rdata())
+
+    @property
+    def flags(self):
+        self.pull()
+        return self._flags
+
+    @flags.setter
+    def flags(self, value):
+        self.api_args['rdata']['flags'] = value
+        self._update_record(self.api_args)
+        if self._implicitPublish:
+            self._flags = value
+
+    @property
+    def tag(self):
+        self.pull()
+        return self._tag
+
+    @tag.setter
+    def tag(self, value):
+        self.api_args['rdata']['tag'] = value
+        self._update_record(self.api_args)
+        if self._implicitPublish:
+            self._tag = value
+
+    @property
+    def value(self):
+        self.pull()
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self.api_args['rdata']['value'] = value
+        self._update_record(self.api_args)
+        if self._implicitPublish:
+            self._value = value
 
 
 class DSRecord(DNSRecord):

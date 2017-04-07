@@ -9,7 +9,7 @@ from dyn.compat import force_unicode
 from dyn.tm.errors import (DynectCreateError, DynectGetError,
                            DynectInvalidArgumentError)
 from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
-                            CDNSKEYRecord, CSYNCRecord, CERTRecord,
+                            CAA, CDNSKEYRecord, CSYNCRecord, CERTRecord,
                             CNAMERecord, DHCIDRecord, DNAMERecord,
                             DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
                             LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,
@@ -27,15 +27,15 @@ __all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node',
            'ExternalNameserver', 'ExternalNameserverEntry']
 
 RECS = {'A': ARecord, 'AAAA': AAAARecord, 'ALIAS': ALIASRecord,
-        'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord, 'CSYNC': CSYNCRecord,
-        'CERT': CERTRecord, 'CNAME': CNAMERecord, 'DHCID': DHCIDRecord,
-        'DNAME': DNAMERecord, 'DNSKEY': DNSKEYRecord, 'DS': DSRecord,
-        'KEY': KEYRecord, 'KX': KXRecord, 'LOC': LOCRecord,
+        'CAA': CAARecord, 'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord,
+        'CSYNC': CSYNCRecord, 'CERT': CERTRecord, 'CNAME': CNAMERecord,
+        'DHCID': DHCIDRecord, 'DNAME': DNAMERecord, 'DNSKEY': DNSKEYRecord,
+        'DS': DSRecord, 'KEY': KEYRecord, 'KX': KXRecord, 'LOC': LOCRecord,
         'IPSECKEY': IPSECKEYRecord, 'MX': MXRecord, 'NAPTR': NAPTRRecord,
         'PTR': PTRRecord, 'PX': PXRecord, 'NSAP': NSAPRecord,
-        'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord,
-        'SPF': SPFRecord, 'SRV': SRVRecord, 'TLSA': TLSARecord,
-        'TXT': TXTRecord, 'SSHFP': SSHFPRecord, 'UNKNOWN': UNKNOWNRecord}
+        'RP': RPRecord, 'NS': NSRecord, 'SOA': SOARecord, 'SPF': SPFRecord,
+        'SRV': SRVRecord, 'TLSA': TLSARecord, 'TXT': TXTRecord,
+        'SSHFP': SSHFPRecord, 'UNKNOWN': UNKNOWNRecord}
 
 
 def get_all_zones():
@@ -522,14 +522,14 @@ class Zone(object):
         are owned by this node.
 
         :param record_type: The type of :class:`DNSRecord` you wish returned.
-            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
+            Valid record_type arguments are: 'A', 'AAAA', 'CAA', 'CERT', 'CNAME',
             'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
             'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
             'SRV', and 'TXT'.
         :return: A :class:`List` of :class:`DNSRecord`'s
         """
         names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'ALIAS': 'ALIASRecord',
-                 'CDS': 'CDSRecord', 'CDNSKEY': 'CDNSKEYRecord',
+                 'CAA': 'CAARecord', 'CDS': 'CDSRecord', 'CDNSKEY': 'CDNSKEYRecord',
                  'CERT': 'CERTRecord', 'CSYNC': 'CSYNCRecord',
                  'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
                  'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
@@ -1052,16 +1052,18 @@ class Node(object):
             'SRV', and 'TXT'.
         :return: A list of :class:`DNSRecord`'s
         """
-        names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'CERT': 'CERTRecord',
-                 'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
-                 'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
-                 'DS': 'DSRecord', 'KEY': 'KEYRecord', 'KX': 'KXRecord',
-                 'LOC': 'LOCRecord', 'IPSECKEY': 'IPSECKEYRecord',
-                 'MX': 'MXRecord', 'NAPTR': 'NAPTRRecord', 'PTR': 'PTRRecord',
+        names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'CAA': 'CAARecord',
+                 'CERT': 'CERTRecord', 'CNAME': 'CNAMERecord',
+                 'DHCID': 'DHCIDRecord', 'DNAME': 'DNAMERecord',
+                 'DNSKEY': 'DNSKEYRecord', 'DS': 'DSRecord',
+                 'KEY': 'KEYRecord', 'KX': 'KXRecord', 'LOC': 'LOCRecord',
+                 'IPSECKEY': 'IPSECKEYRecord', 'MX': 'MXRecord',
+                 'NAPTR': 'NAPTRRecord', 'PTR': 'PTRRecord',
                  'PX': 'PXRecord', 'NSAP': 'NSAPRecord', 'RP': 'RPRecord',
                  'NS': 'NSRecord', 'SOA': 'SOARecord', 'SPF': 'SPFRecord',
-                 'SRV': 'SRVRecord', 'TLSA': 'TLSARecord', 'TXT': 'TXTRecord',
-                 'SSHFP': 'SSHFPRecord', 'ALIAS': 'ALIASRecord'}
+                 'SRV': 'SRVRecord', 'TLSA': 'TLSARecord',
+                 'TXT': 'TXTRecord', 'SSHFP': 'SSHFPRecord',
+                 'ALIAS': 'ALIASRecord'}
         constructor = RECS[record_type]
         uri = '/{}/{}/{}/'.format(names[record_type], self.zone,
                                   self.fqdn)

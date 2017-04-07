@@ -6,8 +6,8 @@ from collections import Iterable
 from dyn.compat import force_unicode, string_types
 from dyn.tm.utils import APIList, Active
 from dyn.tm.errors import DynectInvalidArgumentError
-from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
-                            CDNSKEYRecord, CSYNCRecord, CERTRecord,
+from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CAARecord,
+                            CDSRecord, CDNSKEYRecord, CSYNCRecord, CERTRecord,
                             CNAMERecord, DHCIDRecord, DNAMERecord,
                             DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
                             LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,

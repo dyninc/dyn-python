@@ -6,10 +6,11 @@ behavior.
 """
 import base64
 import copy
-import time
 import locale
 import logging
+import re
 import threading
+import time
 from datetime import datetime
 
 from . import __version__
@@ -114,6 +115,7 @@ class SessionEngine(Singleton):
         self._encoding = locale.getdefaultlocale()[-1] or 'UTF-8'
         self._token = self._conn = self._last_response = None
         self._permissions = None
+        self._tasks = {}
 
     @classmethod
     def new_session(cls, *args, **kwargs):
@@ -243,6 +245,40 @@ class SessionEngine(Singleton):
         """
         return None
 
+    def _retry(self, msgs, final=False):
+        """Retry logic around throttled or blocked tasks"""
+
+        throttle_err = 'RATE_LIMIT_EXCEEDED'
+        throttled = any(throttle_err == err['ERR_CD'] for err in msgs)
+
+        if throttled:
+            # We're rate limited, so wait 5 seconds and try again
+            return dict(retry=True, wait=5, final=final)
+
+        blocked_err = 'Operation blocked by current task'
+        blocked = any(blocked_err in err['INFO'] for err in msgs)
+
+        pat = re.compile(r'^task_id:\s+(\d+)$')
+        if blocked:
+            try:
+                # Get the task id
+                task = next(pat.match(i['INFO']).group(1) for i in msgs
+                            if pat.match(i.get('INFO', '')))
+            except:
+                # Task id could not be recovered
+                wait = 1
+            else:
+                # Exponential backoff for individual blocked tasks
+                wait = self._tasks.get(task, 1)
+                self._tasks[task] = wait * 2 + 1
+
+            # Give up if final or wait > 30 seconds
+            return dict(retry=True, wait=wait, final=wait > 30 or final)
+
+        # Neither blocked nor throttled?
+        return dict(retry=False, wait=0, final=True)
+
+
     def _handle_response(self, response, uri, method, raw_args, final):
         """Handle the processing of the API's response"""
         body = response.read()
@@ -258,12 +294,15 @@ class SessionEngine(Singleton):
                                       ret_val['status']))
 
         self._meta_update(uri, method, ret_val)
-        # Handle retrying if ZoneProp is blocking the current task
-        error_msg = 'Operation blocked by current task'
-        if ret_val['status'] == 'failure' and error_msg in \
-                ret_val['msgs'][0]['INFO'] and not final:
-            time.sleep(8)
-            return self.execute(uri, method, raw_args, final=True)
+
+        retry = {}
+        # Try to retry?
+        if ret_val['status'] == 'failure' and not final:
+            retry = self._retry(ret_val['msgs'], final)
+
+        if retry.get('retry', False):
+            time.sleep(retry['wait'])
+            return self.execute(uri, method, raw_args, final=retry['final'])
         else:
             return self._process_response(ret_val, method)
 

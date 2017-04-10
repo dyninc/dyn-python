@@ -9,7 +9,7 @@ from dyn.compat import force_unicode
 from dyn.tm.errors import (DynectCreateError, DynectGetError,
                            DynectInvalidArgumentError)
 from dyn.tm.records import (ARecord, AAAARecord, ALIASRecord, CDSRecord,
-                            CAA, CDNSKEYRecord, CSYNCRecord, CERTRecord,
+                            CAARecord, CDNSKEYRecord, CSYNCRecord, CERTRecord,
                             CNAMERecord, DHCIDRecord, DNAMERecord,
                             DNSKEYRecord, DSRecord, KEYRecord, KXRecord,
                             LOCRecord, IPSECKEYRecord, MXRecord, NAPTRRecord,

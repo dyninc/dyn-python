@@ -1240,7 +1240,16 @@ class DNSKEYRecord(DNSRecord):
         return self.__str__()
 
 class CAARecord(DNSRecord):
-    """
+    """Certification Authority Authorization (CAA) Resource Record
+
+	This record allows a DNS domain name holder to specify one or more
+	Certification Authorities (CAs) authorized to issue certificates for that
+	domain.  CAA Resource Records allow a public Certification Authority to
+	implement additional controls to reduce the risk of unintended certificate
+	mis-issue.  This document defines the syntax of the CAA record and rules for
+	processing CAA records by certificate issuers.
+
+    see: https://tools.ietf.org/html/rfc6844
     """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
@@ -1306,7 +1315,7 @@ class CAARecord(DNSRecord):
 
     @property
     def flags(self):
-        self.pull()
+        self._pull()
         return self._flags
 
     @flags.setter
@@ -1318,7 +1327,7 @@ class CAARecord(DNSRecord):
 
     @property
     def tag(self):
-        self.pull()
+        self._pull()
         return self._tag
 
     @tag.setter
@@ -1330,7 +1339,7 @@ class CAARecord(DNSRecord):
 
     @property
     def value(self):
-        self.pull()
+        self._pull()
         return self._value
 
     @value.setter

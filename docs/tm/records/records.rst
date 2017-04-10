@@ -18,6 +18,12 @@ ALIASRecord
     :members:
     :undoc-members:    
 
+CAARecord
+==========
+.. autoclass:: dyn.tm.records.CAARecord
+    :members:
+    :undoc-members:
+
 CERTRecord
 ==========
 .. autoclass:: dyn.tm.records.CERTRecord

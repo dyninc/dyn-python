@@ -1,6 +1,13 @@
 Release History
 ---------------
 
+1.8.0 (2017-07-31)
+++++++++++++++++++
+*CAA Record support
+*Exponential backoff on blocked tasks
+*Misc bug fixes
+
+
 1.7.10 (2016-12-08)
 ++++++++++++++++++
 *TSIG names can now be attached to `dyn.tm.zones.ExternalNamserver`

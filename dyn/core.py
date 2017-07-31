@@ -278,7 +278,6 @@ class SessionEngine(Singleton):
         # Neither blocked nor throttled?
         return dict(retry=False, wait=0, final=True)
 
-
     def _handle_response(self, response, uri, method, raw_args, final):
         """Handle the processing of the API's response"""
         body = response.read()

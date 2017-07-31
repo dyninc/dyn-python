@@ -1239,18 +1239,18 @@ class DNSKEYRecord(DNSRecord):
         """print override"""
         return self.__str__()
 
+
 class CAARecord(DNSRecord):
     """Certification Authority Authorization (CAA) Resource Record
 
-	This record allows a DNS domain name holder to specify one or more
-	Certification Authorities (CAs) authorized to issue certificates for that
-	domain.  CAA Resource Records allow a public Certification Authority to
-	implement additional controls to reduce the risk of unintended certificate
-	mis-issue.  This document defines the syntax of the CAA record and rules for
-	processing CAA records by certificate issuers.
+    This record allows a DNS domain name holder to specify one or more
+    Certification Authorities (CAs) authorized to issue certificates for that
+    domain.  CAA Resource Records allow a public Certification Authority to
+    implement additional controls to reduce the risk of unintended certificate
+    mis-issue.  This document defines the syntax of the CAA record and rules
+    for processing CAA records by certificate issuers.
 
-    see: https://tools.ietf.org/html/rfc6844
-    """
+    see: https://tools.ietf.org/html/rfc6844 """
 
     def __init__(self, zone, fqdn, *args, **kwargs):
         """Create a :class:`~dyn.tm.records.CAARecord` object
@@ -1260,26 +1260,26 @@ class CAARecord(DNSRecord):
         :param flags: A byte
         :param tag: A string defining the tag component of the <tag>=<value>
             record property. May be one of:
-			issue: The issue property entry authorizes the holder of
-				the domain name <Issuer Domain Name> or a party acting under
-				the explicit authority of the holder of that domain name to
-				issue certificates for the domain in which the property is
-				published.
+            issue: The issue property entry authorizes the holder of
+                the domain name <Issuer Domain Name> or a party acting under
+                the explicit authority of the holder of that domain name to
+                issue certificates for the domain in which the property is
+                published.
 
-			issuewild: The issuewild property entry authorizes the
-				holder of the domain name <Issuer Domain Name> or a party
-				acting under the explicit authority of the holder of that
-				domain name to issue wildcard certificates for the domain in
-				which the property is published.
+            issuewild: The issuewild property entry authorizes the
+                holder of the domain name <Issuer Domain Name> or a party
+                acting under the explicit authority of the holder of that
+                domain name to issue wildcard certificates for the domain in
+                which the property is published.
 
-			iodef: Specifies a URL to which an issuer MAY report
-				certificate issue requests that are inconsistent with the
-				issuer's Certification Practices or Certificate Policy, or
-				that a Certificate Evaluator may use to report observation
-				of a possible policy violation.
-        :param value: A string representing the value component of the property.
-			This will be an issuer domain name or a URL.
-        :param ttl: TTL for this record. Use 0 for zone default
+            iodef: Specifies a URL to which an issuer MAY report
+                certificate issue requests that are inconsistent with the
+                issuer's Certification Practices or Certificate Policy, or
+                that a Certificate Evaluator may use to report observation
+                of a possible policy violation.
+            :param value: A string representing the value component of the
+                property.  This will be an issuer domain name or a URL.
+            :param ttl: TTL for this record. Use 0 for zone default
         """
         fields = ['flags', 'tag', 'value', 'ttl']
 

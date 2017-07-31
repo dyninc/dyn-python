@@ -635,10 +635,11 @@ class Zone(object):
         response = DynectSession.get_session().execute(uri, 'GET', api_args)
         httpredirs = []
         for httpredir in response['data']:
+            fqdn = httpredir['fqdn']
             del httpredir['zone']
             del httpredir['fqdn']
             httpredirs.append(
-                HTTPRedirect(self._name, self._fqdn, api=False, **httpredir))
+                HTTPRedirect(self._name, fqdn, api=False, **httpredir))
         return httpredirs
 
     def get_all_advanced_redirect(self):

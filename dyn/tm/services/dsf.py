@@ -3578,7 +3578,7 @@ class DSFNode(object):
         self.records = {}
 
         self.recs = {'A': ARecord, 'AAAA': AAAARecord,
-                     'ALIAS': ALIASRecord, 'CDS': CDSRecord,
+                     'ALIAS': ALIASRecord, 'CAA': CAARecord, 'CDS': CDSRecord,
                      'CDNSKEY': CDNSKEYRecord, 'CSYNC': CSYNCRecord,
                      'CERT': CERTRecord, 'CNAME': CNAMERecord,
                      'DHCID': DHCIDRecord, 'DNAME': DNAMERecord,
@@ -3597,10 +3597,10 @@ class DSFNode(object):
         """Adds an a record with the provided data to this :class:`Node`
 
         :param record_type: The type of record you would like to add.
-            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
-            'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
-            'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
-            'SRV', and 'TXT'.
+            Valid record_type arguments are: 'A', 'AAAA', 'CAA', 'CERT',
+            'CNAME', 'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC',
+            'IPSECKEY', 'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA',
+            'SPF', 'SRV', and 'TXT'.
         :param args: Non-keyword arguments to pass to the Record constructor
         :param kwargs: Keyword arguments to pass to the Record constructor
         """
@@ -3650,13 +3650,14 @@ class DSFNode(object):
         are owned by this node.
 
         :param record_type: The type of :class:`DNSRecord` you wish returned.
-            Valid record_type arguments are: 'A', 'AAAA', 'CERT', 'CNAME',
-            'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC', 'IPSECKEY',
-            'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA', 'SPF',
-            'SRV', and 'TXT'.
+            Valid record_type arguments are: 'A', 'AAAA', 'CAA', 'CERT',
+            'CNAME', 'DHCID', 'DNAME', 'DNSKEY', 'DS', 'KEY', 'KX', 'LOC',
+            'IPSECKEY', 'MX', 'NAPTR', 'PTR', 'PX', 'NSAP', 'RP', 'NS', 'SOA',
+            'SPF', 'SRV', and 'TXT'.
         :return: A list of :class:`DNSRecord`'s
         """
-        names = {'A': 'ARecord', 'AAAA': 'AAAARecord', 'CERT': 'CERTRecord',
+        names = {'A': 'ARecord', 'AAAA': 'AAAARecord',
+                 'CAA': 'CAARecord', 'CERT': 'CERTRecord',
                  'CNAME': 'CNAMERecord', 'DHCID': 'DHCIDRecord',
                  'DNAME': 'DNAMERecord', 'DNSKEY': 'DNSKEYRecord',
                  'DS': 'DSRecord', 'KEY': 'KEYRecord', 'KX': 'KXRecord',

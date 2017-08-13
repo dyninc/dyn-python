@@ -287,6 +287,13 @@ class SessionEngine(Singleton):
         if self.poll_incomplete:
             response, body = self.poll_response(response, body)
             self._last_response = response
+
+        if not body:
+            err_msg_fmt = "Received Empty Response: {!r} status: {!r} {!r}"
+            error_message = err_msg_fmt.format(body, response.status, uri)
+            self.logger.error(error_message)
+            raise ValueError(error_message)
+
         ret_val = json.loads(body.decode('UTF-8'))
         if self.__call_cache is not None:
             self.__call_cache.append((uri, method, clean_args(raw_args),

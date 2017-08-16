@@ -11,7 +11,6 @@ import logging
 import re
 import threading
 import time
-import sys
 from datetime import datetime
 
 from . import __version__

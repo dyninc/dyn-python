@@ -298,7 +298,7 @@ class SessionEngine(Singleton):
         try:
             ret_val = json.loads(body.decode('UTF-8'))
         except ValueError:
-            logging.error(json_err_fmt.format(body, response.status, uri))
+            self.logger.error(json_err_fmt.format(body, response.status, uri))
             raise
 
         if self.__call_cache is not None:

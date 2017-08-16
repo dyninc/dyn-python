@@ -11,6 +11,7 @@ import logging
 import re
 import threading
 import time
+import sys
 from datetime import datetime
 
 from . import __version__
@@ -294,7 +295,13 @@ class SessionEngine(Singleton):
             self.logger.error(error_message)
             raise ValueError(error_message)
 
-        ret_val = json.loads(body.decode('UTF-8'))
+        json_err_fmt = "Decode Error on Response Body: {!r} status: {!r} {!r}"
+        try:
+            ret_val = json.loads(body.decode('UTF-8'))
+        except ValueError:
+            logging.error(json_err_fmt.format(body, response.status, uri))
+            raise
+
         if self.__call_cache is not None:
             self.__call_cache.append((uri, method, clean_args(raw_args),
                                       ret_val['status']))

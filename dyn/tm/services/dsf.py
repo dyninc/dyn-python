@@ -3099,7 +3099,7 @@ class DSFMonitorEndpoint(object):
             full_list = self._monitor.endpoints
             args_list = []
             for endpoint in full_list:
-                if id(endpoint) == id(self):
+                if endpoint.address == self.address:
                     args_list.append(api_args)
                 else:
                     args_list.append(endpoint._json)

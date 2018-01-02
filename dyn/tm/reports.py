@@ -2,14 +2,20 @@
 """This module contains interfaces for all Report generation features of the
 REST API
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from .utils import unix_date
+from .utils import unix_date, format_csv
 from .session import DynectSession
 
 __author__ = 'elarochelle'
 __all__ = ['get_check_permission', 'get_dnssec_timeline', 'get_qps',
            'get_rttm_log', 'get_rttm_rrset', 'get_zone_notes']
+
+breakdown_map = {
+    "hosts": "Hostname",
+    "rrecs": "Record Type",
+    "zones": "Zone"
+}
 
 
 def get_check_permission(permission, zone_name=None):
@@ -121,6 +127,321 @@ def get_qps(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
     response = DynectSession.get_session().execute('/QPSReport/',
                                                    'POST', api_args)
     return response['data']
+
+"""
+def get_qph_csv(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None, zones=None):
+    response = get_qps(start_ts, end_ts=end_ts, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+    rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+    titles = rows[0].split(",")
+    data = rows[1:]
+
+    title_dict = {}
+    title_dict['Timestamp'] = 0
+    if breakdown is not None:
+        title_dict[breakdown_map[breakdown]] = 1
+    title_dict['Queries'] = len(title_dict.keys())
+
+    new_csv = ''
+    old_csv = ''
+
+    last_time = None
+    total_queries = 0
+    last_breakdown = None
+
+    for row in data:
+        columns = row.split(",")
+        timestamp = int(columns[title_dict['Timestamp']])
+        queries = int(columns[title_dict['Queries']])
+        other = None
+        this_time = datetime.fromtimestamp(timestamp)
+        if last_time is None:
+            last_time = this_time
+
+        if breakdown is not None:
+            other = columns[title_dict[breakdown_map[breakdown]]]
+
+        old_csv += this_time.strftime("%x %H:%M") + ' - ' + str(timestamp) + ', ' + ('' if other is None else (other + ', ')) + str(queries) + '\n'
+
+        if last_breakdown is None and other is not None:
+            last_breakdown = other
+
+        if last_time.hour != this_time.hour or (breakdown is not None and last_breakdown != other):
+            new_csv += last_time.strftime("%x %H:%M") + ' - ' + str(timestamp) + ', ' + ('' if other is None else (other + ', ')) + str(total_queries) + '\n'
+
+            total_queries = 0
+
+        total_queries += queries
+        last_time = this_time
+        last_breakdown = other
+
+    if last_time is not None:
+        new_csv += last_time.strftime("%x %H:%M") + ' - ' + str(timestamp) + ', ' + ('' if other is None else (other + ', ')) + str(total_queries) + '\n'
+
+    return new_csv, old_csv
+"""
+
+
+def get_qph(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+                   zones=None):
+    """
+    A helper method which formats the QPS CSV return data into Queries Per Hour
+
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the QPS report
+    :param end_ts: datetime.datetime instance indicating the end of the data
+        range for the report. Defaults to datetime.datetime.now(). If this is
+        greater than 2 days after the start_ts, the requests will be broken up
+        into 2 day time periods
+    :param breakdown: By default, most data is aggregated together.
+        Valid values ('hosts', 'rrecs', 'zones').
+    :param hosts: List of hosts to include in the report.
+    :param rrecs: List of record types to include in report.
+    :param zones: List of zones to include in report.
+    :return: A JSON Object made up of the count of queries by day.
+
+    {
+        "data": [
+            {
+                "hour": "06/08/16 10:00",
+                "queries": 16,
+                "timestamp": 1465394400
+            },
+            {
+                "hour": "06/08/16 11:00",
+                "queries": 13,
+                "timestamp": 1465398000
+            }
+            ...
+        ]
+    }
+
+    If the 'breakdown' parameter is passed, the data will be formatted by queries per hour per 'breakdown'
+
+    {
+        "zone1.com": [
+            {
+                "hour": "06/08/16 20:00",
+                "queries": 106,
+                "timestamp": 1465430400
+            },
+            {
+                "hour": "06/09/16 00:00",
+                "queries": 1,
+                "timestamp": 1465444800
+            }
+            ...
+        ]
+        ...
+    }
+
+    """
+
+    dates = []
+
+    # break up requests to a maximum of 2 day range
+    if end_ts is None:
+        end_ts = datetime.now()
+
+    delta = end_ts - start_ts
+    if delta.days > 2:
+        max_days = timedelta(days=2)
+        last_date = start_ts
+        temp_date = last_date + max_days
+        while temp_date < end_ts:
+            dates.append((last_date, temp_date))
+            last_date = temp_date
+            temp_date = last_date + max_days
+        dates.append((last_date, end_ts))
+
+    if len(dates) == 0:
+        dates.append((start_ts, end_ts))
+
+    formatted_rows = []
+
+    for start_date, end_date in dates:
+        response = get_qps(start_date, end_ts=end_date, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+        rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+        formatted_rows.extend(format_csv(rows))
+
+    hourly = {}
+    hour = None
+    current_breakdown_value = None
+    hour_query_count = 0
+
+    # if we have a breakdown
+    if breakdown is not None:
+        # order keys by breakdown (zones, rrecs, or hosts) and timestamp
+        rows = sorted(formatted_rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
+
+    for row in formatted_rows:
+        epoch = int(row['Timestamp'])
+        queries = row['Queries']
+        bd = row[breakdown_map[breakdown]] if breakdown is not None else None
+        dt = datetime.fromtimestamp(epoch)
+
+        # if this is the first time, or a new day, or a new breakdown value
+        if (hour is None or hour.hour != dt.hour or (hour.hour == dt.hour and hour.day != dt.day)) or \
+                (breakdown is not None and bd != current_breakdown_value):
+            if hour is not None:
+                # key for data based on if there is a breakdown value or not
+                hourly_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+                if hourly_key not in hourly:
+                    hourly[hourly_key] = []
+
+                # insert data for (breakdown) hour
+                hourly[hourly_key].append({'timestamp': int(datetime(hour.year, hour.month, hour.day, hour.hour).strftime("%s")), 'hour': hour.strftime('%x %H:00'), 'queries': hour_query_count})
+
+            # next
+            hour = dt
+            current_breakdown_value = bd
+            hour_query_count = 0
+
+        hour_query_count += int(queries)
+
+    if hour is not None:
+        # key for data based on if there is a breakdown value or not
+        hourly_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+        if hourly_key not in hourly:
+            hourly[hourly_key] = []
+
+        # insert data for (breakdown) hour
+        hourly[hourly_key].append(
+            {'timestamp': int(datetime(hour.year, hour.month, hour.day, hour.hour).strftime("%s")), 'hour': hour.strftime('%x %H:00'), 'queries': hour_query_count})
+
+    return hourly
+
+
+def get_qpd(start_ts, end_ts=None, breakdown=None, hosts=None, rrecs=None,
+                  zones=None):
+    """
+    A helper method which formats the QPS CSV return data into Queries Per Day
+
+    :param start_ts: datetime.datetime instance identifying point in time for
+        the QPS report
+    :param end_ts: datetime.datetime instance indicating the end of the data
+        range for the report. Defaults to datetime.datetime.now(). If this is
+        greater than 2 days after the start_ts, the requests will be broken up
+        into 2 day time periods
+    :param breakdown: By default, most data is aggregated together.
+        Valid values ('hosts', 'rrecs', 'zones').
+    :param hosts: List of hosts to include in the report.
+    :param rrecs: List of record types to include in report.
+    :param zones: List of zones to include in report.
+    :return: A JSON Object made up of the count of queries by day.
+
+    {
+        "data": [
+            {
+                "day": "06/08/16",
+                "queries": 296,
+                "timestamp": 1465358400
+            }
+            ...
+        ]
+    }
+
+    If the 'breakdown' parameter is passed, the data will be formatted by queries per day per 'breakdown'
+
+    {
+        "zone1.com": [
+            {
+                "day": "06/08/16",
+                "queries": 106,
+                "timestamp": 1465358400
+            },
+            {
+                "day": "06/09/16",
+                "queries": 109,
+                "timestamp": 1465444800
+            }
+        ]
+        ...
+    }
+
+    """
+    dates = []
+
+    # break up requests to a maximum of 2 day range
+    if end_ts is None:
+        end_ts = datetime.now()
+
+    delta = end_ts - start_ts
+    if delta.days > 2:
+        max_days = timedelta(days=2)
+        last_date = start_ts
+        temp_date = last_date + max_days
+        while temp_date < end_ts:
+            dates.append((last_date, temp_date))
+            last_date = temp_date
+            temp_date = last_date + max_days
+        dates.append((last_date, end_ts))
+
+    if len(dates) == 0:
+        dates.append((start_ts, end_ts))
+
+    formatted_rows = []
+
+    for start_date, end_date in dates:
+        response = get_qps(start_date, end_ts=end_date, breakdown=breakdown, hosts=hosts, rrecs=rrecs, zones=zones)
+
+        rows = response['csv'].encode('utf-8').split('\n')[:-1]
+
+        formatted_rows.extend(format_csv(rows))
+
+    daily = {}
+    day = None
+    current_breakdown_value = None
+    day_query_count = 0
+
+    # if we have a breakdown
+    if breakdown is not None:
+        # order keys by breakdown (zones, rrecs, or hosts) and timestamp
+        rows = sorted(formatted_rows, key=lambda k: (k[breakdown_map[breakdown]], k['Timestamp']))
+
+    for row in formatted_rows:
+        epoch = int(row['Timestamp'])
+        queries = row['Queries']
+        bd = row[breakdown_map[breakdown]] if breakdown is not None else None
+        dt = datetime.fromtimestamp(epoch)
+
+        # if this is the first time, or a new day, or a new breakdown value
+        if (day is None or day.day != dt.day) or \
+                (breakdown is not None and bd != current_breakdown_value):
+            # not the first time
+            if day is not None:
+                # key for data based on if there is a breakdown value or not
+                daily_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+                if daily_key not in daily:
+                    daily[daily_key] = []
+
+                # insert data for (breakdown) day
+                daily[daily_key].append({'timestamp': int(datetime(day.year, day.month, day.day).strftime("%s")), 'day': day.strftime('%x'), 'queries': day_query_count})
+
+            # next
+            day = dt
+            current_breakdown_value = bd
+            day_query_count = 0
+
+        # increment query count for today
+        day_query_count += int(queries)
+
+    # repeat for last iteration
+    if day is not None:
+        daily_key = current_breakdown_value if current_breakdown_value is not None else 'data'
+
+        if daily_key not in daily:
+            daily[daily_key] = []
+
+        daily[daily_key].append({'timestamp': int(datetime(day.year, day.month, day.day).strftime("%s")), 'day': day.strftime('%x'), 'queries': day_query_count})
+
+    return daily
 
 
 def get_zone_notes(zone_name, offset=None, limit=None):

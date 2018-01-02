@@ -13,6 +13,25 @@ def unix_date(date):
     return calendar.timegm(date.timetuple())
 
 
+def format_csv(data):
+    """Return QPS formated CSV as array of JSON"""
+    titles = data[0].split(",")
+    data = data[1:]
+
+    formatted = []
+
+    for query in data:
+        query = query.split(",")
+        dict_data = {}
+
+        for i in xrange(len(titles)):
+            dict_data[titles[i]] = query[i]
+
+        formatted.append(dict_data)
+
+    return formatted
+
+
 class APIList(list):
     """Custom API List type. All objects in this list are assumed to have a
     _json property, ensuring that they are JSON serializable

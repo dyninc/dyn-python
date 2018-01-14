@@ -99,7 +99,8 @@ class DyntmCommand(object):
                 inp = { k : v for k, v in vars(args).iteritems() if k not in ['command', 'func'] }
                 args.func(**inp)
             except Exception as err:
-                print err.message
+                print err
+                # print err.message
                 exit(4)
         # done!
         exit(0)
@@ -112,9 +113,12 @@ class DyntmCommand(object):
 class CommandUserPermissions(DyntmCommand):
     name = "perms"
     desc = "List permissions."
+
     @classmethod
     def action(cls, *rest, **args):
+        # get active session
         session = DynectSession.get_session()
+        # print each permission available to current session
         for perm in sorted(session.permissions):
             print perm
 
@@ -128,8 +132,11 @@ class CommandUserPassword(DyntmCommand):
 
     @classmethod
     def action(cls, *rest, **args):
-        newpass = args['password'] or getpass()
+        # get active session
         session = DynectSession.get_session()
+        # get password or prompt for it
+        newpass = args['password'] or getpass()
+        # update password
         session.update_password(newpass)
 
 
@@ -164,18 +171,21 @@ class CommandZoneCreate(DyntmCommand):
     name = "zone-new"
     desc = "Make a new zone."
     args = [
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'Integer TTL.'},
+        {'arg':'--timeout', 'dest':'timeout', 'type':int, 'help':'Integer timeout for transfer.'},
+        {'arg':'--style', 'dest':'style', 'type':str, 'dest':'serial_style', 'help':'Serial style.','choices': srstyles},
+        {'arg':'--file', 'dest':'file', 'type':file, 'help':'File from which to import zone data.'},
+        {'arg':'--master', 'dest':'master', 'type':str, 'help':'Master IP from which to transfer zone.'},
         {'arg':'name', 'type':str,'help':'The name of the zone.'},
         {'arg':'contact', 'type':str, 'help':'Administrative contact for this zone (RNAME).'},
-        {'arg':'--ttl', 'type':int, 'help':'Integer TTL.'},
-        {'arg':'--timeout', 'type':int, 'help':'Integer timeout for transfer.'},
-        {'arg':'--style', 'type':str, 'dest':'serial_style', 'help':'Serial style.','choices': srstyles},
-        {'arg':'--file', 'type':file, 'help':'File from which to import zone data.'},
-        {'arg':'--master', 'type':str, 'help':'Master IP from which to transfer zone.'},
     ]
 
     @classmethod
     def action(cls, *rest, **args):
-        new = { k : v for k, v in args.iteritems() if v is not None }
+        # figure out zone init arguments
+        spec = [ d['dest'] if d.has_key('dest') else d['arg'] for d in cls.args ]
+        new = { k : args[k] for k in spec if args[k] is not None }
+        # make a new zone
         zone = Zone(**new)
         print zone
 
@@ -189,6 +199,7 @@ class CommandZoneDelete(DyntmCommand):
 
     @classmethod
     def action(cls, *rest, **args):
+        # get the zone and delete it!
         zone = Zone(args['zone'])
         zone.delete()
 
@@ -197,14 +208,15 @@ class CommandZoneFreeze(DyntmCommand):
     name = "freeze"
     desc = "Freeze the given zone."
     args = [
-        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'--ttl', 'type':int, 'help':'Integer TTL.'},
         {'arg':'--timeout', 'type':int, 'help':'Integer timeout for transfer.'},
         {'arg':'--style', 'dest':'serial_style', 'help':'Serial style.','choices': srstyles},
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
     ]
 
     @classmethod
     def action(cls, *rest, **args):
+        # get the zone and freeze it solid
         zone = Zone(args['zone'])
         zone.freeze()
 
@@ -213,14 +225,15 @@ class CommandZoneThaw(DyntmCommand):
     name = "thaw"
     desc = "Thaw the given zone."
     args = [
-        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'--ttl','type':int, 'help':'Integer TTL.'},
         {'arg':'--timeout', 'type':int, 'help':'Integer timeout for transfer.' },
         {'arg':'--style', 'dest':'serial_style', 'help':'Serial style.','choices': srstyles},
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
     ]
 
     @classmethod
     def action(cls, *rest, **args):
+        # get the zone and thaw it out
         zone = Zone(args['zone'])
         zone.thaw()
 
@@ -234,7 +247,9 @@ class CommandNodeList(DyntmCommand):
 
     @classmethod
     def action(cls, *rest, **args):
-        zone = Zone(args['name'])
+        # get the zone
+        zone = Zone(args['zone'])
+        # print all of the zone's nodes
         for node in zone.get_all_nodes():
             print node.fqdn
 
@@ -249,8 +264,10 @@ class CommandNodeDelete(DyntmCommand):
 
     @classmethod
     def action(cls, *rest, **args):
-        zone = Zone(args['name'])
+        # get the zone and node
+        zone = Zone(args['zone'])
         node = zone.get_node(args['node'])
+        # delete the node
         node.delete()
 
 
@@ -259,21 +276,21 @@ class CommandRecordList(DyntmCommand):
     name = "records"
     desc = "List records on the given zone."
     args = [
-        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'--node', 'type':str, 'help':'Limit list to records appearing on the given node.'},
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
     ]
 
     @classmethod
     def action(cls, *rest, **args):
+        # get the zone
         zone = Zone(args['zone'])
-        if args.get('node', None) is not None:
-            name = None if args['node'] == zone.name else args['node']
-            node = zone.get_node(name)
-            recs = reduce(lambda r, n: r + n, node.get_all_records().values())
-        else:
-            recs = reduce(lambda r, n: r + n, zone.get_all_records().values())
-            for record in recs:
-                print "{} {} {}".format(record.fqdn, record.rec_name.upper(), record.rdata())
+        # maybe limit list to a given node
+        thing = zone.get_node(args['node']) if args['node'] else zone
+        # combine awkward rtype lists
+        records = reduce(lambda r, n: r + n, thing.get_all_records().values())
+        # print selected records
+        for record in records:
+            print "{} {} {}".format(record.fqdn, record.rec_name.upper(), record.rdata())
 
 
 class CommandRecordCreate(DyntmCommand):
@@ -288,9 +305,9 @@ class CommandRecordCreate(DyntmCommand):
     @classmethod
     def action(cls, *rest, **args):
         # figure out record init arguments specific to this command
-        keys = [ d['arg'] if d.has_key('dest') else d['arg'] for d in cls.args ]
-        new = { key : args[key] for key in keys }
-        # get zone and node
+        spec = [ d['dest'] if d.has_key('dest') else d['arg'] for d in cls.args ]
+        new = { k : args[k] for k in spec if args[k] is not None }
+        # get the zone and node
         zone = Zone(args['zone'])
         node = zone.get_node(args['node'])
         # add a new record on that node
@@ -298,7 +315,7 @@ class CommandRecordCreate(DyntmCommand):
         # publish the zone TODO
         zone.publish()
 
-
+### TODO define these record classes dynamically
 class CommandRecordCreateA(CommandRecordCreate):
     name = "A"
     desc = "Create an A record."
@@ -307,11 +324,56 @@ class CommandRecordCreateA(CommandRecordCreate):
     ]
 
 
+class CommandRecordCreateAAAA(CommandRecordCreate):
+    name = "AAAA"
+    desc = "Create an AAAA record."
+    args = [
+        {'arg':'address', 'type':str, 'help':'An IPv6 address.'},
+    ]
+
+
 class CommandRecordCreateTXT(CommandRecordCreate):
     name = "TXT"
     desc = "Create a TXT record."
     args = [
         {'arg':'txtdata', 'type':str, 'help':'Some text data.'},
+    ]
+
+    
+class CommandRecordCreateCNAME(CommandRecordCreate):
+    name = "CNAME"
+    desc = "Create a CNAME record."
+    args = [
+        {'arg':'cname', 'type':str, 'help':'A hostname.'},
+    ]
+
+    
+class CommandRecordCreateCNAME(CommandRecordCreate):
+    name = "ALIAS"
+    desc = "Create an ALIAS record."
+    args = [
+        {'arg':'alias', 'type':str, 'help':'A hostname.'},
+    ]
+
+class CommandRecordCreateDNSKEY(CommandRecordCreate):
+    name = "DNSKEY"
+    desc = "Create a DNSKEY record."
+    args = [
+        {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
+        {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
+        {'arg':'--flags', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
+    ]
+
+    
+class CommandRecordCreateCDNSKEY(CommandRecordCreate):
+    name = "CDNSKEY"
+    desc = "Create a CDNSKEY record."
+    args = [
+        {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
+        {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
+        {'arg':'--flags', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
     ]
 
 

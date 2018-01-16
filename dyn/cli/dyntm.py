@@ -33,6 +33,7 @@ rectypes = sorted(dyn.tm.zones.RECS.keys())
 class DyntmCommand(object):
     name = "dyntm"
     desc = "Interact with Dyn Traffic Management API"
+    subtitle = "Commands"
     args = [
         {'arg':'--conf', 'type':str, 'dest':'conf', 'help':'Alternate configuration file.'},
         {'arg':'--cust', 'type':str, 'dest':'cust', 'help':'Customer account name for authentication.'},
@@ -54,7 +55,7 @@ class DyntmCommand(object):
         ap.set_defaults(func=cls.action, command=cls.name)
         # setup subcommand parsers
         if len(cls.__subclasses__()) != 0:
-            sub = ap.add_subparsers(title="Commands")
+            sub = ap.add_subparsers(title=cls.subtitle)
             for cmd in cls.__subclasses__():
                 sub._name_parser_map[cmd.name] = cmd.parser()
         return ap
@@ -99,8 +100,8 @@ class DyntmCommand(object):
                 inp = { k : v for k, v in vars(args).iteritems() if k not in ['command', 'func'] }
                 args.func(**inp)
             except Exception as err:
+                # TODO catch specific errors for meaningful exit codes
                 print err
-                # print err.message
                 exit(4)
         # done!
         exit(0)
@@ -289,17 +290,192 @@ class CommandRecordList(DyntmCommand):
         # combine awkward rtype lists
         records = reduce(lambda r, n: r + n, thing.get_all_records().values())
         # print selected records
-        for record in records:
+        for record in sorted(records, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
             print "{} {} {}".format(record.fqdn, record.rec_name.upper(), record.rdata())
 
+
+# record type specifications for child class generation
+# TODO write sensible help strings
+rtypes = {
+    # 'RTYPE' : [ {'arg':'', 'dest':'','type':str, 'help':''}, ]
+    'A' : [
+        {'arg':'address', 'type':str, 'help':'An IPv4 address.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'AAAA' : [
+        {'arg':'address', 'type':str, 'help':'An IPv6 address.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'ALIAS' : [
+        {'arg':'alias', 'type':str, 'help':'A hostname.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'CAA' : [
+        {'arg':'flags', 'type':str, 'help':'A byte?.'},
+        {'arg':'tag', 'type':str, 'help':'A string representing the name of the property.'},
+        {'arg':'value', 'type':str, 'help':'A string representing the value of the property.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'CDNSKEY' : [
+        {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
+        {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
+        {'arg':'--flags', 'dest':'flags', 'type':int, 'help':'A hostname.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'CDS' : [
+        {'arg':'digest', 'type':str, 'help':'Hexadecimal digest string of a DNSKEY.'},
+        {'arg':'--keytag', 'dest':'keytag', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
+        {'arg':'--digtype', 'dest':'digtype', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'CERT' : [
+        {'arg':'format', 'type':int, 'help':'Numeric value of certificate type.'},
+        {'arg':'tag', 'type':int, 'help':'Numeric value of public key certificate.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'CNAME' : [
+        {'arg':'cname', 'type':str, 'help':'A hostname.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'CSYNC' : [
+        {'arg':'soa_serial', 'type':int, 'help':'SOA serial to bind to this record.'},
+        {'arg':'flags', 'type':str, 'help':'SOA serial to bind to this record.'},
+        {'arg':'rectypes', 'type':str, 'help':'SOA serial to bind to this record.', 'nargs':'+'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'DHCID' : [
+        {'arg':'digest', 'type':str, 'help':'Base-64 encoded digest of DHCP data.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'DNAME' : [
+        {'arg':'cname', 'type':str, 'help':'A hostname.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'DNSKEY' : [
+        {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
+        {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
+        {'arg':'--flags', 'dest':'flags', 'type':int, 'help':'A hostname.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'DS' : [
+        {'arg':'digest', 'type':str, 'help':'Hexadecimal digest string of a DNSKEY.'},
+        {'arg':'--keytag', 'dest':'keytag', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
+        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
+        {'arg':'--digtype', 'dest':'digtype', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'KEY' : [
+        {'arg':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
+        {'arg':'flags', 'type':int, 'help':'Flags!? RTFRFC!'},
+        {'arg':'protocol', 'type':int, 'help':'Numeric code of protocol.'},
+        {'arg':'public_key', 'type':str, 'help':'The public key..'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'KX' : [
+        {'arg':'exchange', 'type':str, 'help':'Hostname of key exchange.'},
+        {'arg':'preference', 'type':int, 'help':'Numeric priority of this exchange.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'LOC' : [
+        {'arg':'altitude', 'type':str, 'help':''},
+        {'arg':'latitude', 'type':str, 'help':''},
+        {'arg':'longitude', 'type':str, 'help':''},
+        {'arg':'--horiz_pre', 'dest':'horiz_pre','type':str, 'help':''},
+        {'arg':'--vert_pre', 'dest':'vert_pre','type':str, 'help':''},
+        {'arg':'--size', 'dest':'size','type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'IPSECKEY' : [
+        {'arg':'precedence', 'type':str, 'help':''},
+        {'arg':'gatetype', 'type':str, 'help':''},
+        {'arg':'algorithm', 'type':str, 'help':''},
+        {'arg':'gateway', 'type':str, 'help':''},
+        {'arg':'public_key', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'MX' : [
+        {'arg':'exchange', 'type':str, 'help':''},
+        {'arg':'prefernce', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'NAPTR' : [
+        {'arg':'order', 'type':str, 'help':''},
+        {'arg':'preference', 'type':str, 'help':''},
+        {'arg':'services', 'type':str, 'help':''},
+        {'arg':'regexp', 'type':str, 'help':''},
+        {'arg':'replacement', 'type':str, 'help':''},
+        {'arg':'flags', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'PTR' : [
+        {'arg':'ptrdname', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'PX' : [
+        {'arg':'prefernce', 'type':str, 'help':''},
+        {'arg':'map822', 'type':str, 'help':''},
+        {'arg':'map400', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'NSAP' : [
+        {'arg':'nsap', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'RP' : [
+        {'arg':'mbox', 'type':str, 'help':''},
+        {'arg':'txtdname', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'NS' : [
+        {'arg':'nsdname', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'SOA' : [
+        # TODO
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'SPF' : [
+        {'arg':'txtdata', 'type':str, 'help':'Some text data.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'SRV' : [
+        {'arg':'port', 'type':str, 'help':''},
+        {'arg':'priority', 'type':str, 'help':''},
+        {'arg':'target', 'type':str, 'help':''},
+        {'arg':'weight', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'SSHFP' : [
+        {'arg':'algorithm', 'type':str, 'help':''},
+        {'arg':'fptype', 'type':str, 'help':''},
+        {'arg':'fingerprint', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'TLSA' : [
+        {'arg':'cert_usage', 'type':str, 'help':''},
+        {'arg':'selector', 'type':str, 'help':''},
+        {'arg':'match_type', 'type':str, 'help':''},
+        {'arg':'certificate', 'type':str, 'help':''},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+    'TXT' : [
+        {'arg':'txtdata', 'type':str, 'help':'Some text data.'},
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+    ],
+}
 
 class CommandRecordCreate(DyntmCommand):
     name = "record-new"
     desc = "Create record."
+    subtitle = "Record Types"
     args = [
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL for the new record.'},
         {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'node', 'type':str, 'help':'Node on which to create the record.'},
+        # could have TTL here but that requires the option to appear before the record type
     ]
 
     @classmethod
@@ -311,72 +487,20 @@ class CommandRecordCreate(DyntmCommand):
         zone = Zone(args['zone'])
         node = zone.get_node(args['node'])
         # add a new record on that node
-        rec = node.add_record(cls.name, ttl=args['ttl'], **new)
+        rec = node.add_record(cls.name, **new)
         # publish the zone TODO
         zone.publish()
 
-### TODO define these record classes dynamically
-class CommandRecordCreateA(CommandRecordCreate):
-    name = "A"
-    desc = "Create an A record."
-    args = [
-        {'arg':'address', 'type':str, 'help':'An IPv4 address.'},
-    ]
 
-
-class CommandRecordCreateAAAA(CommandRecordCreate):
-    name = "AAAA"
-    desc = "Create an AAAA record."
-    args = [
-        {'arg':'address', 'type':str, 'help':'An IPv6 address.'},
-    ]
-
-
-class CommandRecordCreateTXT(CommandRecordCreate):
-    name = "TXT"
-    desc = "Create a TXT record."
-    args = [
-        {'arg':'txtdata', 'type':str, 'help':'Some text data.'},
-    ]
-
-    
-class CommandRecordCreateCNAME(CommandRecordCreate):
-    name = "CNAME"
-    desc = "Create a CNAME record."
-    args = [
-        {'arg':'cname', 'type':str, 'help':'A hostname.'},
-    ]
-
-    
-class CommandRecordCreateCNAME(CommandRecordCreate):
-    name = "ALIAS"
-    desc = "Create an ALIAS record."
-    args = [
-        {'arg':'alias', 'type':str, 'help':'A hostname.'},
-    ]
-
-class CommandRecordCreateDNSKEY(CommandRecordCreate):
-    name = "DNSKEY"
-    desc = "Create a DNSKEY record."
-    args = [
-        {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
-        {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
-        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
-        {'arg':'--flags', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
-    ]
-
-    
-class CommandRecordCreateCDNSKEY(CommandRecordCreate):
-    name = "CDNSKEY"
-    desc = "Create a CDNSKEY record."
-    args = [
-        {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
-        {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
-        {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
-        {'arg':'--flags', 'dest':'algorithm', 'type':int, 'help':'A hostname.'},
-    ]
-
-
+# setup record creation command subclass for each record type
+rcreate = {}
+for rtype in [k for k in sorted(rtypes.keys()) if k not in ['SOA']] :
+    attr = {
+        'name':rtype,
+        'args':rtypes[rtype],
+        'desc':"Create one {} record.".format(rtype),
+    }
+    rcreate[rtype] = type("CommandRecordCreate" + rtype, (CommandRecordCreate,), attr)
 
 
 ## redir commands TODO

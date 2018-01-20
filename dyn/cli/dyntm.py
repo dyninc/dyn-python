@@ -295,85 +295,70 @@ rtypes = {
     # 'RTYPE' : [ {'arg':'', 'dest':'','type':str, 'help':''}, ]
     'A' : [
         {'arg':'address', 'type':str, 'help':'An IPv4 address.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'AAAA' : [
         {'arg':'address', 'type':str, 'help':'An IPv6 address.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'ALIAS' : [
         {'arg':'alias', 'type':str, 'help':'A hostname.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'CAA' : [
         {'arg':'flags', 'type':str, 'help':'A byte?.'},
         {'arg':'tag', 'type':str, 'help':'A string representing the name of the property.'},
         {'arg':'value', 'type':str, 'help':'A string representing the value of the property.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'CDNSKEY' : [
         {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
         {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
         {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
         {'arg':'--flags', 'dest':'flags', 'type':int, 'help':'A hostname.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'CDS' : [
         {'arg':'digest', 'type':str, 'help':'Hexadecimal digest string of a DNSKEY.'},
         {'arg':'--keytag', 'dest':'keytag', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
         {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
         {'arg':'--digtype', 'dest':'digtype', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'CERT' : [
         {'arg':'format', 'type':int, 'help':'Numeric value of certificate type.'},
         {'arg':'tag', 'type':int, 'help':'Numeric value of public key certificate.'},
         {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'CNAME' : [
         {'arg':'cname', 'type':str, 'help':'A hostname.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'CSYNC' : [
         {'arg':'soa_serial', 'type':int, 'help':'SOA serial to bind to this record.'},
         {'arg':'flags', 'type':str, 'help':'SOA serial to bind to this record.'},
         {'arg':'rectypes', 'type':str, 'help':'SOA serial to bind to this record.', 'nargs':'+'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'DHCID' : [
         {'arg':'digest', 'type':str, 'help':'Base-64 encoded digest of DHCP data.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'DNAME' : [
         {'arg':'cname', 'type':str, 'help':'A hostname.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'DNSKEY' : [
         {'arg':'protocol', 'type':int, 'help':'Numeric value for protocol.'},
         {'arg':'public_key', 'type':str, 'help':'The public key for the DNSSEC signed zone.'},
         {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
         {'arg':'--flags', 'dest':'flags', 'type':int, 'help':'A hostname.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'DS' : [
         {'arg':'digest', 'type':str, 'help':'Hexadecimal digest string of a DNSKEY.'},
         {'arg':'--keytag', 'dest':'keytag', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
         {'arg':'--algo', 'dest':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
         {'arg':'--digtype', 'dest':'digtype', 'type':int, 'help':'Numeric code of digest mechanism for verification.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'KEY' : [
         {'arg':'algorithm', 'type':int, 'help':'Numeric code of encryption algorithm.'},
         {'arg':'flags', 'type':int, 'help':'Flags!? RTFRFC!'},
         {'arg':'protocol', 'type':int, 'help':'Numeric code of protocol.'},
         {'arg':'public_key', 'type':str, 'help':'The public key..'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'KX' : [
         {'arg':'exchange', 'type':str, 'help':'Hostname of key exchange.'},
         {'arg':'preference', 'type':int, 'help':'Numeric priority of this exchange.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'LOC' : [
         {'arg':'altitude', 'type':str, 'help':''},
@@ -382,7 +367,6 @@ rtypes = {
         {'arg':'--horiz_pre', 'dest':'horiz_pre','type':str, 'help':''},
         {'arg':'--vert_pre', 'dest':'vert_pre','type':str, 'help':''},
         {'arg':'--size', 'dest':'size','type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'IPSECKEY' : [
         {'arg':'precedence', 'type':str, 'help':''},
@@ -390,12 +374,10 @@ rtypes = {
         {'arg':'algorithm', 'type':str, 'help':''},
         {'arg':'gateway', 'type':str, 'help':''},
         {'arg':'public_key', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'MX' : [
         {'arg':'exchange', 'type':str, 'help':''},
         {'arg':'prefernce', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'NAPTR' : [
         {'arg':'order', 'type':str, 'help':''},
@@ -404,62 +386,50 @@ rtypes = {
         {'arg':'regexp', 'type':str, 'help':''},
         {'arg':'replacement', 'type':str, 'help':''},
         {'arg':'flags', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'PTR' : [
         {'arg':'ptrdname', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'PX' : [
         {'arg':'prefernce', 'type':str, 'help':''},
         {'arg':'map822', 'type':str, 'help':''},
         {'arg':'map400', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'NSAP' : [
         {'arg':'nsap', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'RP' : [
         {'arg':'mbox', 'type':str, 'help':''},
         {'arg':'txtdname', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'NS' : [
         {'arg':'nsdname', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'SOA' : [
         # TODO
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'SPF' : [
         {'arg':'txtdata', 'type':str, 'help':'Some text data.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'SRV' : [
         {'arg':'port', 'type':str, 'help':''},
         {'arg':'priority', 'type':str, 'help':''},
         {'arg':'target', 'type':str, 'help':''},
         {'arg':'weight', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'SSHFP' : [
         {'arg':'algorithm', 'type':str, 'help':''},
         {'arg':'fptype', 'type':str, 'help':''},
         {'arg':'fingerprint', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'TLSA' : [
         {'arg':'cert_usage', 'type':str, 'help':''},
         {'arg':'selector', 'type':str, 'help':''},
         {'arg':'match_type', 'type':str, 'help':''},
         {'arg':'certificate', 'type':str, 'help':''},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
     'TXT' : [
         {'arg':'txtdata', 'type':str, 'help':'Some text data.'},
-        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
     ],
 }
 
@@ -493,6 +463,7 @@ class CommandRecordCreate(DyntmCommand):
 rcreate = {}
 for rtype in [k for k in sorted(rtypes.keys()) if k not in ['SOA']] :
     opts = copy.deepcopy(rtypes[rtype])
+    opts += [ {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'} ]
     attr = {
         'name':rtype,
         'args':opts,
@@ -516,8 +487,8 @@ class CommandRecordList(DyntmCommand):
         # get records
         recs = reduce(lambda x, y: x + y, zone.get_all_records().values())
         # print all records
-        for r in sorted(recs, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
-            print "{} {} {} {}".format(r._record_id, r.fqdn, r.rec_name.upper(), r.rdata())
+        for r in sorted(recs, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)):
+            print "{} {} {} {}".format(r.fqdn, r.rec_name.upper(), r._record_id, r.rdata())
 
 
 ### get records
@@ -541,13 +512,14 @@ class CommandRecordGet(DyntmCommand):
         found = [r for r in recs if any([re.search(str(args[f]), str(getattr(r, f, ""))) for f in fields if args[f]])]
         # print selected records
         for r in sorted(found, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
-            print "{} {} {} {}".format(r._record_id, r.fqdn, r.rec_name.upper(), r.rdata())
+            print "{} {} {} {}".format(r.fqdn, r.rec_name.upper(), r._record_id, r.rdata())
 
 
 rget = {}
 for rtype in sorted(rtypes.keys()):
     # tweak args to make them all optional
     opts = copy.deepcopy(rtypes[rtype]) # list(rtypes[rtype])
+    opts += [ {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'} ]
     opts += [ {'arg':'--id', 'type':int, 'dest':'_record_id', 'help':'Awkward internal record ID'} ]
     for opt in opts:
         if not opt['arg'].startswith('--'):
@@ -603,7 +575,8 @@ for rtype in [k for k in sorted(rtypes.keys())] :
         if not opt['arg'].startswith('--'):
             opt['arg'] = "--" + opt['arg']
     # require record ID argument
-    opts += {'arg':'id', 'type':str, 'help':'The unique numeric ID of the record.'},
+    opts += [ {'arg':'id', 'type':str, 'help':'The unique numeric ID of the record.'} ]
+    opts += [ {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'} ]
     # setup the class attributes
     attr = {
         'name':rtype,

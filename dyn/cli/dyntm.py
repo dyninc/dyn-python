@@ -13,10 +13,15 @@ A command line tool for interacting with the Dyn Traffic Management API.
 ## Cleaned up error messages.
 
 # system libs
-import os, sys
-import argparse, getpass
-import yaml, json
+import os
+import sys
+import re
+import copy
 import itertools
+import argparse
+import getpass
+import yaml
+import json
 
 # internal libs
 import dyn.tm
@@ -31,6 +36,10 @@ rectypes = sorted(dyn.tm.zones.RECS.keys())
 
 # parent command class
 class DyntmCommand(object):
+    '''
+    This is a help string right?
+    '''
+
     name = "dyntm"
     desc = "Interact with Dyn Traffic Management API"
     subtitle = "Commands"
@@ -101,7 +110,7 @@ class DyntmCommand(object):
                 args.func(**inp)
             except Exception as err:
                 # TODO catch specific errors for meaningful exit codes
-                print err
+                print err.message
                 exit(4)
         # done!
         exit(0)
@@ -110,7 +119,7 @@ class DyntmCommand(object):
 
 # command classes!
 
-## user commands
+### user permissions
 class CommandUserPermissions(DyntmCommand):
     name = "perms"
     desc = "List permissions."
@@ -124,6 +133,7 @@ class CommandUserPermissions(DyntmCommand):
             print perm
 
 
+### update password
 class CommandUserPassword(DyntmCommand):
     name = "passwd"
     desc = "Update password."
@@ -141,6 +151,7 @@ class CommandUserPassword(DyntmCommand):
         session.update_password(newpass)
 
 
+### list users
 class CommandUserList(DyntmCommand):
     name = "users"
     desc = "List users."
@@ -156,7 +167,7 @@ class CommandUserList(DyntmCommand):
             print user.user_name
 
 
-## zone commands
+### list zones
 class CommandZoneList(DyntmCommand):
     name = "zones"
     desc = "List all the zones available."
@@ -167,7 +178,7 @@ class CommandZoneList(DyntmCommand):
         for zone in zones:
             print zone.fqdn
 
-
+### create zone
 class CommandZoneCreate(DyntmCommand):
     name = "zone-new"
     desc = "Make a new zone."
@@ -191,6 +202,7 @@ class CommandZoneCreate(DyntmCommand):
         print zone
 
 
+### delete zone
 class CommandZoneDelete(DyntmCommand):
     name = "zone-delete"
     desc = "Make a new zone."
@@ -205,6 +217,7 @@ class CommandZoneDelete(DyntmCommand):
         zone.delete()
 
 
+### freeze zone
 class CommandZoneFreeze(DyntmCommand):
     name = "freeze"
     desc = "Freeze the given zone."
@@ -221,7 +234,7 @@ class CommandZoneFreeze(DyntmCommand):
         zone = Zone(args['zone'])
         zone.freeze()
 
-
+### thaw zone
 class CommandZoneThaw(DyntmCommand):
     name = "thaw"
     desc = "Thaw the given zone."
@@ -239,6 +252,7 @@ class CommandZoneThaw(DyntmCommand):
         zone.thaw()
 
 
+### list nodes
 class CommandNodeList(DyntmCommand):
     name = "nodes"
     desc = "List nodes in the given zone."
@@ -255,6 +269,7 @@ class CommandNodeList(DyntmCommand):
             print node.fqdn
 
 
+### delete nodes
 class CommandNodeDelete(DyntmCommand):
     name = "node-delete"
     desc = "Delete the given node."
@@ -273,26 +288,6 @@ class CommandNodeDelete(DyntmCommand):
 
 
 ## record commands
-class CommandRecordList(DyntmCommand):
-    name = "records"
-    desc = "List records on the given zone."
-    args = [
-        {'arg':'--node', 'type':str, 'help':'Limit list to records appearing on the given node.'},
-        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
-    ]
-
-    @classmethod
-    def action(cls, *rest, **args):
-        # get the zone
-        zone = Zone(args['zone'])
-        # maybe limit list to a given node
-        thing = zone.get_node(args['node']) if args['node'] else zone
-        # combine awkward rtype lists
-        records = reduce(lambda r, n: r + n, thing.get_all_records().values())
-        # print selected records
-        for record in sorted(records, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
-            print "{} {} {}".format(record.fqdn, record.rec_name.upper(), record.rdata())
-
 
 # record type specifications for child class generation
 # TODO write sensible help strings
@@ -468,6 +463,8 @@ rtypes = {
     ],
 }
 
+
+### create record
 class CommandRecordCreate(DyntmCommand):
     name = "record-new"
     desc = "Create record."
@@ -480,27 +477,187 @@ class CommandRecordCreate(DyntmCommand):
 
     @classmethod
     def action(cls, *rest, **args):
-        # figure out record init arguments specific to this command
-        spec = [ d['dest'] if d.has_key('dest') else d['arg'] for d in cls.args ]
-        new = { k : args[k] for k in spec if args[k] is not None }
         # get the zone and node
         zone = Zone(args['zone'])
         node = zone.get_node(args['node'])
+        # figure out record init arguments specific to this command
+        spec = [ d['dest'] if d.has_key('dest') else d['arg'] for d in cls.args ]
+        new = { k : args[k] for k in spec if args[k] is not None }
         # add a new record on that node
         rec = node.add_record(cls.name, **new)
-        # publish the zone TODO
+        # publish the zone
         zone.publish()
 
 
 # setup record creation command subclass for each record type
 rcreate = {}
 for rtype in [k for k in sorted(rtypes.keys()) if k not in ['SOA']] :
+    opts = copy.deepcopy(rtypes[rtype])
     attr = {
         'name':rtype,
-        'args':rtypes[rtype],
+        'args':opts,
         'desc':"Create one {} record.".format(rtype),
     }
     rcreate[rtype] = type("CommandRecordCreate" + rtype, (CommandRecordCreate,), attr)
+
+
+### list records
+class CommandRecordList(DyntmCommand):
+    name = "records"
+    desc = "Get an existing record."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # context
+        zone = Zone(args['zone'])
+        # get records
+        recs = reduce(lambda x, y: x + y, zone.get_all_records().values())
+        # print all records
+        for r in sorted(recs, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
+            print "{} {} {} {}".format(r._record_id, r.fqdn, r.rec_name.upper(), r.rdata())
+
+
+### get records
+class CommandRecordGet(DyntmCommand):
+    name = "record"
+    desc = "List records."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+        {'arg':'node', 'type':str, 'help':'Node on which the the record appears.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # context
+        rtype = cls.name
+        zone = Zone(args['zone'])
+        node = zone.get_node(args['node'])
+        # get set of records
+        recs = node.get_all_records_by_type(rtype)
+        fields =  ['_record_id'] + [a['dest'] if a.has_key('dest') else a['arg'].strip("-") for a in cls.args]
+        found = [r for r in recs if any([re.search(str(args[f]), str(getattr(r, f, ""))) for f in fields if args[f]])]
+        # print selected records
+        for r in sorted(found, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
+            print "{} {} {} {}".format(r._record_id, r.fqdn, r.rec_name.upper(), r.rdata())
+
+
+rget = {}
+for rtype in sorted(rtypes.keys()):
+    # tweak args to make them all optional
+    opts = copy.deepcopy(rtypes[rtype]) # list(rtypes[rtype])
+    opts += [ {'arg':'--id', 'type':int, 'dest':'_record_id', 'help':'Awkward internal record ID'} ]
+    for opt in opts:
+        if not opt['arg'].startswith('--'):
+            opt['arg'] = "--" + opt['arg']
+    attr = {
+        'name':rtype,
+        'args':opts,
+        'desc':"List some {} records.".format(rtype),
+    }
+    rget[rtype] = type("CommandRecordGet" + rtype, (CommandRecordGet,), attr)
+
+
+### update record
+class CommandRecordUpdate(DyntmCommand):
+    name = "record-update"
+    desc = "Update a record."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+        {'arg':'node', 'type':str, 'help':'Node on which the the record appears.'},
+    ]
+    subtitle = "Record Types"
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # context
+        zone = Zone(args['zone'])
+        node = zone.get_node(args['node'])
+        rid = args['id']
+        # identify target record
+        recs = node.get_all_records_by_type(cls.name)
+        them = [r for r in recs if str(r._record_id) == str(rid)]
+        if len(them) == 0:
+            raise Exception("Record {} not found.".format(rid))
+        that = them.pop()
+        # build update arguments
+        fields = [a['dest'] if a.has_key('dest') else a['arg'].strip("-") for a in cls.args]
+        # update the record
+        for field in fields:
+            if args[field]:
+                setattr(that, field, args[field])
+        # publish the zone
+        zone.publish()
+        # success
+        print that
+
+
+# setup record update command subclass for each record type
+rupdate = {}
+for rtype in [k for k in sorted(rtypes.keys())] :
+    # tweak args to make them all optional
+    opts = copy.deepcopy(rtypes[rtype]) # list(rtypes[rtype])
+    for opt in opts:
+        if not opt['arg'].startswith('--'):
+            opt['arg'] = "--" + opt['arg']
+    # require record ID argument
+    opts += {'arg':'id', 'type':str, 'help':'The unique numeric ID of the record.'},
+    # setup the class attributes
+    attr = {
+        'name':rtype,
+        'args':opts,
+        'desc':"Update one {} record.".format(rtype),
+    }
+    # make the record update subclass
+    rupdate[rtype] = type("CommandRecordUpdate" + rtype, (CommandRecordUpdate,), attr)
+
+
+### delete record
+class CommandRecordDelete(DyntmCommand):
+    name = "record-delete"
+    desc = "Delete a record."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+        {'arg':'node', 'type':str, 'help':'Node on which the the record appears.'},
+    ]
+    subtitle = "Record Types"
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # context
+        zone = Zone(args['zone'])
+        node = zone.get_node(args['node'])
+        rid = args['id']
+        # identify target record
+        recs = node.get_all_records_by_type(cls.name)
+        them = [r for r in recs if str(r._record_id) == str(rid)]
+        if len(them) == 0:
+            raise Exception("Record {} not found.".format(rid))
+        that = them.pop()
+        # delete the record
+        that.delete()
+        # publish the zone
+        zone.publish()
+        # success
+        print that
+
+
+# setup record delete command subclass for each record type
+rdelete = {}
+for rtype in [k for k in sorted(rtypes.keys())] :
+    # require record ID argument
+    opts = {'arg':'id', 'type':str, 'help':'The unique numeric ID of the record.'},
+    # setup the class attributes
+    attr = {
+        'name':rtype,
+        'args':opts,
+        'desc':"Update one {} record.".format(rtype),
+    }
+    # make the record delete subclass
+    rdelete[rtype] = type("CommandRecordDelete" + rtype, (CommandRecordDelete,), attr)
+
 
 
 ## redir commands TODO

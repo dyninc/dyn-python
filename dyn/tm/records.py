@@ -95,15 +95,9 @@ class DNSRecord(object):
 
     def rdata(self):
         """Return a records rdata"""
-        rdata = {}
-        for key, val in self.__dict__.items():
-            if (key.startswith('_') and
-                    not hasattr(val, '__call__') and
-                    key != '_record_type' and
-                    key != '_record_id' and key != '_implicitPublish'):
-                missing = {'ttl', 'zone', 'fqdn'}
-                if all([i not in key for i in missing]):
-                    rdata[key[1:]] = val
+        skip = {'_record_type','_record_id','_implicitPublish','_note','_ttl','_zone','_fqdn'}
+        rdata = {k[1:] : v for k, v in self.__dict__.items() if not hasattr(v, '__call__')
+                 and k.startswith('_') and k not in skip }
         return rdata
 
     @property

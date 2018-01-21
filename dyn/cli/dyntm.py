@@ -451,7 +451,7 @@ class CommandRecordCreate(DyntmCommand):
         zone = Zone(args['zone'])
         node = zone.get_node(args['node'])
         # figure out record init arguments specific to this command
-        spec = [ d['dest'] if d.has_key('dest') else d['arg'] for d in cls.args ]
+        spec = [ d['dest'] if d.has_key('dest') else d['arg'].strip('-') for d in cls.args ]
         new = { k : args[k] for k in spec if args[k] is not None }
         # add a new record on that node
         rec = node.add_record(cls.name, **new)
@@ -488,7 +488,9 @@ class CommandRecordList(DyntmCommand):
         recs = reduce(lambda x, y: x + y, zone.get_all_records().values())
         # print all records
         for r in sorted(recs, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)):
-            print "{} {} {} {}".format(r.fqdn, r.rec_name.upper(), r._record_id, r.rdata())
+            rtype = r.rec_name.upper()
+            rdata = json.dumps(dyn.tm.records.DNSRecord.rdata(r))
+            print "{} {} {} {} {}".format(r.fqdn, rtype, r._record_id, r.ttl, rdata)
 
 
 ### get records
@@ -508,11 +510,13 @@ class CommandRecordGet(DyntmCommand):
         node = zone.get_node(args['node'])
         # get set of records
         recs = node.get_all_records_by_type(rtype)
-        fields =  ['_record_id'] + [a['dest'] if a.has_key('dest') else a['arg'].strip("-") for a in cls.args]
+        fields =  ['_record_id'] + [a['dest'] if a.has_key('dest') else a['arg'].strip('-') for a in cls.args]
         found = [r for r in recs if any([re.search(str(args[f]), str(getattr(r, f, ""))) for f in fields if args[f]])]
         # print selected records
         for r in sorted(found, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)) :
-            print "{} {} {} {}".format(r.fqdn, r.rec_name.upper(), r._record_id, r.rdata())
+            rtype = r.rec_name.upper()
+            rdata = json.dumps(dyn.tm.records.DNSRecord.rdata(r))
+            print "{} {} {} {} {}".format(r.fqdn, rtype, r._record_id, r.ttl, rdata)
 
 
 rget = {}

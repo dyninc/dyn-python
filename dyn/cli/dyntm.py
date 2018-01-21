@@ -6,11 +6,10 @@ A command line tool for interacting with the Dyn Traffic Management API.
 """
 
 # TODO
-## Persistent session tokens via file cache. Requires changes to dyn.tm.session?
-### Publishing changes after multiple invocations of the script.
+## Publishing changes after multiple invocations of the script.
 ## A file cache of zones, nodes, services etc. Any of the 'get_all_X'.
-### DTRT with one argument specifying a zone and node.
-## Cleaned up error messages.
+## DTRT with one argument specifying a zone and node.
+## Cleaned up help and error messages.
 
 # system libs
 import os
@@ -93,16 +92,28 @@ class DyntmCommand(object):
         if not pswd:
             sys.stderr.write("A password must be provided!")
             exit(2)
-        # maybe more session options
-        keys = ['host', 'port', 'proxy_host', 'proxy_port', 'proxy_user', 'proxy_pass', 'proxy_pass']
-        opts = { k : v for d in [conf, vars(args)] for k, v in d.iteritems() if k in keys and v is not None }
         # setup session
+        token = None
+        tpath = os.path.expanduser("~/.dyntm-token")
         try:
-            # TODO cache session token! update SessionEngine.connect maybe?
-            session = DynectSession(cust, user, pswd, **opts)
+            # maybe load cached session token
+            if os.path.isfile(tpath):
+                with open(tpath, 'r') as tf:
+                    token = tf.readline()
+            # create session
+            keys = ['host', 'port', 'proxy_host', 'proxy_port', 'proxy_user', 'proxy_pass', 'proxy_pass']
+            opts = { k : v for d in [conf, vars(args)] for k, v in d.iteritems() if k in keys and v is not None }
+            # authenticate only if token needed
+            if token:
+                session = DynectSession(cust, user, pswd, auto_auth=False, **opts)
+                session._token = token
+            else:
+                session = DynectSession(cust, user, pswd, **opts)
         except DynectAuthError as auth:
             print auth.message
             exit(3)
+        except IOError as e:
+            sys.stderr.write("Could not read from token file {}.\n{}".format(tpath, str(e)))
         # dispatch to command
         if args.command != cls.name:
             try:
@@ -112,6 +123,13 @@ class DyntmCommand(object):
                 # TODO catch specific errors for meaningful exit codes
                 print err.message
                 exit(4)
+        # record token for later use
+        try:
+            if session._token != token:
+                with open(tpath, 'w') as tf:
+                    tf.write(session._token)
+        except IOError as e:
+            sys.stderr.write("Could not write to token file {}.\n{}".format(tpath, str(e)))
         # done!
         exit(0)
     def __init__(self):

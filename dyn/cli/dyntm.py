@@ -71,7 +71,8 @@ class DyntmCommand(object):
     @classmethod
     def action(cls, *argv, **opts):
         # parse arguments
-        args = cls.parser().parse_args() # (args=argv) TODO list unhashable?
+        ap = cls.parser()
+        args = ap.parse_args() # (args=argv) TODO list unhashable?
         # read configuration file
         cpath = os.path.expanduser("~/.dyntm.yml")
         conf = {}
@@ -94,7 +95,7 @@ class DyntmCommand(object):
             exit(2)
         # setup session
         token = None
-        tpath = os.path.expanduser("~/.dyntm-token")
+        tpath = os.path.expanduser("~/.dyntm-{}-{}".format(cust, user))
         try:
             # maybe load cached session token
             if os.path.isfile(tpath):
@@ -112,8 +113,8 @@ class DyntmCommand(object):
         except DynectAuthError as auth:
             print auth.message
             exit(3)
-        except IOError as e:
-            sys.stderr.write("Could not read from token file {}.\n{}".format(tpath, str(e)))
+        except IOError as err:
+            sys.stderr.write("Could not read from token file {}.\n{}".format(tpath, str(err)))
         # dispatch to command
         if args.command != cls.name:
             try:
@@ -128,8 +129,8 @@ class DyntmCommand(object):
             if session._token != token:
                 with open(tpath, 'w') as tf:
                     tf.write(session._token)
-        except IOError as e:
-            sys.stderr.write("Could not write to token file {}.\n{}".format(tpath, str(e)))
+        except IOError as err:
+            sys.stderr.write("Could not write to token file {}.\n{}".format(tpath, str(err)))
         # done!
         exit(0)
     def __init__(self):
@@ -195,6 +196,7 @@ class CommandZoneList(DyntmCommand):
         zones = get_all_zones()
         for zone in zones:
             print zone.fqdn
+
 
 ### create zone
 class CommandZoneCreate(DyntmCommand):
@@ -537,12 +539,16 @@ class CommandRecordGet(DyntmCommand):
             print "{} {} {} {} {}".format(r.fqdn, rtype, r._record_id, r.ttl, rdata)
 
 
+# setup record selection command subclass for each record type
 rget = {}
 for rtype in sorted(rtypes.keys()):
-    # tweak args to make them all optional
+    # setup argument spec
     opts = copy.deepcopy(rtypes[rtype]) # list(rtypes[rtype])
-    opts += [ {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'} ]
-    opts += [ {'arg':'--id', 'type':int, 'dest':'_record_id', 'help':'Awkward internal record ID'} ]
+    opts += [
+        {'arg':'--ttl', 'dest':'ttl', 'type':int, 'help':'TTL of the record.'},
+        {'arg':'--id', 'type':int, 'dest':'_record_id', 'help':'Awkward internal record ID'},
+    ]
+    # tweak args to make them all optional
     for opt in opts:
         if not opt['arg'].startswith('--'):
             opt['arg'] = "--" + opt['arg']
@@ -659,9 +665,7 @@ for rtype in [k for k in sorted(rtypes.keys())] :
 ## gslb commands TODO
 ## dsf commands TODO
 
-# main
-def dyntm(argv=sys.argv):
-    DyntmCommand.action(argv)
 
-# call it if invoked
-dyntm(sys.argv[1:])
+# main
+if __name__ == "__main__":
+    DyntmCommand.action(sys.argv[1:])

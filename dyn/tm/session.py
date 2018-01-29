@@ -81,7 +81,7 @@ class DynectSession(SessionEngine):
         try:
             session_check = self.execute('/REST/Session/', 'GET')
             renew_token = 'login:' in session_check['msgs'][0]['INFO']
-        except DynectGetError:
+        except DynectAuthError:
             renew_token = True
 
         if renew_token:
@@ -109,7 +109,7 @@ class DynectSession(SessionEngine):
             return response
         elif status == 'failure':
             msgs = response['msgs']
-            if method == 'POST' and 'login' in msgs[0]['INFO']:
+            if 'login' in msgs[0]['INFO']:
                 raise DynectAuthError(response['msgs'])
             if method == 'POST':
                 raise DynectCreateError(response['msgs'])
@@ -126,6 +126,22 @@ class DynectSession(SessionEngine):
                 return self._process_response(response, method, True)
             else:
                 raise DynectQueryTimeout({})
+
+    def _meta_update(self, uri, method, results):
+        """Update the HTTP session token if the uri is a login or logout
+        :param uri: the uri from the call being updated
+        :param method: the api method
+        :param results: the JSON results
+        """
+        # If we had a successful log in, update the token
+        if uri.startswith('/REST/Session') and method == 'POST':
+            if results['status'] == 'success':
+                self._token = results['data']['token']
+
+        # Otherwise, if it's a successful logout, blank the token
+        if uri.startswith('/REST/Session') and method == 'DELETE':
+            if results['status'] == 'success':
+                self._token = None
 
     def update_password(self, new_password):
         """Update the current users password

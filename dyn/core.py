@@ -280,20 +280,24 @@ class SessionEngine(Singleton):
 
     def _handle_response(self, response, uri, method, raw_args, final):
         """Handle the processing of the API's response"""
+        # Read response
         body = response.read()
         self.logger.debug('RESPONSE: {0}'.format(body))
-        self._last_response = response
 
+        # Poll for task completion if needed
+        self._last_response = response
         if self.poll_incomplete:
             response, body = self.poll_response(response, body)
             self._last_response = response
 
+        # The response was empty? Something went wrong.
         if not body:
             err_msg_fmt = "Received Empty Response: {!r} status: {!r} {!r}"
             error_message = err_msg_fmt.format(body, response.status, uri)
             self.logger.error(error_message)
             raise ValueError(error_message)
 
+        # Parse response JSON
         json_err_fmt = "Decode Error on Response Body: {!r} status: {!r} {!r}"
         try:
             ret_val = json.loads(body.decode('UTF-8'))
@@ -301,26 +305,28 @@ class SessionEngine(Singleton):
             self.logger.error(json_err_fmt.format(body, response.status, uri))
             raise
 
+        # Add a record of this request/response to the history.
         if self.__call_cache is not None:
             self.__call_cache.append((uri, method, clean_args(raw_args),
                                       ret_val['status']))
 
+        # Call this hook for client state updates.
         self._meta_update(uri, method, ret_val)
 
+        # Maybe retry failed calls?
         retry = {}
-        # Try to retry?
         if ret_val['status'] == 'failure' and not final:
             retry = self._retry(ret_val['msgs'], final)
-
         if retry.get('retry', False):
             time.sleep(retry['wait'])
             return self.execute(uri, method, raw_args, final=retry['final'])
-        else:
-            return self._process_response(ret_val, method)
+
+        # Return processed response.
+        return self._process_response(ret_val, method)
 
     def _validate_uri(self, uri):
         """Validate and return a cleaned up uri. Make sure the command is
-        prefixed by '/REST/'
+        prefixed by root.
         """
         if not uri.startswith('/'):
             uri = '/' + uri
@@ -399,21 +405,9 @@ class SessionEngine(Singleton):
         return self._handle_response(response, uri, method, raw_args, final)
 
     def _meta_update(self, uri, method, results):
-        """Update the HTTP session token if the uri is a login or logout
+        """Hook into response handling."""
+        pass
 
-        :param uri: the uri from the call being updated
-        :param method: the api method
-        :param results: the JSON results
-        """
-        # If we had a successful log in, update the token
-        if uri.startswith('/REST/Session') and method == 'POST':
-            if results['status'] == 'success':
-                self._token = results['data']['token']
-
-        # Otherwise, if it's a successful logout, blank the token
-        if uri.startswith('/REST/Session') and method == 'DELETE':
-            if results['status'] == 'success':
-                self._token = None
 
     def poll_response(self, response, body):
         """Looks at a response from a REST command, and while indicates that

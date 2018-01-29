@@ -101,10 +101,10 @@ class DyntmCommand(object):
             if os.path.isfile(tpath):
                 with open(tpath, 'r') as tf:
                     token = tf.readline()
-            # create session
+            # figure session fields
             keys = ['host', 'port', 'proxy_host', 'proxy_port', 'proxy_user', 'proxy_pass', 'proxy_pass']
             opts = { k : v for d in [conf, vars(args)] for k, v in d.iteritems() if k in keys and v is not None }
-            # authenticate only if token needed
+            # create session. authenticate only if token is unavailable
             if token:
                 session = DynectSession(cust, user, pswd, auto_auth=False, **opts)
                 session._token = token

@@ -310,6 +310,7 @@ class CommandNodeDelete(DyntmCommand):
 ## record commands
 
 # record type specifications for child class generation
+# HEY! Maintaining an 80 character column limit is pointless busy work especially in this indentation oriented language.
 # TODO write sensible help strings
 rtypes = {
     # 'RTYPE' : [ {'arg':'', 'dest':'','type':str, 'help':''}, ]

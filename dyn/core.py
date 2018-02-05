@@ -10,7 +10,6 @@ import locale
 import logging
 import re
 import threading
-import time
 from datetime import datetime
 
 from . import __version__
@@ -64,19 +63,6 @@ class Singleton(_Singleton('SingletonMeta', (object,), {})):
     pass
 
 
-class _History(list):
-    """A *list* subclass specifically targeted at being able to store the
-    history of calls made via a SessionEngine
-    """
-
-    def append(self, p_object):
-        """Override builtin list append operators to allow for the automatic
-        appendation of a timestamp for cleaner record keeping
-        """
-        now_ts = datetime.now().isoformat()
-        super(_History, self).append(tuple([now_ts] + list(p_object)))
-
-
 class SessionEngine(Singleton):
     """Base object representing a DynectSession Session"""
     _valid_methods = tuple()
@@ -100,7 +86,6 @@ class SessionEngine(Singleton):
         :return: SessionEngine object
         """
         super(SessionEngine, self).__init__()
-        self.__call_cache = _History() if history else None
         self.extra_headers = dict()
         self.logger = logging.getLogger(self.name)
         self.host = host
@@ -110,12 +95,11 @@ class SessionEngine(Singleton):
         self.proxy_port = proxy_port
         self.proxy_user = proxy_user
         self.proxy_pass = proxy_pass
-        self.poll_incomplete = True
         self.content_type = 'application/json'
         self._encoding = locale.getdefaultlocale()[-1] or 'UTF-8'
         self._token = self._conn = self._last_response = None
         self._permissions = None
-        self._tasks = {}
+        self._history = []
 
     @classmethod
     def new_session(cls, *args, **kwargs):
@@ -162,17 +146,10 @@ class SessionEngine(Singleton):
         return str(self.__class__).split('.')[-1][:-2]
 
     def connect(self):
-        """Establishes a connection to the REST API server as defined by the
+        """Establishes a connection to the API server as defined by the
         host, port and ssl instance variables. If a proxy is specified, it
         is used.
         """
-        if self._token:
-            self.logger.debug('Forcing logout from old session')
-            orig_value = self.poll_incomplete
-            self.poll_incomplete = False
-            self.execute('/REST/Session', 'DELETE')
-            self.poll_incomplete = orig_value
-            self._token = None
         self._conn = None
         use_proxy = False
         headers = {}
@@ -181,15 +158,11 @@ class SessionEngine(Singleton):
             msg = 'Proxy missing port, please specify a port'
             raise ValueError(msg)
 
+        # proxy or normal connection?
         if self.proxy_host and self.proxy_port:
-            use_proxy = True
-
             if self.proxy_user and self.proxy_pass:
                 auth = '{}:{}'.format(self.proxy_user, self.proxy_pass)
-                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(
-                    auth)
-
-        if use_proxy:
+                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(auth)
             if self.ssl:
                 s = 'Establishing SSL connection to {}:{} with proxy {}:{}'
                 msg = s.format(
@@ -202,21 +175,18 @@ class SessionEngine(Singleton):
                                              timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
             else:
-                s = ('Establishing unencrypted connection to {}:{} with proxy '
-                     '{}:{}')
+                s = ('Establishing unencrypted connection to {}:{} with proxy {}:{}')
                 msg = s.format(
                     self.host,
                     self.port,
                     self.proxy_host,
                     self.proxy_port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.proxy_host, self.proxy_port,
-                                            timeout=300)
+                self._conn = HTTPConnection(self.proxy_host, self.proxy_port,timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
         else:
             if self.ssl:
-                msg = 'Establishing SSL connection to {}:{}'.format(self.host,
-                                                                    self.port)
+                msg = 'Establishing SSL connection to {}:{}'.format(self.host,self.port)
                 self.logger.info(msg)
                 self._conn = HTTPSConnection(self.host, self.port,
                                              timeout=300)
@@ -228,101 +198,53 @@ class SessionEngine(Singleton):
                 self._conn = HTTPConnection(self.host, self.port,
                                             timeout=300)
 
-    def _process_response(self, response, method, final=False):
+    def _process_response(self, response, uri, method, args, final=False):
         """API Method. Process an API response for failure, incomplete, or
         success and throw any appropriate errors
 
         :param response: the JSON response from the request being processed
         :param method: the HTTP method
         :param final: boolean flag representing whether or not to continue
-            polling
+            polling.
         """
         return response
 
-    def _handle_error(self, uri, method, raw_args):
+    def _handle_error(self, uri, method, args):
         """Handle the processing of a connection error with the api. Note, to be
         implemented as needed in subclasses.
         """
         return None
 
-    def _retry(self, msgs, final=False):
-        """Retry logic around throttled or blocked tasks"""
-
-        throttle_err = 'RATE_LIMIT_EXCEEDED'
-        throttled = any(throttle_err == err['ERR_CD'] for err in msgs)
-
-        if throttled:
-            # We're rate limited, so wait 5 seconds and try again
-            return dict(retry=True, wait=5, final=final)
-
-        blocked_err = 'Operation blocked by current task'
-        blocked = any(blocked_err in err['INFO'] for err in msgs)
-
-        pat = re.compile(r'^task_id:\s+(\d+)$')
-        if blocked:
-            try:
-                # Get the task id
-                task = next(pat.match(i['INFO']).group(1) for i in msgs
-                            if pat.match(i.get('INFO', '')))
-            except:
-                # Task id could not be recovered
-                wait = 1
-            else:
-                # Exponential backoff for individual blocked tasks
-                wait = self._tasks.get(task, 1)
-                self._tasks[task] = wait * 2 + 1
-
-            # Give up if final or wait > 30 seconds
-            return dict(retry=True, wait=wait, final=wait > 30 or final)
-
-        # Neither blocked nor throttled?
-        return dict(retry=False, wait=0, final=True)
-
-    def _handle_response(self, response, uri, method, raw_args, final):
+    def _handle_response(self, response, uri, method, args, final):
         """Handle the processing of the API's response"""
         # Read response
         body = response.read()
         self.logger.debug('RESPONSE: {0}'.format(body))
 
-        # Poll for task completion if needed
-        self._last_response = response
-        if self.poll_incomplete:
-            response, body = self.poll_response(response, body)
-            self._last_response = response
-
         # The response was empty? Something went wrong.
         if not body:
-            err_msg_fmt = "Received Empty Response: {!r} status: {!r} {!r}"
-            error_message = err_msg_fmt.format(body, response.status, uri)
-            self.logger.error(error_message)
-            raise ValueError(error_message)
+            err = "Received Empty Response: {!r} status: {!r} {!r}"
+            msg = err.format(body, response.status, uri)
+            self.logger.error(msg)
+            raise ValueError(msg)
 
         # Parse response JSON
-        json_err_fmt = "Decode Error on Response Body: {!r} status: {!r} {!r}"
         try:
-            ret_val = json.loads(body.decode('UTF-8'))
+            data = json.loads(body.decode('UTF-8'))
         except ValueError:
-            self.logger.error(json_err_fmt.format(body, response.status, uri))
+            err = "Decode Error on Response Body: {!r} status: {!r} {!r}"
+            self.logger.error(err.format(body, response.status, uri))
             raise
 
         # Add a record of this request/response to the history.
-        if self.__call_cache is not None:
-            self.__call_cache.append((uri, method, clean_args(raw_args),
-                                      ret_val['status']))
+        now = datetime.now().isoformat()
+        self._history.append((now, uri, method, clean_args(args),data['status']))
 
         # Call this hook for client state updates.
-        self._meta_update(uri, method, ret_val)
-
-        # Maybe retry failed calls?
-        retry = {}
-        if ret_val['status'] == 'failure' and not final:
-            retry = self._retry(ret_val['msgs'], final)
-        if retry.get('retry', False):
-            time.sleep(retry['wait'])
-            return self.execute(uri, method, raw_args, final=retry['final'])
+        self._meta_update(uri, method, data)
 
         # Return processed response.
-        return self._process_response(ret_val, method)
+        return self._process_response(data, uri, method, args, final)
 
     def _validate_uri(self, uri):
         """Validate and return a cleaned up uri. Make sure the command is
@@ -362,8 +284,7 @@ class SessionEngine(Singleton):
     def execute(self, uri, method, args=None, final=False):
         """Execute a commands against the rest server
 
-        :param uri: The uri of the resource to access. /REST/ will be prepended
-            if it is not at the beginning of the uri
+        :param uri: The URI of the resource to access
         :param method: One of 'DELETE', 'GET', 'POST', or 'PUT'
         :param args: Any arguments to be sent as a part of the request
         :param final: boolean flag representing whether or not we have already
@@ -378,14 +299,13 @@ class SessionEngine(Singleton):
         self._validate_method(method)
 
         # Prepare arguments to send to API
-        raw_args, args, uri = self._prepare_arguments(args, method, uri)
+        args, data, uri = self._prepare_arguments(args, method, uri)
 
         msg = 'uri: {}, method: {}, args: {}'
-        self.logger.debug(
-            msg.format(uri, method, clean_args(json.loads(args))))
+        self.logger.debug(msg.format(uri, method, clean_args(json.loads(data))))
 
         # Send the command and deal with results
-        self.send_command(uri, method, args)
+        self.send_command(uri, method, data)
 
         # Deal with the results
         try:
@@ -395,36 +315,18 @@ class SessionEngine(Singleton):
                 raise e
             else:
                 # Handle processing a connection error
-                resp = self._handle_error(uri, method, raw_args)
+                resp = self._handle_error(uri, method, args)
                 # If we got a valid response back from our _handle_error call
                 # Then return it, otherwise raise the original exception
                 if resp is not None:
                     return resp
                 raise e
 
-        return self._handle_response(response, uri, method, raw_args, final)
+        return self._handle_response(response, uri, method, args, final)
 
     def _meta_update(self, uri, method, results):
         """Hook into response handling."""
         pass
-
-
-    def poll_response(self, response, body):
-        """Looks at a response from a REST command, and while indicates that
-        the job is incomplete, poll for response
-
-        :param response: the JSON response containing return codes
-        :param body: the body of the HTTP response
-        """
-        while response.status == 307:
-            time.sleep(1)
-            uri = response.getheader('Location')
-            self.logger.info('Polling {}'.format(uri))
-
-            self.send_command(uri, 'GET', '')
-            response = self._conn.getresponse()
-            body = response.read()
-        return response, body
 
     def send_command(self, uri, method, args):
         """Responsible for packaging up the API request and sending it to the
@@ -454,28 +356,6 @@ class SessionEngine(Singleton):
 
         self._conn.send(prepare_to_send(args))
 
-    def wait_for_job_to_complete(self, job_id, timeout=120):
-        """When a response comes back with a status of "incomplete" we need to
-        wait and poll for the status of that job until it comes back with
-        success or failure
-
-        :param job_id: the id of the job to poll for a response from
-        :param timeout: how long (in seconds) we should wait for a valid
-            response before giving up on this request
-        """
-        self.logger.debug('Polling for job_id: {}'.format(job_id))
-        start = datetime.now()
-        uri = '/Job/{}/'.format(job_id)
-        api_args = {}
-        # response = self.execute(uri, 'GET', api_args)
-        response = {'status': 'incomplete'}
-        now = datetime.now()
-        self.logger.warn('Waiting for job {}'.format(job_id))
-        too_long = (now - start).seconds < timeout
-        while response['status'] is 'incomplete' and too_long:
-            time.sleep(10)
-            response = self.execute(uri, 'GET', api_args)
-        return response
 
     def __getstate__(cls):
         """Because HTTP/HTTPS connections are not serializeable, we need to
@@ -510,4 +390,4 @@ class SessionEngine(Singleton):
         *list* of 5-tuples of the form: (timestamp, uri, method, args, status)
         where status will be one of 'success' or 'failure'
         """
-        return self.__call_cache
+        return self._history

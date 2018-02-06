@@ -6,7 +6,6 @@ A command line tool for interacting with the Dyn Traffic Management API.
 """
 
 # TODO
-## Publishing changes after multiple invocations of the script.
 ## A file cache of zones, nodes, services etc. Any of the 'get_all_X'.
 ## DTRT with one argument specifying a zone and node.
 ## Cleaned up help and error messages.
@@ -28,6 +27,7 @@ from dyn.tm import *
 from dyn.tm.accounts import *
 from dyn.tm.zones import *
 from dyn.tm.session import *
+from dyn.tm.errors import *
 
 # globals!
 srstyles = ['increment', 'epoch', 'day', 'minute']
@@ -111,26 +111,36 @@ class DyntmCommand(object):
             else:
                 session = DynectSession(cust, user, pswd, **opts)
         except DynectAuthError as auth:
+            # authentication failed
             print auth.message
             exit(3)
         except IOError as err:
             sys.stderr.write("Could not read from token file {}.\n{}".format(tpath, str(err)))
-        # dispatch to command
-        if args.command != cls.name:
-            try:
-                inp = { k : v for k, v in vars(args).iteritems() if k not in ['command', 'func'] }
-                args.func(**inp)
-            except Exception as err:
-                # TODO catch specific errors for meaningful exit codes
-                print err.message
-                exit(4)
-        # record token for later use
+        # figure out arguments
+        inp = { k : v for k, v in vars(args).iteritems() if k not in ['command', 'func'] }
+        # try the command again, reauthenticate if needed
         try:
-            if session._token != token:
+            auth = True
+            while auth:
+                try:
+                    # call the command
+                    args.func(**inp)
+                    auth = False
+                except DynectAuthError as err:
+                    # session is invalid
+                    session.authenticate()
+                    auth = True
+        except DynectError as err:
+            # something went wrong
+            print err.message
+            exit(4)
+        # record session token for later use
+        if session._token and session._token != token:
+            try:
                 with open(tpath, 'w') as tf:
                     tf.write(session._token)
-        except IOError as err:
-            sys.stderr.write("Could not write to token file {}.\n{}".format(tpath, str(err)))
+            except IOError as err:
+                sys.stderr.write("Could not write to token file {}.\n{}".format(tpath, str(err)))
         # done!
         exit(0)
     def __init__(self):
@@ -150,6 +160,17 @@ class CommandUserPermissions(DyntmCommand):
         # print each permission available to current session
         for perm in sorted(session.permissions):
             print perm
+
+### log out
+class CommandUserLogOut(DyntmCommand):
+    name = "logout"
+    desc = "Log out of the current session."
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # get active session and log out
+        session = DynectSession.get_session()
+        session.log_out()
 
 
 ### update password
@@ -254,6 +275,7 @@ class CommandZoneFreeze(DyntmCommand):
         zone = Zone(args['zone'])
         zone.freeze()
 
+
 ### thaw zone
 class CommandZoneThaw(DyntmCommand):
     name = "thaw"
@@ -307,10 +329,40 @@ class CommandNodeDelete(DyntmCommand):
         node.delete()
 
 
+### zone changes
+class CommandZoneChanges(DyntmCommand):
+    name = "changes"
+    desc = "List pending changes to a zone."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+        {'arg':'note', 'type':str, 'nargs':'?', 'help':'A note associated with this change.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # get the zone
+        zone = Zone(args['zone'])
+        print zone.changes()
+
+
+### zone publish
+class CommandZonePublish(DyntmCommand):
+    name = "publish"
+    desc = "Publish pending changes to a zone."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # get the zone
+        zone = Zone(args['zone'])
+        print zone.publish(notes=args.get('note', None))
+
 ## record commands
 
 # record type specifications for child class generation
-# HEY! Maintaining an 80 character column limit is pointless busy work especially in this indentation oriented language.
+
 # TODO write sensible help strings
 rtypes = {
     # 'RTYPE' : [ {'arg':'', 'dest':'','type':str, 'help':''}, ]
@@ -463,6 +515,7 @@ class CommandRecordCreate(DyntmCommand):
     args = [
         {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'node', 'type':str, 'help':'Node on which to create the record.'},
+        {'arg':'--publish', 'type':bool, 'help':'Zone should be published immediately.'},
         # could have TTL here but that requires the option to appear before the record type
     ]
 
@@ -477,7 +530,10 @@ class CommandRecordCreate(DyntmCommand):
         # add a new record on that node
         rec = node.add_record(cls.name, **new)
         # publish the zone
-        zone.publish()
+        if args['publish']:
+            zone.publish()
+        # print the new record
+        print rec
 
 
 # setup record creation command subclass for each record type
@@ -568,6 +624,7 @@ class CommandRecordUpdate(DyntmCommand):
     args = [
         {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'node', 'type':str, 'help':'Node on which the the record appears.'},
+        {'arg':'--publish', 'type':bool, 'help':'Zone should be published immediately.'},
     ]
     subtitle = "Record Types"
 
@@ -589,8 +646,9 @@ class CommandRecordUpdate(DyntmCommand):
         for field in fields:
             if args[field]:
                 setattr(that, field, args[field])
-        # publish the zone
-        zone.publish()
+        # maybe publish the zone
+        if args['publish']:
+            zone.publish()
         # success
         print that
 
@@ -623,6 +681,7 @@ class CommandRecordDelete(DyntmCommand):
     args = [
         {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
         {'arg':'node', 'type':str, 'help':'Node on which the the record appears.'},
+        {'arg':'--publish', 'type':bool, 'help':'Zone should be published immediately.'},
     ]
     subtitle = "Record Types"
 
@@ -640,8 +699,9 @@ class CommandRecordDelete(DyntmCommand):
         that = them.pop()
         # delete the record
         that.delete()
-        # publish the zone
-        zone.publish()
+        # maybe publish the zone
+        if args['publish']:
+            zone.publish()
         # success
         print that
 

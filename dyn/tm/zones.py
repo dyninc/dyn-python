@@ -23,8 +23,10 @@ from dyn.tm.services import (ActiveFailover, DynamicDNS, DNSSEC,
 from dyn.tm.task import Task
 
 __author__ = 'jnappi'
-__all__ = ['get_all_zones', 'Zone', 'SecondaryZone', 'Node',
+__all__ = ['get_all_zones', 'Zone', 'Node',
+           'get_all_secondary_zones', 'SecondaryZone',
            'ExternalNameserver', 'ExternalNameserverEntry']
+
 
 RECS = {'A': ARecord, 'AAAA': AAAARecord, 'ALIAS': ALIASRecord,
         'CAA': CAARecord, 'CDS': CDSRecord, 'CDNSKEY': CDNSKEYRecord,
@@ -44,13 +46,9 @@ def get_all_zones():
 
     :return: a *list* of :class:`~dyn.tm.zones.Zone`'s
     """
-    uri = '/Zone/'
-    api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    zones = []
-    for zone in response['data']:
-        zones.append(Zone(zone['zone'], api=False, **zone))
-    return zones
+    session = DynectSession.get_session()
+    response = session.execute('/Zone/', 'GET', {'detail': 'Y'})
+    return [Zone(zone['zone'], api=False, **zone) for zone in response['data']]
 
 
 def get_all_secondary_zones():
@@ -59,13 +57,9 @@ def get_all_secondary_zones():
 
     :return: a *list* of :class:`~dyn.tm.zones.SecondaryZone`'s
     """
-    uri = '/Secondary/'
-    api_args = {'detail': 'Y'}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    zones = []
-    for zone in response['data']:
-        zones.append(SecondaryZone(zone.pop('zone'), api=False, **zone))
-    return zones
+    session = DynectSession.get_session()
+    response = session.execute('/Secondary/', 'GET', {'detail': 'Y'})
+    return [SecondaryZone(zone['zone'], api=False, **zone) for zone in response['data']]
 
 
 def get_apex(node_name, full_details=False):
@@ -79,14 +73,9 @@ def get_apex(node_name, full_details=False):
     :return: a *string* containing apex zone name, if full_details is
         :const:`False`, a :const:`dict` containing apex zone name otherwise
     """
-
-    uri = '/Apex/{}'.format(node_name)
-    api_args = {}
-    response = DynectSession.get_session().execute(uri, 'GET', api_args)
-    if full_details:
-        return response['data']
-    else:
-        return response['data']['zone']
+    session = DynectSession.get_session()
+    response = session.execute('/Apex/{}'.format(node_name), 'GET', {})
+    return response['data'] if full_details else response['data']['zone']
 
 
 class Zone(object):
@@ -396,6 +385,14 @@ class Zone(object):
             api_args['limit'] = limit
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']
+
+
+    def changes(self):
+        """Describes pending changes to this zone."""
+        session = DynectSession.get_session()
+        response = session.execute('/ZoneChanges/{}'.format(self.name), 'GET')
+        return response['data']
+
 
     def add_record(self, name=None, record_type='A', *args, **kwargs):
         """Adds an a record with the provided name and data to this

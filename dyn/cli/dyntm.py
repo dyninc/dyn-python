@@ -342,7 +342,12 @@ class CommandZoneChanges(DyntmCommand):
     def action(cls, *rest, **args):
         # get the zone
         zone = Zone(args['zone'])
-        print zone.changes()
+        for change in zone.get_changes():
+            fqdn = change["fqdn"]
+            ttl = change["ttl"]
+            rtype = change["rdata_type"]
+            rdata = change["rdata"].get("rdata_{}".format(rtype.lower()),{})
+            print "{} {} {} {}".format(fqdn, rtype, ttl, json.dumps(rdata))
 
 
 ### zone publish
@@ -358,6 +363,21 @@ class CommandZonePublish(DyntmCommand):
         # get the zone
         zone = Zone(args['zone'])
         print zone.publish(notes=args.get('note', None))
+
+
+### zone change reset
+class CommandZoneChangeDiscard(DyntmCommand):
+    name = "discard"
+    desc = "Discard pending changes to a zone."
+    args = [
+        {'arg':'zone', 'type':str, 'help':'The name of the zone.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # get the zone
+        zone = Zone(args['zone'])
+        zone.discard_changes()
 
 ## record commands
 
@@ -719,7 +739,6 @@ for rtype in [k for k in sorted(rtypes.keys())] :
     }
     # make the record delete subclass
     rdelete[rtype] = type("CommandRecordDelete" + rtype, (CommandRecordDelete,), attr)
-
 
 
 ## redir commands TODO

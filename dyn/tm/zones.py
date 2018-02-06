@@ -386,13 +386,17 @@ class Zone(object):
         response = DynectSession.get_session().execute(uri, 'POST', api_args)
         return response['data']
 
-
-    def changes(self):
+    def get_changes(self):
         """Describes pending changes to this zone."""
         session = DynectSession.get_session()
         response = session.execute('/ZoneChanges/{}'.format(self.name), 'GET')
         return response['data']
 
+    def discard_changes(self):
+        """Removes pending changes to this zone."""
+        session = DynectSession.get_session()
+        response = session.execute('/ZoneChanges/{}'.format(self.name), 'DELETE')
+        return True
 
     def add_record(self, name=None, record_type='A', *args, **kwargs):
         """Adds an a record with the provided name and data to this

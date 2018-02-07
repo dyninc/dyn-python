@@ -17,6 +17,8 @@ import re
 import copy
 import itertools
 import argparse
+import shlex
+import subprocess
 import getpass
 import yaml
 import json
@@ -73,8 +75,21 @@ class DyntmCommand(object):
         # parse arguments
         ap = cls.parser()
         args = ap.parse_args() # (args=argv) TODO list unhashable?
-        # read configuration file
+        # maybe generate configuration file
         cpath = os.path.expanduser("~/.dyntm.yml")
+        if not os.path.exists(cpath):
+            creds = {
+                "customer": args.cust or raw_input("Dyn account name > "),
+                "user": args.user or raw_input("Dyn user name > "),
+                # "pass" : args.pass or getpass.getpass("Password > "),
+            }
+            try:
+                with open(args.conf or cpath, 'w') as cf:
+                    yaml.dump(creds, cf, default_flow_style=False)
+            except IOError as e:
+                sys.stderr.write(str(e))
+                exit(1)
+        # read configuration file
         conf = {}
         try:
             with open(args.conf or cpath, 'r') as cf:
@@ -83,13 +98,26 @@ class DyntmCommand(object):
             sys.stderr.write(str(e))
             exit(1)
         # require credentials
-        cust = args.cust or conf.get('cust')
+        cust = args.cust or conf.get('customer')
         user = args.user or conf.get('user')
         if not user or not cust:
-            sys.stderr.write("A customer name and user name must be provided!")
+            sys.stderr.write("A customer name and user name must be provided!\n")
             exit(2)
+        # get password from config
+        pswd = conf.get('password')
+        # or get password from the output of some command. not for babies™
+        if conf.get('passcmd'):
+            try:
+                toks = shlex.split(conf.get('passcmd'))
+                proc = subprocess.Popen(toks, stdout=subprocess.PIPE)
+                pswd = proc.stdout.readline() if proc.wait() == 0 else None
+            except OSError as e:
+                sys.stderr.write("Something wrong with 'passcmd' config!\n{}\n".format(e))
+                exit(5)
+        # or get password interactively if practical
+        if not pswd and sys.stdout.isatty():
+            pswd = getpass.getpass("Password for {}/{} > ".format(cust, user))
         # require password
-        pswd = conf.get('pass') or getpass("Password for {}/{}".format(cust, user))
         if not pswd:
             sys.stderr.write("A password must be provided!")
             exit(2)
@@ -116,7 +144,7 @@ class DyntmCommand(object):
             exit(3)
         except IOError as err:
             sys.stderr.write("Could not read from token file {}.\n{}".format(tpath, str(err)))
-        # figure out arguments
+        # figure out command arguments
         inp = { k : v for k, v in vars(args).iteritems() if k not in ['command', 'func'] }
         # try the command again, reauthenticate if needed
         try:
@@ -216,7 +244,7 @@ class CommandZoneList(DyntmCommand):
     def action(cls, *rest, **args):
         zones = get_all_zones()
         for zone in zones:
-            print zone.fqdn
+            print zone.name
 
 
 ### create zone
@@ -747,5 +775,8 @@ for rtype in [k for k in sorted(rtypes.keys())] :
 
 
 # main
-if __name__ == "__main__":
+def main():
     DyntmCommand.action(sys.argv[1:])
+
+if __name__ == "__main__":
+    main()

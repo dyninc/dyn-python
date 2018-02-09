@@ -110,7 +110,7 @@ class DyntmCommand(object):
             try:
                 toks = shlex.split(conf.get('passcmd'))
                 proc = subprocess.Popen(toks, stdout=subprocess.PIPE)
-                pswd = proc.stdout.readline() if proc.wait() == 0 else None
+                pswd = proc.stdout.readline().strip() if proc.wait() == 0 else None
             except OSError as e:
                 sys.stderr.write("Something wrong with 'passcmd' config!\n{}\n".format(e))
                 exit(5)

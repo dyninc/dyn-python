@@ -161,10 +161,11 @@ class SessionEngine(Singleton):
         # proxy or normal connection?
         if self.proxy_host and self.proxy_port:
             if self.proxy_user and self.proxy_pass:
-                auth = '{}:{}'.format(self.proxy_user, self.proxy_pass)
-                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(auth)
+                creds = 'Basic {}'.format(base64.b64encode(
+                    '{}:{}'.format(self.proxy_user, self.proxy_pass)))
+                headers['Proxy-Authorization'] = creds
             if self.ssl:
-                s = 'Establishing SSL connection to {}:{} with proxy {}:{}'
+                s = 'Establishing SSL connection to {}:{} via {}:{}'
                 msg = s.format(
                     self.host,
                     self.port,
@@ -175,28 +176,24 @@ class SessionEngine(Singleton):
                                              timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
             else:
-                s = ('Establishing unencrypted connection to {}:{} with proxy {}:{}')
-                msg = s.format(
-                    self.host,
-                    self.port,
-                    self.proxy_host,
-                    self.proxy_port)
+                s = ('Establishing unencrypted connection to {}:{} via {}:{}')
+                msg = s.format(self.host, self.port,
+                               self.proxy_host, self.proxy_port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.proxy_host, self.proxy_port,timeout=300)
+                self._conn = HTTPConnection(self.proxy_host, self.proxy_port,
+                                            timeout=300)
                 self._conn.set_tunnel(self.host, self.port, headers)
         else:
             if self.ssl:
-                msg = 'Establishing SSL connection to {}:{}'.format(self.host,self.port)
-                self.logger.info(msg)
-                self._conn = HTTPSConnection(self.host, self.port,
-                                             timeout=300)
+                msg = 'Establishing SSL connection to {}:{}'
+                self.logger.info(msg.format(self.host, self.port))
+                self._conn = HTTPSConnection(self.host, self.port, timeout=300)
             else:
                 msg = 'Establishing unencrypted connection to {}:{}'.format(
                     self.host,
                     self.port)
                 self.logger.info(msg)
-                self._conn = HTTPConnection(self.host, self.port,
-                                            timeout=300)
+                self._conn = HTTPConnection(self.host, self.port, timeout=300)
 
     def _process_response(self, response, uri, method, args, final=False):
         """API Method. Process an API response for failure, incomplete, or
@@ -238,7 +235,8 @@ class SessionEngine(Singleton):
 
         # Add a record of this request/response to the history.
         now = datetime.now().isoformat()
-        self._history.append((now, uri, method, clean_args(args),data['status']))
+        self._history.append(
+            (now, uri, method, clean_args(args), data['status']))
 
         # Call this hook for client state updates.
         self._meta_update(uri, method, data)
@@ -302,7 +300,8 @@ class SessionEngine(Singleton):
         args, data, uri = self._prepare_arguments(args, method, uri)
 
         msg = 'uri: {}, method: {}, args: {}'
-        self.logger.debug(msg.format(uri, method, clean_args(json.loads(data))))
+        self.logger.debug(
+            msg.format(uri, method, clean_args(json.loads(data))))
 
         # Send the command and deal with results
         self.send_command(uri, method, data)
@@ -355,7 +354,6 @@ class SessionEngine(Singleton):
         self._conn.endheaders()
 
         self._conn.send(prepare_to_send(args))
-
 
     def __getstate__(cls):
         """Because HTTP/HTTPS connections are not serializeable, we need to

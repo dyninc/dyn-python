@@ -419,7 +419,7 @@ class _DSFRecord(object):
                                             self._rdata_class.lower()):
                                         for k, v in rdata_v.items():
                                             setattr(self, '_' + k, v)
-                            except:
+                            except Exception:
                                 pass
             else:
                 setattr(self, '_' + key, val)

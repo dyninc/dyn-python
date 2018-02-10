@@ -76,8 +76,8 @@ class DNSRecord(object):
             self._fqdn += '.'
         if not self._record_type.endswith('Record'):
             self._record_type += 'Record'
-        uri = '/{}/{}/{}/{}/'.format(self._record_type, self._zone, self._fqdn,
-                                     self._record_id)
+            uri = '/{}/{}/{}/{}/'.format(
+                self._record_type, self._zone, self._fqdn, self._record_id)
         response = DynectSession.get_session().execute(uri, 'PUT', api_args)
         self._build(response['data'])
 
@@ -95,9 +95,11 @@ class DNSRecord(object):
 
     def rdata(self):
         """Return a records rdata"""
-        skip = {'_record_type','_record_id','_implicitPublish','_note','_ttl','_zone','_fqdn'}
-        rdata = {k[1:] : v for k, v in self.__dict__.items() if not hasattr(v, '__call__')
-                 and k.startswith('_') and k not in skip }
+        skip = {'_record_type', '_record_id', '_implicitPublish',
+                '_note', '_ttl', '_zone', '_fqdn'}
+        rdata = {k[1:]: v for k, v in self.__dict__.items()
+                 if not hasattr(v, '__call__')
+                 and k.startswith('_') and k not in skip}
         return rdata
 
     @property

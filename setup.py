@@ -31,7 +31,7 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: Name Service (DNS)',
-        'Topic :: Software Development :: Libraries', 
+        'Topic :: Software Development :: Libraries',
     ],
     install_requires=requires,
     tests_require=tests_requires,

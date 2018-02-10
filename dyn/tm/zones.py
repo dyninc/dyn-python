@@ -59,7 +59,8 @@ def get_all_secondary_zones():
     """
     session = DynectSession.get_session()
     response = session.execute('/Secondary/', 'GET', {'detail': 'Y'})
-    return [SecondaryZone(zone['zone'], api=False, **zone) for zone in response['data']]
+    return [SecondaryZone(zone['zone'], api=False, **zone)
+            for zone in response['data']]
 
 
 def get_apex(node_name, full_details=False):
@@ -389,13 +390,15 @@ class Zone(object):
     def get_changes(self):
         """Describes pending changes to this zone."""
         session = DynectSession.get_session()
-        response = session.execute('/ZoneChanges/{}'.format(self.name), 'GET')
+        frag = '/ZoneChanges/{}'.format(self.name)
+        response = session.execute(frag, 'GET')
         return response['data']
 
     def discard_changes(self):
         """Removes pending changes to this zone."""
         session = DynectSession.get_session()
-        response = session.execute('/ZoneChanges/{}'.format(self.name), 'DELETE')
+        frag = '/ZoneChanges/{}'.format(self.name)
+        response = session.execute(frag, 'DELETE')
         return True
 
     def add_record(self, name=None, record_type='A', *args, **kwargs):

@@ -278,6 +278,31 @@ class CommandZoneList(DyntmCommand):
             print zone.name
 
 
+class CommandZonePrimaryList(DyntmCommand):
+    name = "primary"
+    desc = "List all the primary zones available."
+
+    @classmethod
+    def action(cls, *rest, **args):
+        zones = get_all_zones()
+        secondary = get_all_secondary_zones()
+        primary = [z for z in zones
+                   if z.name not in [s.zone for s in secondary]]
+        for zone in primary:
+            print zone.name
+
+
+class CommandZoneSecondaryList(DyntmCommand):
+    name = "secondary"
+    desc = "List all the secondary zones available."
+
+    @classmethod
+    def action(cls, *rest, **args):
+        secondary = get_all_secondary_zones()
+        for zone in secondary:
+            print zone.zone
+
+
 # create zone
 class CommandZoneCreate(DyntmCommand):
     name = "zone-new"

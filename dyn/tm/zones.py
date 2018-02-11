@@ -59,7 +59,7 @@ def get_all_secondary_zones():
     """
     session = DynectSession.get_session()
     response = session.execute('/Secondary/', 'GET', {'detail': 'Y'})
-    return [SecondaryZone(zone['zone'], api=False, **zone)
+    return [SecondaryZone(api=False, **zone)
             for zone in response['data']]
 
 

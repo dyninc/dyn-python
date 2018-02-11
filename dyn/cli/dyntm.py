@@ -81,7 +81,7 @@ class DyntmCommand(object):
 
     @classmethod
     def config(cls, conf):
-        # maybe generate configuration file
+        # maybe generate an empty configuration file
         cpath = os.path.expanduser(conf)
         if not os.path.exists(cpath):
             creds = {"customer": "", "user": "", "password": ""}
@@ -176,7 +176,9 @@ class DyntmCommand(object):
         mine = auth + ['command', 'func']
         inp = {k: v for k, v in args.iteritems() if k not in mine}
         # run the command, reauthenticate if needed
-        func = args['func']
+        func = args.get('func')
+        command = args.get('command')
+        context = "{} {}".format(command, str(inp))
         try:
             try:
                 func(**inp)
@@ -184,11 +186,11 @@ class DyntmCommand(object):
                 cls.session(auth=True, **plan)
                 func(**inp)
         except DynectError as err:
-            msg = "Dynect SDK error:\n{}\n".format(err.message or str(err))
+            msg = "{}\n{}\n".format(context, err.message or str(err))
             sys.stderr.write(msg)
             exit(3)
         except Exception as err:
-            msg = "General error:\n{}\n".format(err.message or str(err))
+            msg = "{}\n{}\n".format(context, err.message or str(err))
             sys.stderr.write(msg)
             exit(4)
         # done!

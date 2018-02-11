@@ -11,7 +11,7 @@ import time
 from dyn.compat import force_unicode
 from dyn.core import SessionEngine
 from dyn.encrypt import AESCipher
-from dyn.tm.errors import (DynectAuthError, DynectCreateError,
+from dyn.tm.errors import (DynectError, DynectAuthError, DynectCreateError,
                            DynectUpdateError, DynectGetError,
                            DynectDeleteError, DynectQueryTimeout)
 
@@ -54,6 +54,7 @@ class DynectSession(SessionEngine):
         self.customer = customer
         self.username = username
         self.password = self.__cipher.encrypt(password)
+        self.tasks = {}
         self.connect()
         if auto_auth:
             self.authenticate()
@@ -106,33 +107,35 @@ class DynectSession(SessionEngine):
             polling
         """
         # Establish response context.
-        status = response['status']
-        messages = response['msgs']
-        job = response['job_id']
+        status = response.get('status')
+        messages = response.get('msgs')
+        job = response.get('job_id')
         # Check for successful response
         if status == 'success':
             return response
         # Task must have failed or be incomplete. Reattempt request if possible
-        wait, last = (None, None)
+        retry = False
         if any(err['ERR_CD'] == 'RATE_LIMIT_EXCEEDED' for err in messages):
             # Rate limit exceeded, try again.
-            wait, last = (5, True)
-            self.logger.warn('Rate limit exceeded!')
-        if any('Operation blocked' in err['INFO'] for err in messages):
+            retry = True
+        elif any('Operation blocked' in err['INFO'] for err in messages):
             # Waiting on other task completion, try again.
-            wait, last = (10, False)
-            self.logger.warn('Blocked by other task.')
-        if status == 'incomplete':
+            retry = True
+        elif any('already has a job' in err['INFO'] for err in messages):
+            # Request made in parallel with another task.
+            retry = True
+        elif status == 'incomplete':
             # Waiting on completion of current task, poll given job
-            wait, last = (10, False)
-            method, uri = 'GET', '/Job/{}/'.format(job)
-            self.logger.warn('Waiting for job {}.'.format(job))
-        # Wait for a few seconds and re-attempt
-        if wait:
+            retry, method, uri = True, 'GET', '/Job/{}/'.format(job)
+        # Maybe retry the call
+        if retry:
             if final:
                 raise DynectQueryTimeout({})
-            time.sleep(wait)
-            return self.execute(uri, method, args, final=last)
+            # Back off exponentially up to 30 seconds
+            delay = self.tasks.get(job, 1)
+            self.tasks[job] = delay * 2 + 1
+            time.sleep(delay)
+            return self.execute(uri, method, args, final=delay > 30)
         # Request failed, raise an appropriate error
         if any('login' in msg['INFO'] for msg in messages):
             raise DynectAuthError(messages)

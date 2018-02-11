@@ -8,7 +8,7 @@ A command line tool for interacting with the Dyn Traffic Management API.
 # TODO
 # A file cache of zones, nodes, services etc. Any of the 'get_all_X'.
 # DTRT with one argument specifying a zone and node.
-# Cleaned up help and error messages.
+# Better documentation, help messages, and error messages.
 
 # system libs
 import os
@@ -34,9 +34,8 @@ from dyn.tm.errors import *
 srstyles = ['increment', 'epoch', 'day', 'minute']
 rectypes = sorted(dyn.tm.zones.RECS.keys())
 
+
 # parent command class
-
-
 class DyntmCommand(object):
     '''
     This is a help string right?
@@ -81,115 +80,117 @@ class DyntmCommand(object):
         return ap
 
     @classmethod
-    def action(cls, *argv, **opts):
-        # parse arguments
-        ap = cls.parser()
-        args = ap.parse_args()  # (args=argv) TODO list unhashable?
+    def config(cls, conf):
         # maybe generate configuration file
-        cpath = os.path.expanduser("~/.dyntm.yml")
+        cpath = os.path.expanduser(conf)
         if not os.path.exists(cpath):
-            creds = {
-                "customer": args.cust or raw_input("Dyn account name > "),
-                "user": args.user or raw_input("Dyn user name > "),
-                # "pass" : args.pass or getpass.getpass("Password > "),
-            }
-            try:
-                with open(args.conf or cpath, 'w') as cf:
-                    yaml.dump(creds, cf, default_flow_style=False)
-            except IOError as e:
-                sys.stderr.write(str(e))
-                exit(1)
-        # read configuration file
-        conf = {}
-        try:
-            with open(args.conf or cpath, 'r') as cf:
-                conf = yaml.load(cf)
-        except IOError as e:
-            sys.stderr.write(str(e))
-            exit(1)
+            creds = {"customer": "", "user": "", "password": ""}
+            with open(cpath, 'w') as cf:
+                yaml.dump(creds, cf, default_flow_style=False)
+        # read configuration file and return config dict
+        with open(cpath, 'r') as cf:
+            return yaml.load(cf)
+
+    @classmethod
+    def session(cls, auth=False, **kwargs):
+        # return session singleton if it exists already
+        session = DynectSession.get_session()
+        if session and not auth:
+            return session
         # require credentials
-        cust = args.cust or conf.get('customer')
-        user = args.user or conf.get('user')
+        cust = kwargs.get('customer')
+        user = kwargs.get('user')
         if not user or not cust:
-            sys.stderr.write(
-                "A customer name and user name must be provided!\n")
-            exit(2)
-        # get password from config
-        pswd = conf.get('password')
-        # or get password from the output of some command. not for babies™
-        pcmd = conf.get('passcmd')
-        if pcmd:
-            try:
-                pswd = None
-                toks = shlex.split(conf.get('passcmd'))
-                proc = subprocess.Popen(toks, stdout=subprocess.PIPE)
-                if proc.wait() == 0:
-                    pswd = proc.stdout.readline().strip()
-            except OSError as e:
-                sys.stderr.write(
-                    "Password command '{}' failed!\n{}\n".format(pcmd, e))
-                exit(5)
+            msg = "A customer name and user name must be provided!\n"
+            raise ValueError(msg)
+        # run system command to fetch password if possible
+        password = None
+        passcmd = kwargs.get('passcmd')
+        if passcmd:
+            toks = shlex.split(passcmd)
+            proc = subprocess.Popen(toks, stdout=subprocess.PIPE)
+            if proc.wait() == 0:
+                output = proc.stdout.readline()
+                password = output.strip()
+        else:
+            password = kwargs.get('password')
         # or get password interactively if practical
-        if not pswd and sys.stdout.isatty():
-            pswd = getpass.getpass("Password for {}/{} > ".format(cust, user))
-        # require password
-        if not pswd:
-            sys.stderr.write("A password must be provided!")
-            exit(2)
+        if not password and sys.stdout.isatty():
+            prompt = "Password for {}/{} > ".format(cust, user)
+            password = getpass.getpass(prompt)
+        # require a password
+        if not password:
+            raise ValueError("A password must be provided!")
         # setup session
         token = None
         tpath = os.path.expanduser("~/.dyntm-{}-{}".format(cust, user))
-        try:
-            # maybe load cached session token
-            if os.path.isfile(tpath):
-                with open(tpath, 'r') as tf:
-                    token = tf.readline()
-            # figure session fields
-            keys = ['host', 'port', 'proxy_host', 'proxy_port',
-                    'proxy_user', 'proxy_pass', 'proxy_pass']
-            opts = {k: v for d in [conf, vars(args)] for k, v in d.iteritems(
-            ) if k in keys and v is not None}
-            # create session. authenticate only if token is unavailable
-            if token:
-                session = DynectSession(
-                    cust, user, pswd, auto_auth=False, **opts)
-                session._token = token
-            else:
-                session = DynectSession(cust, user, pswd, **opts)
-        except DynectAuthError as auth:
-            # authentication failed
-            print auth.message
-            exit(3)
-        except IOError as err:
-            msg = "Could not read from token file {}.\n{}"
-            sys.stderr.write(msg.format(tpath, str(err)))
-        # figure out command arguments
-        mine = ['command', 'func']
-        inp = {k: v for k, v in vars(args).iteritems() if k not in mine}
-        # try the command again, reauthenticate if needed
-        try:
-            auth = True
-            while auth:
-                try:
-                    # call the command
-                    args.func(**inp)
-                    auth = False
-                except DynectAuthError as err:
-                    # session is invalid
-                    session.authenticate()
-                    auth = True
-        except DynectError as err:
-            # something went wrong
-            print err.message
-            exit(4)
+        # maybe load cached session token
+        if os.path.isfile(tpath):
+            with open(tpath, 'r') as tf:
+                token = tf.readline()
+        # figure session fields
+        keys = ['host', 'port', 'proxy_host', 'proxy_port',
+                'proxy_user', 'proxy_pass']
+        opts = {k: v for k, v in kwargs.iteritems()
+                if k in keys and v is not None}
+        # create session
+        if not token or auth:
+            # authenticate
+            session = DynectSession(cust, user, password, **opts)
+            session.authenticate()
+        else:
+            # maybe use cached session token
+            session = DynectSession(cust, user, password,
+                                    auto_auth=False, **opts)
+            session._token = token
         # record session token for later use
         if session._token and session._token != token:
+            with open(tpath, 'w') as tf:
+                tf.write(session._token)
+        # return the session handle
+        return session
+
+    @classmethod
+    def action(cls, *argv, **opts):
+        # parse arguments
+        args = vars(cls.parser().parse_args())
+        # get configuration
+        try:
+            conf = cls.config(args.get('conf') or "~/.dyntm.yml")
+        except Exception as e:
+            msg = "Configuration problem!\n{}\n".format(e.message or str(e))
+            sys.stderr.write(msg)
+            sys.exit(1)
+        # command line arguments take precedence over config
+        auth = ['customer', 'user', 'password', 'passcmd', 'host', 'port',
+                'proxy_host', 'proxy_port', 'proxy_user', 'proxy_pass']
+        plan = {k: args.get(k) or conf.get(k) for k in auth}
+        # get session
+        try:
+            cls.session(auth=False, **plan)
+        except Exception as e:
+            msg = "Authentication problem!\n{}\n".format(e.message)
+            sys.stderr.write(msg)
+            sys.exit(2)
+        # figure out arguments for subcommand
+        mine = auth + ['command', 'func']
+        inp = {k: v for k, v in args.iteritems() if k not in mine}
+        # run the command, reauthenticate if needed
+        func = args['func']
+        try:
             try:
-                with open(tpath, 'w') as tf:
-                    tf.write(session._token)
-            except IOError as err:
-                msg = "Could not write to token file {}.\n{}"
-                sys.stderr.write(msg.format(tpath, str(err)))
+                func(**inp)
+            except DynectAuthError as err:
+                cls.session(auth=True, **plan)
+                func(**inp)
+        except DynectError as err:
+            msg = "Dynect SDK error:\n{}\n".format(err.message or str(err))
+            sys.stderr.write(msg)
+            exit(3)
+        except Exception as err:
+            msg = "General error:\n{}\n".format(err.message or str(err))
+            sys.stderr.write(msg)
+            exit(4)
         # done!
         exit(0)
 
@@ -208,7 +209,7 @@ class CommandUserPermissions(DyntmCommand):
     @classmethod
     def action(cls, *rest, **args):
         # get active session
-        session = DynectSession.get_session()
+        session = cls.session()
         # print each permission available to current session
         for perm in sorted(session.permissions):
             print perm
@@ -223,7 +224,7 @@ class CommandUserLogOut(DyntmCommand):
     @classmethod
     def action(cls, *rest, **args):
         # get active session and log out
-        session = DynectSession.get_session()
+        session = cls.session()
         session.log_out()
 
 
@@ -239,7 +240,7 @@ class CommandUserPassword(DyntmCommand):
     @classmethod
     def action(cls, *rest, **args):
         # get active session
-        session = DynectSession.get_session()
+        session = cls.session()
         # get password or prompt for it
         newpass = args['password'] or getpass()
         # update password

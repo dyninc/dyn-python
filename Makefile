@@ -1,12 +1,13 @@
 PACKAGE=dyn
 
-.PHONY: clean
+.PHONY: clean publsh dics style init ci
 
 init:
 	pip install -r test-requirements.txt
 
 style:
 	flake8 $(PACKAGE)
+	pycodestyle $(PACKAGE)
 
 ci: init style
 

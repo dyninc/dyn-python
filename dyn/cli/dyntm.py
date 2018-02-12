@@ -18,6 +18,7 @@ import copy
 import argparse
 import shlex
 import subprocess
+import functools
 import getpass
 import yaml
 import json
@@ -109,7 +110,7 @@ class DyntmCommand(object):
             toks = shlex.split(passcmd)
             proc = subprocess.Popen(toks, stdout=subprocess.PIPE)
             if proc.wait() == 0:
-                output = proc.stdout.readline()
+                output = str(proc.stdout.readline())
                 password = output.strip()
         else:
             password = kwargs.get('password')
@@ -130,7 +131,7 @@ class DyntmCommand(object):
         # figure session fields
         keys = ['host', 'port', 'proxy_host', 'proxy_port',
                 'proxy_user', 'proxy_pass']
-        opts = {k: v for k, v in kwargs.iteritems()
+        opts = {k: v for k, v in kwargs.items()
                 if k in keys and v is not None}
         # create session
         if not token or auth:
@@ -168,12 +169,12 @@ class DyntmCommand(object):
         try:
             cls.session(auth=False, **plan)
         except Exception as e:
-            msg = "Authentication problem!\n{}\n".format(e.message)
+            msg = "Authentication problem!\n{}\n".format(str(e))
             sys.stderr.write(msg)
             sys.exit(2)
         # figure out arguments for subcommand
         mine = auth + ['command', 'func']
-        inp = {k: v for k, v in args.iteritems() if k not in mine}
+        inp = {k: v for k, v in args.items() if k not in mine}
         # run the command, reauthenticate if needed
         func = args.get('func')
         command = args.get('command')
@@ -185,11 +186,11 @@ class DyntmCommand(object):
                 cls.session(auth=True, **plan)
                 func(**inp)
         except DynectError as err:
-            msg = "{}\n{}\n".format(context, err.message or str(err))
+            msg = "{}\n{}\n".format(context, str(err))
             sys.stderr.write(msg)
             exit(3)
         except Exception as err:
-            msg = "{}\n{}\n".format(context, err.message or str(err))
+            msg = "{}\n{}\n".format(context, str(err))
             sys.stderr.write(msg)
             exit(4)
         # done!
@@ -213,7 +214,7 @@ class CommandUserPermissions(DyntmCommand):
         session = cls.session()
         # print each permission available to current session
         for perm in sorted(session.permissions):
-            print perm
+            sys.stdout.write(perm)
 
 # log out
 
@@ -262,7 +263,7 @@ class CommandUserList(DyntmCommand):
         # for user in get_users():
         #     print ",".join([getattr(user, attr, "") for attr in attrs])
         for user in get_users():
-            print user.user_name
+            sys.stdout.write("{}\n".format(user.user_name))
 
 
 # list zones
@@ -274,7 +275,7 @@ class CommandZoneList(DyntmCommand):
     def action(cls, *rest, **args):
         zones = get_all_zones()
         for zone in zones:
-            print zone.name
+            sys.stdout.write("{}\n".format(zone.name))
 
 
 class CommandZonePrimaryList(DyntmCommand):
@@ -288,7 +289,7 @@ class CommandZonePrimaryList(DyntmCommand):
         primary = [z for z in zones
                    if z.name not in [s.zone for s in secondary]]
         for zone in primary:
-            print zone.name
+            sys.stdout.write("{}\n".format(zone.name))
 
 
 class CommandZoneSecondaryList(DyntmCommand):
@@ -299,7 +300,7 @@ class CommandZoneSecondaryList(DyntmCommand):
     def action(cls, *rest, **args):
         secondary = get_all_secondary_zones()
         for zone in secondary:
-            print zone.zone
+            sys.stdout.write("{}\n".format(zone.zone))
 
 
 # create zone
@@ -313,7 +314,7 @@ class CommandZoneCreate(DyntmCommand):
          'help': 'Integer timeout for transfer.'},
         {'arg': '--style', 'type': str, 'dest': 'serial_style',
          'help': 'Serial style.', 'choices': srstyles},
-        {'arg': '--file', 'dest': 'file', 'type': file,
+        {'arg': '--file', 'dest': 'file', 'type': str,
          'help': 'File from which to import zone data.'},
         {'arg': '--master', 'dest': 'master', 'type': str,
          'help': 'Master IP from which to transfer zone.'},
@@ -330,7 +331,7 @@ class CommandZoneCreate(DyntmCommand):
         new = {k: args[k] for k in spec if args[k] is not None}
         # make a new zone
         zone = Zone(**new)
-        print zone
+        sys.stdout.write(zone)
 
 
 # delete zone
@@ -405,9 +406,9 @@ class CommandNodeList(DyntmCommand):
     def action(cls, *rest, **args):
         # get the zone
         zone = Zone(args['zone'])
-        # print all of the zone's nodes
+        # output all of the zone's nodes
         for node in zone.get_all_nodes():
-            print node.fqdn
+            sys.stdout.write("{}\n".format(node.fqdn))
 
 
 # delete nodes
@@ -447,7 +448,8 @@ class CommandZoneChanges(DyntmCommand):
             ttl = change["ttl"]
             rtype = change["rdata_type"]
             rdata = change["rdata"].get("rdata_{}".format(rtype.lower()), {})
-            print "{} {} {} {}".format(fqdn, rtype, ttl, json.dumps(rdata))
+            msg = "{} {} {} {}".format(fqdn, rtype, ttl, json.dumps(rdata))
+            sys.stdout.write(msg)
 
 
 # zone publish
@@ -462,7 +464,7 @@ class CommandZonePublish(DyntmCommand):
     def action(cls, *rest, **args):
         # get the zone
         zone = Zone(args['zone'])
-        print zone.publish(notes=args.get('note', None))
+        sys.stdout.write(zone.publish(notes=args.get('note', None)))
 
 
 # zone change reset
@@ -733,8 +735,8 @@ class CommandRecordCreate(DyntmCommand):
         # publish the zone
         if args['publish']:
             zone.publish()
-        # print the new record
-        print rec
+        # output the new record
+        sys.stdout.write(rec)
 
 
 # setup record creation command subclass for each record type
@@ -766,13 +768,14 @@ class CommandRecordList(DyntmCommand):
         # context
         zone = Zone(args['zone'])
         # get records
-        recs = reduce(lambda x, y: x + y, zone.get_all_records().values())
-        # print all records
-        for r in sorted(recs, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)):
+        recs = functools.reduce(
+            lambda x, y: x + y, zone.get_all_records().values())
+        # output all records
+        for r in sorted(recs, key=lambda x: x.fqdn):
             rtype = r.rec_name.upper()
             rdata = json.dumps(dyn.tm.records.DNSRecord.rdata(r))
-            print "{} {} {} {} {}".format(
-                r.fqdn, rtype, r._record_id, r.ttl, rdata)
+            sys.stdout.write("{} {} {} {} {}\n".format(
+                r.fqdn, rtype, r._record_id, r.ttl, rdata))
 
 
 # get records
@@ -801,12 +804,12 @@ class CommandRecordGet(DyntmCommand):
         found = [r for r in recs
                  if any([re.search(str(args[f]), str(getattr(r, f, "")))
                          for f in fields if args[f]])]
-        # print selected records
-        for r in sorted(found, cmp=lambda x, y: cmp(y.fqdn, x.fqdn)):
+        # output selected records
+        for r in sorted(found, key=lambda x: x.fqdn):
             rtype = r.rec_name.upper()
             rdata = json.dumps(dyn.tm.records.DNSRecord.rdata(r))
-            print "{} {} {} {} {}".format(
-                r.fqdn, rtype, r._record_id, r.ttl, rdata)
+            sys.stdout.write("{} {} {} {} {}\n".format(
+                r.fqdn, rtype, r._record_id, r.ttl, rdata))
 
 
 # setup record selection command subclass for each record type
@@ -869,7 +872,7 @@ class CommandRecordUpdate(DyntmCommand):
         if args['publish']:
             zone.publish()
         # success
-        print that
+        sys.stdout.write("{}\n".format(str(that)))
 
 
 # setup record update command subclass for each record type
@@ -928,7 +931,7 @@ class CommandRecordDelete(DyntmCommand):
         if args['publish']:
             zone.publish()
         # success
-        print that
+        sys.stdout.write("{}\n".format(str(that)))
 
 
 # setup record delete command subclass for each record type

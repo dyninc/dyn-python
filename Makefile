@@ -1,6 +1,6 @@
 PACKAGE=dyn
 
-.PHONY: clean publsh dics style init ci
+.PHONY: clean publish dics style init ci
 
 init:
 	pip install -r test-requirements.txt

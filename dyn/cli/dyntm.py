@@ -110,7 +110,7 @@ class DyntmCommand(object):
             toks = shlex.split(passcmd)
             proc = subprocess.Popen(toks, stdout=subprocess.PIPE)
             if proc.wait() == 0:
-                output = str(proc.stdout.readline())
+                output = proc.stdout.readline().decode('UTF-8')
                 password = output.strip()
         else:
             password = kwargs.get('password')
@@ -123,7 +123,7 @@ class DyntmCommand(object):
             raise ValueError("A password must be provided!")
         # setup session
         token = None
-        tpath = os.path.expanduser("~/.dyntm-{}-{}".format(cust, user))
+        tpath = os.path.expanduser("~/.dyntm_{}_{}".format(cust, user))
         # maybe load cached session token
         if os.path.isfile(tpath):
             with open(tpath, 'r') as tf:

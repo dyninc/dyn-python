@@ -98,8 +98,8 @@ class DNSRecord(object):
         skip = {'_record_type', '_record_id', '_implicitPublish',
                 '_note', '_ttl', '_zone', '_fqdn'}
         rdata = {k[1:]: v for k, v in self.__dict__.items()
-                 if not hasattr(v, '__call__')
-                 and k.startswith('_') and k not in skip}
+                 if not hasattr(v, '__call__') and
+                 k.startswith('_') and k not in skip}
         return rdata
 
     @property

@@ -399,7 +399,7 @@ class Zone(object):
         session = DynectSession.get_session()
         frag = '/ZoneChanges/{}'.format(self.name)
         response = session.execute(frag, 'DELETE')
-        return True
+        return True if response else False
 
     def add_record(self, name=None, record_type='A', *args, **kwargs):
         """Adds an a record with the provided name and data to this

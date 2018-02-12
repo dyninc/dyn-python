@@ -8,7 +8,6 @@ import base64
 import copy
 import locale
 import logging
-import re
 import threading
 from datetime import datetime
 
@@ -151,7 +150,6 @@ class SessionEngine(Singleton):
         is used.
         """
         self._conn = None
-        use_proxy = False
         headers = {}
 
         if self.proxy_host and not self.proxy_port:

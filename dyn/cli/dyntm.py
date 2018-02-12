@@ -24,11 +24,10 @@ import json
 
 # internal libs
 import dyn.tm
-from dyn.tm import *
-from dyn.tm.accounts import *
-from dyn.tm.zones import *
-from dyn.tm.session import *
-from dyn.tm.errors import *
+from dyn.tm.accounts import get_users
+from dyn.tm.zones import Zone, get_all_zones, get_all_secondary_zones
+from dyn.tm.session import DynectSession
+from dyn.tm.errors import DynectError, DynectAuthError
 
 # globals!
 srstyles = ['increment', 'epoch', 'day', 'minute']

@@ -214,7 +214,7 @@ class CommandUserPermissions(DyntmCommand):
         session = cls.session()
         # print each permission available to current session
         for perm in sorted(session.permissions):
-            sys.stdout.write(perm)
+            sys.stdout.write("{}\n".format(str(perm)))
 
 # log out
 
@@ -331,7 +331,7 @@ class CommandZoneCreate(DyntmCommand):
         new = {k: args[k] for k in spec if args[k] is not None}
         # make a new zone
         zone = Zone(**new)
-        sys.stdout.write(zone)
+        sys.stdout.write("{}".format(str(zone)))
 
 
 # delete zone
@@ -448,7 +448,7 @@ class CommandZoneChanges(DyntmCommand):
             ttl = change["ttl"]
             rtype = change["rdata_type"]
             rdata = change["rdata"].get("rdata_{}".format(rtype.lower()), {})
-            msg = "{} {} {} {}".format(fqdn, rtype, ttl, json.dumps(rdata))
+            msg = "{} {} {} {}\n".format(fqdn, rtype, ttl, json.dumps(rdata))
             sys.stdout.write(msg)
 
 
@@ -464,7 +464,7 @@ class CommandZonePublish(DyntmCommand):
     def action(cls, *rest, **args):
         # get the zone
         zone = Zone(args['zone'])
-        sys.stdout.write(zone.publish(notes=args.get('note', None)))
+        zone.publish(notes=args.get('note', None))
 
 
 # zone change reset
@@ -736,7 +736,7 @@ class CommandRecordCreate(DyntmCommand):
         if args['publish']:
             zone.publish()
         # output the new record
-        sys.stdout.write(rec)
+        sys.stdout.write("{}\n".format(rec))
 
 
 # setup record creation command subclass for each record type

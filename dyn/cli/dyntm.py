@@ -26,7 +26,8 @@ import json
 # internal libs
 import dyn.tm
 from dyn.tm.accounts import get_users
-from dyn.tm.zones import Zone, get_all_zones, get_all_secondary_zones
+from dyn.tm.zones import Zone, get_all_zones
+from dyn.tm.zones import SecondaryZone, get_all_secondary_zones
 from dyn.tm.session import DynectSession
 from dyn.tm.errors import DynectError, DynectAuthError
 
@@ -278,6 +279,7 @@ class CommandZoneList(DyntmCommand):
             sys.stdout.write("{}\n".format(zone.name))
 
 
+# list primary zones
 class CommandZonePrimaryList(DyntmCommand):
     name = "primary"
     desc = "List all the primary zones available."
@@ -292,6 +294,7 @@ class CommandZonePrimaryList(DyntmCommand):
             sys.stdout.write("{}\n".format(zone.name))
 
 
+# list secondary zones
 class CommandZoneSecondaryList(DyntmCommand):
     name = "secondary"
     desc = "List all the secondary zones available."
@@ -331,6 +334,31 @@ class CommandZoneCreate(DyntmCommand):
         new = {k: args[k] for k in spec if args[k] is not None}
         # make a new zone
         zone = Zone(**new)
+        sys.stdout.write("{}".format(str(zone)))
+
+
+# create secondary zone
+class CommandSecondaryZoneCreate(DyntmCommand):
+    name = "secondary-new"
+    desc = "Make a new secondary zone."
+    args = [
+        {'arg': 'zone', 'type': str,
+         'help': 'The name of the zone.'},
+        {'arg': 'masters', 'type': str, 'nargs': '+',
+         'help': 'IPs of master nameservers of the zone.'},
+        {'arg': '--contact', 'type': str, 'dest': 'contact_nickname',
+         'help': 'Administrative contact for this zone (RNAME).'},
+        {'arg': '--tsig-key', 'type': str, 'dest': 'tsig_key_name',
+         'help': 'Name of TSIG key to use when communicating with masters.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # figure out zone init arguments
+        spec = [d['dest'] if 'dest' in d else d['arg'] for d in cls.args]
+        new = {k: args[k] for k in spec if args[k] is not None}
+        # make a new secondary zone
+        zone = SecondaryZone(**new)
         sys.stdout.write("{}".format(str(zone)))
 
 

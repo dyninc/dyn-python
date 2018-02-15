@@ -30,6 +30,7 @@ from dyn.tm.zones import Zone, get_all_zones
 from dyn.tm.zones import SecondaryZone, get_all_secondary_zones
 from dyn.tm.session import DynectSession
 from dyn.tm.errors import DynectError, DynectAuthError
+from dyn.tm.services.httpredirect import HTTPRedirect
 
 # globals!
 srstyles = ['increment', 'epoch', 'day', 'minute']
@@ -160,7 +161,6 @@ class DyntmCommand(object):
             conf = cls.config(args.get('conf') or "~/.dyntm.yml")
         except Exception as e:
             msg = "Configuration problem!\n{}\n".format(e.message or str(e))
-            sys.stderr.write(msg)
             sys.exit(1)
         # command line arguments take precedence over config
         auth = ['customer', 'user', 'password', 'passcmd', 'host', 'port',
@@ -200,11 +200,8 @@ class DyntmCommand(object):
     def __init__(self):
         return
 
-# command classes!
 
 # user permissions
-
-
 class CommandUserPermissions(DyntmCommand):
     name = "perms"
     desc = "List permissions."
@@ -217,9 +214,8 @@ class CommandUserPermissions(DyntmCommand):
         for perm in sorted(session.permissions):
             sys.stdout.write("{}\n".format(str(perm)))
 
+
 # log out
-
-
 class CommandUserLogOut(DyntmCommand):
     name = "logout"
     desc = "Log out of the current session."
@@ -257,13 +253,12 @@ class CommandUserList(DyntmCommand):
 
     @classmethod
     def action(cls, *rest, **args):
-        # TODO verbose output
-        # attrs = ['user_name', 'email', 'phone', 'organization',
-        #         'first_name', 'last_name',
-        #         'address', 'city', 'country', 'fax', 'status']
-        # for user in get_users():
-        #     print ",".join([getattr(user, attr, "") for attr in attrs])
+        # attrs = ['first_name', 'last_name', 'phone', 'organization',
+        #         'address', 'city', 'country', 'fax']
         for user in get_users():
+            # mess = json.dumps({k: getattr(user, k, "") for k in attrs})
+            # msg = "{} {} {}\n".format(
+            #  user.user_name, user.status, user.email)
             sys.stdout.write("{}\n".format(user.user_name))
 
 
@@ -612,7 +607,7 @@ rtypes = {
         {'arg': 'protocol', 'type': int,
          'help': 'Numeric code of protocol.'},
         {'arg': 'public_key', 'type': str,
-         'help': 'The public key..'},
+         'help': 'The public key.'},
     ],
     'KX': [
         {'arg': 'exchange', 'type': str,
@@ -979,7 +974,35 @@ for rtype in [k for k in sorted(rtypes.keys())]:
                           (CommandRecordDelete,), attr)
 
 
-# redir commands TODO
+# create redirect service
+class CommandRedirectCreate(DyntmCommand):
+    name = "redirect-new"
+    desc = "Create an HTTP redirect service."
+    args = [
+        {'arg': 'zone', 'type': str,
+         'help': 'The name of the zone.'},
+        {'arg': 'node', 'type': str,
+         'help': 'Node on which to create the record.'},
+        {'arg': 'url', 'type': str,
+         'help': 'The HTTP(S) URL to which requests will be redirected.'},
+        {'arg': '--permanent', 'type': bool,
+         'help': 'Respond with 301 Permanent Redirect not 302.'},
+        {'arg': '--keep', 'type': bool,
+         'help': 'Keep the requested current hostname after redirect.'},
+    ]
+
+    @classmethod
+    def action(cls, *rest, **args):
+        # required arguments
+        zone, node, url = args['zone'], args['node'], args['url']
+        # optional arguments
+        code = 302 if args.get('permanent', False) else 301
+        keep = args.get('keep', False)
+        # make the redirect service
+        redir = HTTPRedirect(zone, node, code, keep, url)
+        sys.stdout.write(str(redir))
+
+
 # gslb commands TODO
 # dsf commands TODO
 

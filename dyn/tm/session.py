@@ -5,11 +5,13 @@ methods that return various types of DynECT objects which will provide their
 own respective functionality.
 """
 import warnings
+import time
+
 # API Libs
 from dyn.compat import force_unicode
 from dyn.core import SessionEngine
 from dyn.encrypt import AESCipher
-from dyn.tm.errors import (DynectAuthError, DynectCreateError,
+from dyn.tm.errors import (DynectError, DynectAuthError, DynectCreateError,
                            DynectUpdateError, DynectGetError,
                            DynectDeleteError, DynectQueryTimeout)
 
@@ -52,6 +54,7 @@ class DynectSession(SessionEngine):
         self.customer = customer
         self.username = username
         self.password = self.__cipher.encrypt(password)
+        self.tasks = {}
         self.connect()
         if auto_auth:
             self.authenticate()
@@ -72,7 +75,7 @@ class DynectSession(SessionEngine):
         """Accessible method for subclass to encrypt with existing AESCipher"""
         return self.__cipher.encrypt(data)
 
-    def _handle_error(self, uri, method, raw_args):
+    def _handle_error(self, uri, method, args):
         """Handle the processing of a connection error with the api"""
         # Need to force a re-connect on next execute
         self._conn.close()
@@ -81,7 +84,7 @@ class DynectSession(SessionEngine):
         try:
             session_check = self.execute('/REST/Session/', 'GET')
             renew_token = 'login:' in session_check['msgs'][0]['INFO']
-        except DynectGetError:
+        except DynectAuthError:
             renew_token = True
 
         if renew_token:
@@ -92,9 +95,9 @@ class DynectSession(SessionEngine):
 
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
-        return self.execute(uri, method, raw_args, final=True)
+        return self.execute(uri, method, args, final=True)
 
-    def _process_response(self, response, method, final=False):
+    def _process_response(self, response, uri, method, args, final=False):
         """Process an API response for failure, incomplete, or success and
         throw any appropriate errors
 
@@ -103,29 +106,64 @@ class DynectSession(SessionEngine):
         :param final: boolean flag representing whether or not to continue
             polling
         """
-        status = response['status']
-        self.logger.debug(status)
+        # Establish response context.
+        status = response.get('status')
+        messages = response.get('msgs')
+        job = response.get('job_id')
+        # Check for successful response
         if status == 'success':
             return response
-        elif status == 'failure':
-            msgs = response['msgs']
-            if method == 'POST' and 'login' in msgs[0]['INFO']:
-                raise DynectAuthError(response['msgs'])
-            if method == 'POST':
-                raise DynectCreateError(response['msgs'])
-            elif method == 'GET':
-                raise DynectGetError(response['msgs'])
-            elif method == 'PUT':
-                raise DynectUpdateError(response['msgs'])
-            else:
-                raise DynectDeleteError(response['msgs'])
-        else:  # Status was incomplete
-            job_id = response['job_id']
-            if not final:
-                response = self.wait_for_job_to_complete(job_id)
-                return self._process_response(response, method, True)
-            else:
+        # Task must have failed or be incomplete. Reattempt request if possible
+        retry = False
+        if any(err['ERR_CD'] == 'RATE_LIMIT_EXCEEDED' for err in messages):
+            # Rate limit exceeded, try again.
+            retry = True
+        elif any('Operation blocked' in err['INFO'] for err in messages):
+            # Waiting on other task completion, try again.
+            retry = True
+        elif any('already has a job' in err['INFO'] for err in messages):
+            # Request made in parallel with another task.
+            retry = True
+        elif status == 'incomplete':
+            # Waiting on completion of current task, poll given job
+            retry, method, uri = True, 'GET', '/Job/{}/'.format(job)
+        # Maybe retry the call
+        if retry:
+            if final:
                 raise DynectQueryTimeout({})
+            # Back off exponentially up to 30 seconds
+            delay = self.tasks.get(job, 1)
+            self.tasks[job] = delay * 2 + 1
+            time.sleep(delay)
+            return self.execute(uri, method, args, final=delay > 30)
+        # Request failed, raise an appropriate error
+        if any('login' in msg['INFO'] for msg in messages):
+            raise DynectAuthError(messages)
+        elif method == 'POST':
+            raise DynectCreateError(messages)
+        elif method == 'GET':
+            raise DynectGetError(messages)
+        elif method == 'PUT':
+            raise DynectUpdateError(messages)
+        elif method == 'DELETE':
+            raise DynectDeleteError(messages)
+        raise DynectError(messages)
+
+    def _meta_update(self, uri, method, results):
+        """Update the HTTP session token if the uri is a login or logout
+        :param uri: the uri from the call being updated
+        :param method: the api method
+        :param results: the JSON results
+        """
+        # If we had a successful log in, update the token
+        if uri.startswith('/REST/Session') and method == 'POST':
+            if results['status'] == 'success':
+                self._token = results['data']['token']
+
+        # Otherwise, if it's a successful logout, blank the token
+        if uri.startswith('/REST/Session') and method == 'DELETE':
+            if results['status'] == 'success':
+                self._token = None
 
     def update_password(self, new_password):
         """Update the current users password
@@ -221,7 +259,7 @@ class DynectMultiSession(DynectSession):
                                                  proxy_pass=proxy_pass)
         self.__add_open_session()
 
-    def _handle_error(self, uri, method, raw_args):
+    def _handle_error(self, uri, method, args):
         """Handle the processing of a connection error with the api"""
 
         # Need to force a re-connect on next execute
@@ -242,7 +280,7 @@ class DynectMultiSession(DynectSession):
 
         # Then try the current call again and Specify final as true so
         # if we fail again we can raise the actual error
-        return self.execute(uri, method, raw_args, final=True)
+        return self.execute(uri, method, args, final=True)
 
     def __add_open_session(self):
         """Add new open session to hash of open sessions"""

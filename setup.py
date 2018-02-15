@@ -22,11 +22,16 @@ setup(
     author_email='jnappi@dyn.com',
     url='https://github.com/dyninc/dyn-python',
     packages=['dyn', 'dyn/tm', 'dyn/mm', 'dyn/tm/services'],
+    entry_points={
+        'console_scripts': [
+            'dyntm = dyn.cli.dyntm:main'
+        ],
+    },
     classifiers=[
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'Topic :: Internet :: Name Service (DNS)',
-        'Topic :: Software Development :: Libraries', 
+        'Topic :: Software Development :: Libraries',
     ],
     install_requires=requires,
     tests_require=tests_requires,

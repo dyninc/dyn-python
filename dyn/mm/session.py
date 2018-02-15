@@ -61,13 +61,14 @@ class MMSession(SessionEngine):
             return {}, '{}', uri
         return args, urlencode(args), uri
 
-    def _handle_response(self, response, uri, method, raw_args, final):
+    def _handle_response(self, response, uri, method, args, final):
         """Handle the processing of the API's response"""
         body = response.read()
-        ret_val = json.loads(prepare_for_loads(body, self._encoding))
-        return self._process_response(ret_val['response'], method, final)
+        data = json.loads(prepare_for_loads(body, self._encoding))
+        resp = data['response']
+        return self._process_response(resp, uri, method, args, final)
 
-    def _process_response(self, response, method, final=False):
+    def _process_response(self, response, uri, method, args, final=False):
         """Process an API response for failure, incomplete, or success and
         throw any appropriate errors
 

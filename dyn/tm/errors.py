@@ -4,7 +4,7 @@ the base DynectError class which is only ever directly raised if something
 completely unexpected happens
 TODO: add a DynectInvalidPermissionsError
 """
-__all__ = ['DynectAuthError', 'DynectInvalidArgumentError',
+__all__ = ['DynectError', 'DynectAuthError', 'DynectInvalidArgumentError',
            'DynectCreateError', 'DynectUpdateError', 'DynectGetError',
            'DynectDeleteError', 'DynectQueryTimeout']
 __author__ = 'jnappi'

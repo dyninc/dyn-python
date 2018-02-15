@@ -68,18 +68,23 @@ class DyntmCommand(object):
     ]
 
     @classmethod
-    def parser(cls):
+    def parser(cls, parser=None):
         # setup parser
-        ap = argparse.ArgumentParser(prog=cls.name, description=cls.desc)
+        if not parser:
+            parser = argparse.ArgumentParser(
+                prog=cls.name, description=cls.desc)
+        # add arguments
         for spec in [dict(s) for s in cls.args if s]:
-            ap.add_argument(spec.pop('arg'), **spec)
-        ap.set_defaults(func=cls.action, command=cls.name)
+            parser.add_argument(spec.pop('arg'), **spec)
+        # set action function and name
+        parser.set_defaults(func=cls.action, command=cls.name)
         # setup subcommand parsers
         if len(cls.__subclasses__()) != 0:
-            sub = ap.add_subparsers(title=cls.subtitle)
+            what = parser.add_subparsers(title=cls.subtitle)
             for cmd in cls.__subclasses__():
-                sub._name_parser_map[cmd.name] = cmd.parser()
-        return ap
+                sub = what.add_parser(cmd.name, help=cmd.desc)
+                cmd.parser(parser=sub)
+        return parser
 
     @classmethod
     def config(cls, conf):
@@ -205,6 +210,7 @@ class DyntmCommand(object):
 class CommandUserPermissions(DyntmCommand):
     name = "perms"
     desc = "List permissions."
+    args = []
 
     @classmethod
     def action(cls, *rest, **args):
@@ -219,6 +225,7 @@ class CommandUserPermissions(DyntmCommand):
 class CommandUserLogOut(DyntmCommand):
     name = "logout"
     desc = "Log out of the current session."
+    args = []
 
     @classmethod
     def action(cls, *rest, **args):
@@ -250,6 +257,7 @@ class CommandUserPassword(DyntmCommand):
 class CommandUserList(DyntmCommand):
     name = "users"
     desc = "List users."
+    args = []
 
     @classmethod
     def action(cls, *rest, **args):
@@ -266,6 +274,7 @@ class CommandUserList(DyntmCommand):
 class CommandZoneList(DyntmCommand):
     name = "zones"
     desc = "List all the zones available."
+    args = []
 
     @classmethod
     def action(cls, *rest, **args):
@@ -278,6 +287,7 @@ class CommandZoneList(DyntmCommand):
 class CommandZonePrimaryList(DyntmCommand):
     name = "primary"
     desc = "List all the primary zones available."
+    args = []
 
     @classmethod
     def action(cls, *rest, **args):
@@ -293,6 +303,7 @@ class CommandZonePrimaryList(DyntmCommand):
 class CommandZoneSecondaryList(DyntmCommand):
     name = "secondary"
     desc = "List all the secondary zones available."
+    args = []
 
     @classmethod
     def action(cls, *rest, **args):

@@ -264,7 +264,7 @@ class SessionEngine(Singleton):
                 # Get the task id
                 task = next(pat.match(i['INFO']).group(1) for i in msgs
                             if pat.match(i.get('INFO', '')))
-            except:
+            except Exception:
                 # Task id could not be recovered
                 wait = 1
             else:

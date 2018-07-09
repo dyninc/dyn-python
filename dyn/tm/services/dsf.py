@@ -35,6 +35,19 @@ __all__ = ['get_all_dsf_services', 'get_all_record_sets',
            'TrafficDirector']
 
 
+def get_dsf(service):
+    """
+    :param service: a dsf_id string, or :class:`TrafficDirector`
+    :return: :class:`TrafficDirector` Service
+    """
+    _service_id = _check_type(service)
+    uri = '/DSF/{}'.format(_service_id)
+    api_args = {'detail': 'Y'}
+    response = DynectSession.get_session().execute(uri, 'GET', api_args)
+    director = TrafficDirector(None, api=False, **response['data'])
+    return director
+
+
 def get_all_dsf_services():
     """:return: A ``list`` of :class:`TrafficDirector` Services"""
     uri = '/DSF/'
@@ -419,7 +432,7 @@ class _DSFRecord(object):
                                             self._rdata_class.lower()):
                                         for k, v in rdata_v.items():
                                             setattr(self, '_' + k, v)
-                            except:
+                            except Exception:
                                 pass
             else:
                 setattr(self, '_' + key, val)

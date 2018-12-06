@@ -244,6 +244,7 @@ class GSLBRegionPoolEntry(object):
         self._address = address
         self._label = self._weight = self._serve_mode = None
         self._task_id = None
+        self._status = None
 
         uri = '/GSLBRegionPoolEntry/{}/{}/{}/{}/'
         self.uri = uri.format(self._zone, self._fqdn, self._region_code,
@@ -409,7 +410,16 @@ class GSLBRegionPoolEntry(object):
             output['weight'] = self._weight
         if self._serve_mode:
             output['serve_mode'] = self._serve_mode
+        if self._status:
+            output['status'] = self._status
         return output
+
+    @property
+    def status(self):
+        """The current state of the pool entry. Will be one of 'unk', 'up',
+        or 'down'
+        """
+        return self._status
 
     def delete(self):
         """Delete this :class:`GSLBRegionPoolEntry` from the DynECT System"""

@@ -249,7 +249,7 @@ class SessionEngine(Singleton):
         """Retry logic around throttled or blocked tasks"""
 
         throttle_err = 'RATE_LIMIT_EXCEEDED'
-        throttled = any(throttle_err == err['ERR_CD'] for err in msgs)
+        throttled = any(throttle_err == err.get('ERR_CD') for err in msgs)
 
         if throttled:
             # We're rate limited, so wait 5 seconds and try again

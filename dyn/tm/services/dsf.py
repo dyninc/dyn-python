@@ -3531,8 +3531,7 @@ class DSFNotifier(object):
         if self._label:
             json_blob['label'] = self._label
         if self._recipients:
-            json_blob['recipients'] = [recipient['recipient'] for recipient in
-                                       self._recipients]
+            json_blob['recipients'] = self._recipients
         if self._services:
             json_blob['dsf_services'] = [dsf['service_id'] for dsf in
                                          self._services if

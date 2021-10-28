@@ -964,7 +964,7 @@ class PermissionsGroup(object):
         for key, val in self.__dict__.items():
             if val is not None and not hasattr(val, '__call__') and \
                     key.startswith('_'):
-                if key is '_group_type':
+                if key == '_group_type':
                     api_args['type'] = val
                 else:
                     api_args[key[1:]] = val

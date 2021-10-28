@@ -478,7 +478,7 @@ class SessionEngine(Singleton):
         now = datetime.now()
         self.logger.warn('Waiting for job {}'.format(job_id))
         too_long = (now - start).seconds < timeout
-        while response['status'] is 'incomplete' and too_long:
+        while response['status'] == 'incomplete' and too_long:
             time.sleep(10)
             response = self.execute(uri, 'GET', api_args)
         return response

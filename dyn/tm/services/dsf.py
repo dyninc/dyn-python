@@ -2,7 +2,7 @@
 """This module contains wrappers for interfacing with every element of a
 Traffic Director (DSF) service.
 """
-from collections import Iterable
+from collections.abc import Iterable
 from dyn.compat import force_unicode, string_types
 from dyn.tm.utils import APIList, Active
 from dyn.tm.errors import DynectInvalidArgumentError

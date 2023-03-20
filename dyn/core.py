@@ -185,9 +185,9 @@ class SessionEngine(Singleton):
             use_proxy = True
 
             if self.proxy_user and self.proxy_pass:
-                auth = '{}:{}'.format(self.proxy_user, self.proxy_pass)
-                headers['Proxy-Authorization'] = 'Basic ' + base64.b64encode(
-                    auth)
+                auth = '{}:{}'.format(self.proxy_user, self.proxy_pass).encode()
+                headers['Proxy-Authorization'] = 'Basic ' + str(base64.b64encode(
+                    auth))
 
         if use_proxy:
             if self.ssl:

@@ -811,8 +811,12 @@ class GSLB(object):
                         region_code = region.pop('region_code', None)
                         self._region.append(GSLBRegion(self._zone, self._fqdn,
                                                        region_code, **region))
+            elif key == 'monitor' and not val:
+                self._monitor = None
             elif key == 'monitor':
-                # We already have the monitor object, no need to rebuild it
+                self._monitor = Monitor(protocol=val['protocol'], interval=val['interval'])
+                for attr, v in val.items():
+                  setattr(self._monitor, '_'+attr, v)
                 pass
             elif key == "task_id" and not val:
                 self._task_id = None
